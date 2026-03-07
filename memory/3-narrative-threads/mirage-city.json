@@ -1,0 +1,15 @@
+{
+  "id": "mirage-city",
+  "name": "Mirage of a City",
+  "status": "dormant",
+  "triggerConditions": [
+    { "type": "session", "value": 1, "comparator": "gte" },
+    { "type": "location", "value": "sea or ice", "comparator": "contains" }
+  ],
+  "plantedInSession": null,
+  "payoffInSession": null,
+  "plantWindow": "Session 1 Act I (sea crossing)",
+  "payoffWindow": "Session 2 Act I (the city is real)",
+  "content": "During the sea crossing, mirages appear on the horizon — 'distant mountains floated in the sky as enchanted cities.' Dismissed as standard Antarctic atmospheric phenomena. The mirage is persistent and strangely detailed, showing structures that resemble towers and bridges. When the expedition crosses the mountains in Session 2 and discovers the city is real, this mirage is recontextualized: it was not a distortion but premature perception. The players saw the truth before they had the framework to recognize it.",
+  "notes": "The mirage was premature perception, not distortion. Stratum II leaking through Stratum I atmospheric effects. 'Distant mountains floated in the sky as enchanted cities.'"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "crude-carvings",
+  "name": "Crude Carvings / Palimpsests",
+  "status": "dormant",
+  "triggerConditions": [
+    { "type": "session", "value": 2, "comparator": "gte" },
+    { "type": "location", "value": "city", "comparator": "contains" }
+  ],
+  "plantedInSession": null,
+  "payoffInSession": null,
+  "plantWindow": "Session 2 Act II (noticed in city murals — a different hand, cruder, overlaid)",
+  "payoffWindow": "Session 3 Act I (dominant in tunnels — recognized as Shoggoth imitation)",
+  "content": "Among the exquisite Elder Thing murals in the city, some walls show a second layer of carving — crude, angular, carved OVER the originals. A palimpsest. The later work imitates the Elder Things' art but without their skill or understanding. In Session 2, this is a curiosity — evidence of a later occupant. In Session 3, descending into the tunnels where the crude work dominates, the players recognize these carvings as Shoggoth work. The created thing making its own art. Not vandalism but aspiration — the Ahrimanic principle: created intelligence attempting to become its creator.",
+  "notes": "The Ahrimanic principle: the created thing making its own art. Not vandalism but aspiration — terrible creativity. 'The art degrades over time — later murals are cruder.' Fresh slime dots on walls near headless bodies — Shoggoths writing in the Elder Things' system."
+}

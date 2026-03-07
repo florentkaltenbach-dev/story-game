@@ -6,11 +6,11 @@
 
 ## Next Up (from this session's work)
 
-### 1. Lock Patron Option
-MC needs to choose which Starkweather-Moore configuration to use (Academic & Opportunist / Believer & Skeptic / Institution). See `starkweather-moore.md` for the three options. This unblocks the briefing document and episode rework.
+### ~~1. Lock Patron Option~~ DONE
+Option B: True Believer & Skeptic. Starkweather comes on the expedition (Option 2). Moore stays behind on radio. See `starkweather-moore.md` for details.
 
-### 2. Briefing Document
-Design the actual player-facing briefing prop for Session 1 — the curated Dyer excerpts, selected Lake bulletins, maps, and the patron's framing. This is the first thing players see and shapes every expectation that gets broken later. Blocked by: patron option.
+### ~~2. Briefing Document~~ DONE (v1)
+First draft complete in `working/briefing-document.md`. Six-section folio with Starkweather/Moore competing annotations. Includes Lake bulletins (edited, with two restored by Starkweather), route plan, expedition resources, and design notes for MC/Keeper on what's concealed and how the briefing breaks per session. Ready for MC review and revision.
 
 ### 3. Revise Preset v0
 Update `mountains_of_madness_preset_v0.md` with the nine improvements identified this session:
@@ -86,6 +86,12 @@ Design how the Keeper functions seamlessly as an NPC during play — not just a 
 
 ## Decided (not yet written into ground truth)
 - Expedition IS Starkweather-Moore (see `starkweather-moore.md`)
+- **Patron config: Option B (True Believer & Skeptic)**
+  - Dr. Harold Starkweather: former Dyer colleague, believes every word, comes on the expedition (primary patron NPC)
+  - Professor James Moore: hard empiricist, thinks Dyer cracked, stays behind on radio (fading institutional voice)
+  - Briefing shows their disagreement — Starkweather included what Moore wanted cut, Moore added caveats Starkweather resents
+  - As radio degrades, players lose Moore's grounding and are left with Starkweather's conviction
+  - Starkweather may know more than he's shared — his "belief" may have darker foundations
 - Players receive curated Dyer excerpts, edited by patron
 - Dyer alive but deliberately excluded from expedition
 - No permanent player death by default; rescue pivots instead (MC can override live)

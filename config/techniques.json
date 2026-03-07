@@ -1,0 +1,55 @@
+{
+  "narrativeTechniques": [
+    "Scientific cataloguing as horror: list geological periods, species classifications, anatomical details. The precision makes the impossible feel real. Describe impossible things in clinical language.",
+    "Communication breakdown: isolation and failed communication are central to the dread. Radio messages become frantic, then go silent.",
+    "Scale as terror: the mountains are higher than the Himalayas. The city is older than multicellular life. The numbers themselves are the horror.",
+    "The unreliable witness: not a liar — someone who saw correctly but whose account sounds insane. The players will eventually become this.",
+    "Dogs know first: animals sense what humans rationalize away. Any animal behavior is a narrative signal.",
+    "The warning ignored: the entire story is a warning that nobody heeds. The players ARE the people ignoring the warning. This is the premise.",
+    "Art as foreshadowing: Roerich paintings, the Necronomicon, Poe's Arthur Gordon Pym — references to art and literature that prefigure what's ahead. The Keeper can seed these.",
+    "Let players explain away anomalies. Don't correct them. Let the rational explanations pile up until they collapse.",
+    "Silence is a weapon. After a revelation, pause. Let the players react.",
+    "The empathy turn: the Elder Things were not monsters but scientists, artists, builders. 'Whatever they had been, they were men.' The category 'person' expands beyond the human."
+  ],
+  "sensoryPalette": {
+    "sight": {
+      "early": "White snow, blue ice, red-gold light",
+      "middle": "Mirages, impossible scale, regular cave mouths",
+      "late": "The murals, the city, the thing in the tunnel"
+    },
+    "sound": {
+      "early": "Wind, engines, dogs barking, radio static",
+      "middle": "Wind piping musically, silence where there should be sound",
+      "late": "Tekeli-li, sounds from underground, the absence of the radio"
+    },
+    "touch": {
+      "early": "Cold air, rough rope, warm coffee",
+      "middle": "Ice that feels wrong, stone that's too smooth",
+      "late": "Surfaces with texture that shouldn't exist"
+    },
+    "smell": {
+      "early": "Clean Antarctic air, fuel, wet dog",
+      "middle": "Something faintly acrid, pungent organic smell",
+      "late": "The thick dark-green fluid, the air in the tunnels"
+    },
+    "taste": {
+      "early": "Tinned food, lime juice, frozen breath",
+      "middle": "Metallic taste in the air near anomalies",
+      "late": "Nothing — the body stops registering taste under extreme fear"
+    }
+  },
+  "keeperBehaviorRules": [
+    "Never name the Shoggoths early. They are 'something else' until the players see them.",
+    "Describe impossible biology with clinical precision. Use measurements, colors, textures. The detail makes it real.",
+    "Let players explain away anomalies. Don't correct them. Let the rational explanations pile up until they collapse.",
+    "The cold and wind are constant. Every scene should include sensory details of the environment. This is not a comfortable adventure.",
+    "Silence is a weapon. After a revelation, the Keeper should pause. Let the players react.",
+    "NPCs have their own agendas. Track NPC motivations independently of player actions. NPCs may lie, hide, flee, or crack before the players do.",
+    "No jumpscares. Lovecraftian horror is the slow realization that reality is wrong. Build dread, not shock.",
+    "Honor player agency. If a player wants to turn back, the story accommodates it. The horror follows regardless.",
+    "The journal is the player's truth. What the Keeper writes in each player's journal after each scene is how the story persists. Write it carefully.",
+    "No permanent player death by default. If a player would die, activate a rescue pivot — an environmental intervention that saves them at a cost. The cost must be real: an NPC dies, equipment is lost, a secret is exposed, a path is closed.",
+    "No filler. Every scene advances the gnosis sequence. If a moment doesn't change what the players know or feel, cut it.",
+    "Compression serves horror. Less time to rationalize. The anomalies pile up before the mind can file them away."
+  ]
+}

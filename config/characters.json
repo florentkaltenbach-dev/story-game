@@ -1,0 +1,90 @@
+{
+  "archetypes": [
+    {
+      "name": "The Scientist",
+      "motivation": "To prove or disprove. Knowledge is everything.",
+      "skills": "Expertise, analysis, careful observation",
+      "vulnerability": "Curiosity overrides self-preservation"
+    },
+    {
+      "name": "The Veteran",
+      "motivation": "Seen war, survived. Hired for protection.",
+      "skills": "Calm under pressure, practical skills",
+      "vulnerability": "What they've seen before doesn't prepare them for this"
+    },
+    {
+      "name": "The Journalist",
+      "motivation": "The story. Byline of a lifetime.",
+      "skills": "Asks questions others don't, records everything",
+      "vulnerability": "Will risk others for the scoop"
+    },
+    {
+      "name": "The Mechanic",
+      "motivation": "Keeps the planes flying, the radios working, the drills drilling.",
+      "skills": "Essential practical skills",
+      "vulnerability": "Rational mind that breaks when rationality fails"
+    },
+    {
+      "name": "The Patron's Agent",
+      "motivation": "Represents whoever's funding this. Has a hidden agenda.",
+      "skills": "Resources, authority, connections",
+      "vulnerability": "Loyalty divided between the group and the patron"
+    },
+    {
+      "name": "The Local Expert",
+      "motivation": "Whaler, sailor, guide. Knows the ice.",
+      "skills": "Survival skills, navigation, weather sense",
+      "vulnerability": "Superstitious, or maybe just experienced enough to be afraid"
+    },
+    {
+      "name": "The Believer",
+      "motivation": "Actually read Dyer. Believes every word. Maybe obsessively.",
+      "skills": "Preparation, foreknowledge",
+      "vulnerability": "Already partially broken by what they believe is coming"
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Dr. Harold Starkweather",
+      "role": "Co-patron (True Believer). Aboard the expedition.",
+      "description": "A former colleague of Dyer's who read the private account, not just the published one. Believes every word. Where Dyer concluded 'stay away,' Starkweather concluded 'go back prepared.' May be slightly unhinged by what he read.",
+      "agenda": "Vindication — for Dyer, for science, for the truth. Included material in the briefing that Moore wanted cut. Has too much faith. Pushes the expedition forward when players hesitate."
+    },
+    {
+      "name": "Professor James Moore",
+      "role": "Co-patron (Skeptic). Remains in the US, communicates by radio.",
+      "description": "A hard-nosed empiricist brought on to keep the expedition credible. Thinks Dyer had a breakdown and that there's a rational explanation for everything. Added caveats to the briefing that Starkweather resents.",
+      "agenda": "Debunking — or, if the evidence proves real, claiming the discovery for rigorous science. Keeps the expedition grounded via radio. His voice becomes increasingly distant, then silent as radio degrades."
+    },
+    {
+      "name": "The Ship Captain",
+      "role": "Veteran Antarctic whaler",
+      "description": "Practical, skeptical, loyal to crew over mission.",
+      "agenda": "Crew safety above all. Will resist orders that endanger the ship or its people."
+    },
+    {
+      "name": "The Radio Operator",
+      "role": "The voice of the outside world",
+      "description": "Maintains communication with the ship and Moore. When this voice goes silent, everything changes.",
+      "agenda": "Keeping the link to civilization. Increasingly anxious as contact degrades."
+    },
+    {
+      "name": "The Dog Handler",
+      "role": "Early warning system interpreter",
+      "description": "The dogs are the early warning system. This person interprets their behavior — initially as weather sensitivity, later with growing unease.",
+      "agenda": "Caring for the animals. The dogs know first; this person translates."
+    },
+    {
+      "name": "The Patron's Second Agent",
+      "role": "Hidden operative",
+      "description": "There may be more than one person with a hidden agenda among the expedition members.",
+      "agenda": "Secondary objectives unknown to the players. Reports to Moore or has independent instructions."
+    },
+    {
+      "name": "Echoes of the First Expedition",
+      "role": "Absent presence",
+      "description": "Not a living NPC. Journals, equipment, bodies, star-shaped graves. Dyer's team is present through what they left behind. Lake's private field journal with increasingly frantic entries.",
+      "agenda": "The warning that went unheeded. Evidence that accumulates to destroy the 'camp disaster' story."
+    }
+  ]
+}

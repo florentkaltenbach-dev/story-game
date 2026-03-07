@@ -1,0 +1,14 @@
+{
+  "id": "violet-mountains",
+  "name": "The Violet Mountains",
+  "status": "dormant",
+  "triggerConditions": [
+    { "type": "session", "value": 2, "comparator": "gte" }
+  ],
+  "plantedInSession": null,
+  "payoffInSession": null,
+  "plantWindow": "Session 2 Act III (first sighting from the city — a dim, elfin line of pinnacled violet on the western horizon)",
+  "payoffWindow": "Session 4 Act II (the vision — Danforth's list, the contact with Stratum IV)",
+  "content": "A dim, elfin line of pinnacled violet on the western horizon, visible from the city. Even the Elder Things feared them — the murals show cities built near the violet range that crumbled before their time. Something lives there that the Elder Things refused to carve clearly. In Session 4, during the flight back over the mountains, someone looks west and sees the sky above the violet mountains almost resolve into something: the black pit, the carven rim, the proto-Shoggoths, windowless solids with five dimensions, the elder pharos, the original, the eternal, the undying. This is the ceremony's contact with Stratum IV. It lasts one moment. It is not repeated. It cannot be fully communicated.",
+  "notes": "Stratum IV. Two appearances only. 'Highest of earth's peaks and focus of earth's evil.' Estimated 300+ miles away but sharply visible. The ceremony's deepest point — the wound that doesn't close."
+}

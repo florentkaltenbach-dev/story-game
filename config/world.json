@@ -1,0 +1,34 @@
+{
+  "era": "1933. Three years after the Miskatonic University Expedition. Dr. William Dyer published his account; nobody believed him. The university quietly distanced itself. The Starkweather-Moore expedition is the second attempt.",
+  "geography": {
+    "McMurdo Sound": "The base of operations. Ships, supply caches, the last connection to the world.",
+    "Ross Ice Barrier": "The wall of ice marking the edge of the navigable south. Two hundred feet of vertical ice.",
+    "Beardmore Glacier": "The largest valley glacier in the world. The crossing point from coast to interior.",
+    "The Plateau": "The high Antarctic interior. Miles of ice over dead rock. 8,500+ feet above sea level.",
+    "The Mountains": "Lovecraft's unnamed range. Peaks exceeding 35,000 feet (higher than Everest). Black, bare of snow. Windswept. Caves with regular openings. Formations that look like cubes clinging to peaks.",
+    "The City Beyond": "Ancient ruins behind the mountain range. Cyclopean architecture. Murals that tell the history of Earth's true first civilization. The destination the players don't know they're heading toward.",
+    "The Tunnels": "Fifteen-foot carved passages descending from the city into warmth. Crude carvings overlay the originals. Giant blind albino penguins. An underground ecosystem. The temperature is wrong.",
+    "The Violet Mountains": "A dim, elfin line of pinnacled violet on the western horizon. The Elder Things feared them. Cities built there crumbled before their time. Something lives there that the Elder Things refused to carve clearly."
+  },
+  "environmentRules": [
+    "Wind is not just weather — cadences sometimes hold vague suggestions of wild and half-sentient musical piping. The wind has a voice.",
+    "Mirages are vivid and persistent. Distant mountains float in the sky as enchanted cities. Reality is unreliable from the start.",
+    "Light is always wrong. The midnight sun. Red-gold light on black peaks. Opalescent voids where sky and snow merge.",
+    "Cold is actively hostile. Equipment fails. Fuel freezes. Exposed skin dies.",
+    "Silence is the most terrifying sound in the Antarctic. The absence of sound is a narrative signal.",
+    "Every scene should include sensory details of the environment. This is not a comfortable adventure.",
+    "Equipment malfunctions near Elder Thing technology — electrical and magnetic interference.",
+    "Radio is fragile, weather-dependent, with lag. Radio degradation is a narrative thread that tightens isolation.",
+    "The nameless scent — faintly acrid, pungent organic — grows stronger as players approach Shoggoth territory."
+  ],
+  "timeline": "Radio is the only communication. Transportation: dog sledges and Dornier seaplanes (no helicopters). Navigation: compass, sextant, theodolite — maps are incomplete or wrong. Photography: glass plates and early film — evidence is hard to capture and easy to doubt. The expedition is funded, university-backed, but small and not widely publicized.",
+  "technology": [
+    "Radio communication — fragile, weather-dependent, with lag",
+    "Dog sledges for ground transportation",
+    "Dornier seaplanes for aerial survey and mountain crossing",
+    "Compass, sextant, and theodolite for navigation",
+    "Glass plate and early film photography",
+    "Geological boring and drilling equipment",
+    "Limited fuel supply — crossing the mountains is a point of no return"
+  ]
+}

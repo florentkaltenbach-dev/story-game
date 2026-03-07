@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0e17;
+  --foreground: #e8dcc8;
+  --surface: #131a2b;
+  --surface-light: #1c2640;
+  --accent: #c4a35a;
+  --accent-hover: #d4b76a;
+  --ice: #7ba4c7;
+  --keeper: #6b9e7a;
+  --danger: #8b3a3a;
+  --border: #1e2d44;
+  --muted: #8b9bb4;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-light: var(--surface-light);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-ice: var(--ice);
+  --color-keeper: var(--keeper);
+  --color-danger: var(--danger);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-narrative: var(--font-crimson);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Narrative text styling */
+.narrative-text {
+  font-family: var(--font-narrative), Georgia, "Times New Roman", serif;
+  line-height: 1.8;
+  letter-spacing: 0.01em;
+}

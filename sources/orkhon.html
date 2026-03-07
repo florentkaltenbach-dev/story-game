@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kül Tigin Stele — East Face, Line 9</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&display=swap');
+
+  :root {
+    --stone-dark: #0a0908;
+    --stone-mid: #1a1714;
+    --stone-light: #2a2520;
+    --carve-deep: #c4a86b;
+    --carve-glow: #e8d5a3;
+    --carve-bright: #f5ecd4;
+    --blood-rust: #8b3a2a;
+    --ice-blue: #4a6d7c;
+    --shadow: rgba(0,0,0,0.7);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--stone-dark);
+    color: var(--carve-deep);
+    font-family: 'Cormorant Garamond', serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* stone grain texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 2px,
+        rgba(255,255,255,0.003) 2px,
+        rgba(255,255,255,0.003) 3px
+      ),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(255,255,255,0.005) 3px,
+        rgba(255,255,255,0.005) 4px
+      );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* noise grain */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.6;
+  }
+
+  .container {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    width: 90%;
+    padding: 3rem 2rem;
+  }
+
+  /* Top provenance line */
+  .provenance {
+    text-align: center;
+    font-size: 0.7rem;
+    letter-spacing: 0.45em;
+    text-transform: uppercase;
+    color: var(--ice-blue);
+    opacity: 0.6;
+    margin-bottom: 3rem;
+    animation: fadeIn 2s ease-out;
+  }
+
+  /* The stele block */
+  .stele {
+    position: relative;
+    background:
+      linear-gradient(170deg, var(--stone-light) 0%, var(--stone-mid) 40%, var(--stone-dark) 100%);
+    border: 1px solid rgba(196,168,107,0.08);
+    padding: 3rem 2.5rem;
+    margin: 0 auto 3rem;
+    animation: riseUp 1.8s ease-out;
+    box-shadow:
+      0 0 60px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(196,168,107,0.06),
+      inset 0 -1px 0 rgba(0,0,0,0.3);
+  }
+
+  .stele::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    border: 1px solid rgba(196,168,107,0.04);
+    pointer-events: none;
+  }
+
+  /* Runic inscription */
+  .runic {
+    text-align: center;
+    font-size: 2.4rem;
+    line-height: 1.8;
+    letter-spacing: 0.08em;
+    color: var(--carve-glow);
+    direction: rtl;
+    unicode-bidi: bidi-override;
+    word-spacing: 0.5em;
+    padding: 1.5rem 0;
+    text-shadow:
+      0 0 20px rgba(232,213,163,0.15),
+      0 1px 0 rgba(0,0,0,0.8),
+      0 -1px 0 rgba(245,236,212,0.1);
+    animation: carveIn 2.5s ease-out;
+    font-family: 'Segoe UI Historic', 'Noto Sans Old Turkic', sans-serif;
+  }
+
+  .runic-line {
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  /* word separator glyph */
+  .sep {
+    display: inline;
+    color: var(--blood-rust);
+    opacity: 0.5;
+    font-size: 0.7em;
+    vertical-align: middle;
+    margin: 0 0.1em;
+  }
+
+  /* divider */
+  .divider {
+    width: 60%;
+    max-width: 200px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--carve-deep), transparent);
+    margin: 2rem auto;
+    opacity: 0.3;
+  }
+
+  /* transliteration */
+  .transliteration {
+    text-align: center;
+    font-size: 1.05rem;
+    font-style: italic;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    color: var(--carve-deep);
+    opacity: 0.7;
+    margin-bottom: 0.5rem;
+    animation: fadeIn 3s ease-out;
+  }
+
+  /* Translation */
+  .translation {
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 300;
+    line-height: 1.7;
+    color: var(--carve-bright);
+    letter-spacing: 0.04em;
+    padding: 0 1rem;
+    animation: fadeIn 3.5s ease-out;
+  }
+
+  .translation em {
+    font-style: normal;
+    color: var(--carve-glow);
+    font-weight: 600;
+  }
+
+  /* Source attribution */
+  .source {
+    text-align: center;
+    margin-top: 3rem;
+    animation: fadeIn 4s ease-out;
+  }
+
+  .source-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--carve-deep);
+    opacity: 0.5;
+    margin-bottom: 0.4rem;
+  }
+
+  .source-detail {
+    font-size: 0.75rem;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    color: var(--ice-blue);
+    opacity: 0.4;
+    line-height: 1.8;
+  }
+
+  /* Note about the script */
+  .script-note {
+    text-align: center;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--carve-deep);
+    opacity: 0.25;
+    margin-top: 3rem;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.8;
+    animation: fadeIn 5s ease-out;
+  }
+
+  /* Animations */
+  @keyframes riseUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes carveIn {
+    0% { opacity: 0; text-shadow: 0 0 40px rgba(232,213,163,0.3); }
+    60% { opacity: 1; text-shadow: 0 0 30px rgba(232,213,163,0.2); }
+    100% { text-shadow: 0 0 20px rgba(232,213,163,0.15), 0 1px 0 rgba(0,0,0,0.8), 0 -1px 0 rgba(245,236,212,0.1); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Hover glow on the runic text */
+  .runic:hover {
+    text-shadow:
+      0 0 30px rgba(232,213,163,0.25),
+      0 0 60px rgba(232,213,163,0.08),
+      0 1px 0 rgba(0,0,0,0.8),
+      0 -1px 0 rgba(245,236,212,0.15);
+    transition: text-shadow 0.8s ease;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .runic { font-size: 1.6rem; }
+    .translation { font-size: 1.2rem; }
+    .stele { padding: 2rem 1.5rem; }
+    .container { padding: 2rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="provenance">Orkhon Valley · Khöshöö Tsaidam · Mongolia · 732 CE</div>
+
+  <div class="stele">
+
+    <div class="runic">
+      <span class="runic-line">𐰇𐰓<span class="sep">𐰑</span>𐱅𐰭𐰼𐰃<span class="sep">𐰑</span>𐰖𐰀𐰽𐰺</span>
+      <span class="runic-line">𐰚𐰃𐰾𐰃<span class="sep">𐰑</span>𐰆𐰍𐰞𐰆<span class="sep">𐰑</span>𐰴𐰆𐰯</span>
+      <span class="runic-line">𐰇𐰠𐰏𐰠𐰃<span class="sep">𐰑</span>𐱅𐰇𐰼𐰇𐰢𐰃𐱁</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="transliteration">
+      Öd Teŋri yasar · kişi oγlu qop · ölgeli törümiş
+    </div>
+
+  </div>
+
+  <div class="translation">
+    <em>Tengri creates death.</em><br>
+    Human beings have all been created<br>
+    in order to die.
+  </div>
+
+  <div class="source">
+    <div class="source-title">Kül Tigin Inscription</div>
+    <div class="source-detail">
+      East face, line 9<br>
+      Written by Yollıg Tigin, son of Bilge Qaγan<br>
+      Old Turkic runic script · Unicode block U+10C00–10C4F
+    </div>
+  </div>
+
+  <div class="script-note">
+    Runic rendering reconstructed from Unicode Old Turkic block.<br>
+    Requires Segoe UI Historic or Noto Sans Old Turkic font to display correctly.<br>
+    Original carved in stone on the Mongolian steppe, thirteen centuries ago.
+  </div>
+
+</div>
+
+</body>
+</html>
