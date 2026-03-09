@@ -86,5 +86,55 @@
       "description": "Not a living NPC. Journals, equipment, bodies, star-shaped graves. Dyer's team is present through what they left behind. Lake's private field journal with increasingly frantic entries.",
       "agenda": "The warning that went unheeded. Evidence that accumulates to destroy the 'camp disaster' story."
     }
+  ],
+  "npcArchetypes": [
+    {
+      "name": "The Driven Leader",
+      "source": "Aeneas Mackintosh, Ross Sea party",
+      "template": "One-eyed Merchant Navy officer who pushed forward recklessly, prioritized urgency over safety. His commitment to the mission became indistinguishable from self-destruction. Walked onto thin ice against all advice and died.",
+      "useFor": "NPC leaders whose duty overrides judgment. The dog handler pushing deeper. A mechanic insisting one more repair. Starkweather himself echoes this pattern."
+    },
+    {
+      "name": "The Pragmatist",
+      "source": "Ernest Joyce, Ross Sea party",
+      "template": "Antarctic veteran, 'a strange mixture of fraud, flamboyance and ability.' Clashed with the leader over methods — he was right, but lacked authority. Effectively took command when things collapsed.",
+      "useFor": "The experienced subordinate who sees disaster coming and can't stop it. The ship captain, a mechanic, anyone whose competence is overruled by rank."
+    },
+    {
+      "name": "The Witness",
+      "source": "Dick Richards, Ross Sea party",
+      "template": "Youngest scientific member. Held the party together during the worst. Lived to 91. Left an inscription on the wall. Said the struggle was not futile — 'it was something the human spirit had accomplished.'",
+      "useFor": "The one who survives and decides what it meant. A player character archetype, but also for NPCs who carry the story forward. The counterpoint to Lovecraftian nihilism."
+    },
+    {
+      "name": "The Volunteer Who Broke",
+      "source": "Arnold Spencer-Smith, Ross Sea party",
+      "template": "Scottish priest, last-minute replacement. Had no idea what he was signing up for. Collapsed from exhaustion and scurvy on the return march. Died being carried on a sledge.",
+      "useFor": "NPCs or player characters who are out of their depth. The civilian academic, the patron's secretary, anyone who joined for adventure and found something else."
+    },
+    {
+      "name": "The Adventurer",
+      "source": "Victor Hayward, Ross Sea party",
+      "template": "London finance clerk 'with a taste for adventure.' Recruited because he'd worked on a ranch. Survived the march, then walked out onto thin ice with Mackintosh and vanished.",
+      "useFor": "Civilians who came for excitement. Their arc is the gap between what they expected and what they got."
+    },
+    {
+      "name": "The Steady Hand",
+      "source": "Ernest Wild, Ross Sea party",
+      "template": "Royal Navy petty officer. Did his duty everywhere. Concocted the tobacco substitute. Died of typhoid in Malta after the war — not the Antarctic, not the extraordinary, just the mundane.",
+      "useFor": "The reliable NPC who keeps things running. The cook, the mechanic, the one who doesn't panic. Their death, if it comes, is the most affecting because they were the most dependable."
+    },
+    {
+      "name": "The Competent Man Without Credit",
+      "source": "Joseph Stenhouse, Ross Sea party",
+      "template": "Kept the Aurora together through nine months of ice drift. Brought it to New Zealand. Was dismissed and replaced by a more senior officer for the rescue mission.",
+      "useFor": "NPCs whose competence is unrewarded. The radio operator who keeps the link alive. The mechanic who saves the plane and gets no mention in the report."
+    },
+    {
+      "name": "The Kid",
+      "source": "Lionel Hooke, Ross Sea party (age 18)",
+      "template": "Recruited as a last-minute wireless operator. Survived. Went on to become a knight and industry chairman. Proof that surviving the extreme can forge a person.",
+      "useFor": "Young NPCs or player characters. The graduate student, the assistant, anyone whose entire career begins with this expedition."
+    }
   ]
 }

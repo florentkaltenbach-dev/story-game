@@ -116,6 +116,20 @@ The briefing the players receive in Session 0 is an edited document. See `workin
 - Navigation: compass, sextant, theodolite. Maps are incomplete or wrong.
 - Photography: glass plates and early film. Evidence is hard to capture and easy to doubt.
 - The expedition is funded by Starkweather and Moore, a joint venture between Miskatonic and Columbia.
+- Byrd's second expedition (1933–35) is the major Antarctic story — the Starkweather-Moore expedition is invisible by comparison.
+- University budgets slashed ~40%, research funding from private philanthropies. Starkweather's "personal connections" means wealthy patrons, not institutions.
+- "Polar madness" is a recognized phenomenon. ~50% of polar expedition members experience significant mood disruption. There is strong stigma against admitting it.
+
+### Historic Sites Along the Route
+
+By the 1930s, McMurdo Sound and the route south are layered with remains from four prior expeditions — Discovery (1901–04), Nimrod (1907–09), Terra Nova (1910–13), and the Ross Sea party (1914–17). Every hut, cache, and inscription is a potential discovery. The Ross Sea party's story — three men dead completing a mission that was never needed — mirrors the game's core themes. See `sources/ross_sea_party_supplement.md` and `config/world.json` (`historicSites`) for full detail.
+
+Key discoverable objects:
+- **Richards' inscription** (Cape Evans) — three names scratched on a wall. Men who died for nothing. The most powerful quiet moment in the preset.
+- **Wild's letter** (Mount Hope depot) — written to a brother who was never coming. Undelivered, uncollected.
+- **The unsent cable** — proof of institutional negligence that got people killed. A paper trail players can find.
+- **Improvised clothing** (Cape Evans) — garments cut from Scott's tent canvas. Evidence of survival by scavenging.
+- **Old cached supplies** at depot sites — 15+ years old. Pemmican and hardtack survive. Do the players trust them?
 
 ---
 
@@ -233,6 +247,7 @@ Key beats:
 Establishing camp near McMurdo Sound. First borings, surveys, radio check-ins. The Antarctic is beautiful and lethal.
 
 Key beats:
+- **Historic site exploration.** Cape Evans and Hut Point are nearby — layered remains of four prior expeditions. Players can find Richards' inscription, improvised clothing, journals, old supplies. This is human tragedy as emotional grounding before the cosmic horror arrives. The Keeper draws from `config/world.json` (`historicSites`) and `memory/5-world-state/ross-sea-party.md`.
 - Odd formations in rock samples. Triangular markings in strata that shouldn't contain them.
 - Instruments behave strangely near certain locations.
 - Dogs refuse food. Refuse to face one direction.
@@ -586,6 +601,8 @@ The Keeper manages these characters. They have their own motivations and arcs.
 | **The Dog Handler** | Animal expert | Understand the dogs' behavior | The dogs are the early warning system. This person interprets what the scientists dismiss. Their growing unease is a narrative signal. |
 | **Echoes of the First Expedition** | Journals, equipment, bodies | — | Dyer's team is present through what they left behind. Lake's journal. The graves. The evidence. |
 
+**NPC design archetypes** from the Ross Sea party (see `config/characters.json` `npcArchetypes`): The Driven Leader (mission over safety), The Pragmatist (competent but overruled), The Witness (survives and decides what it meant), The Volunteer Who Broke (out of their depth), The Adventurer (came for excitement, found horror), The Steady Hand (reliable, dies unremarkably), The Competent Man Without Credit, The Kid (young, forged by the experience). These templates inform how the Keeper gives unnamed NPCs depth and arc.
+
 ---
 
 ## 10. CAMPAIGN ARC — COMPRESSED
@@ -659,7 +676,14 @@ When the ceremony begins, the Keeper seeds its memory from this document:
 
 *This preset is a living document. The MC reviews, adjusts, adds, and removes before the first ceremony. The Keeper initializes its memory from this config.*
 
-*Source: H.P. Lovecraft, "At the Mountains of Madness" (1931). Project Gutenberg eBook #70652.*
+*Sources:*
+- *H.P. Lovecraft, "At the Mountains of Madness" (1931). Project Gutenberg eBook #70652.*
+- *Lovecraft Mythos texts: Fungi from Yuggoth, The Haunter of the Dark, The Whisperer in Darkness, Through the Gates of the Silver Key*
+- *Richard E. Byrd, "Little America" (1930) — first expedition full text*
+- *Ross Sea party historical research — `sources/ross_sea_party_supplement.md`*
+- *Period research — `sources/historical-notes-1930s.md`*
+- *Lore gap tracking — `working/lore-expansion-brief.md`*
+
 *Session structure: v2 (5 sessions, replaces v1's 8-10 episodes).*
 *Patron configuration: Option B (Starkweather aboard, Moore on radio).*
-*Last updated: March 7, 2026*
+*Last updated: March 9, 2026*

@@ -89,10 +89,10 @@ New source material added. Gap tracking from `working/lore-expansion-brief.md`.
 
 ### Integration Tasks
 
-- [ ] Update `config/world.json` with Ross Sea Party locations and discoverable objects
-- [ ] Update `config/characters.json` with NPC archetypes from Ross Sea Party supplement
-- [ ] Seed memory level 5 (World State) with historical/lore material
-- [ ] Update `mountains_of_madness_preset_v0.md` with new lore references
+- [x] Update `config/world.json` with Ross Sea Party locations and discoverable objects
+- [x] Update `config/characters.json` with NPC archetypes from Ross Sea Party supplement
+- [x] Seed memory level 5 (World State) with historical/lore material
+- [x] Update `mountains_of_madness_preset_v0.md` with new lore references
 
 ---
 

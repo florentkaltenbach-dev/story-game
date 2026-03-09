@@ -30,5 +30,62 @@
     "Glass plate and early film photography",
     "Geological boring and drilling equipment",
     "Limited fuel supply — crossing the mountains is a point of no return"
-  ]
+  ],
+  "historicSites": {
+    "Cape Evans Hut": {
+      "origin": "Scott's Terra Nova expedition (1910–13), later occupied by the Ross Sea party (1915–17)",
+      "description": "Primary shore base. A palimpsest of four expeditions. Contains accumulated material from Discovery, Nimrod, Terra Nova, and Ross Sea party occupations. By the 1930s, a layered archaeological record of Antarctic survival.",
+      "discoverableObjects": [
+        "Richards' inscription — names of three dead men scratched on the wall near a bunk. Spencer-Smith, Mackintosh, Hayward. Still legible.",
+        "Canvas clothing from 'Joyce's Famous Tailoring Shop' — garments cut from a Terra Nova tent. Bizarre handmade coats and trousers.",
+        "'Hut Point Mixture' — a tin of homemade tobacco substitute (sawdust, tea, coffee, dried herbs). Labeled in Wild's handwriting. Smells terrible.",
+        "Journals and diaries — fragments from Mackintosh, Joyce, Richards. Primary accounts of the depot-laying ordeal.",
+        "Conflicting orders from Shackleton — documents showing contradictory instructions that got people killed.",
+        "The unsent cable — Shackleton wrote it, never sent it. Would have prevented the first season's disastrous depot run.",
+        "Scientific instruments — remnants from the Ross Sea party's research team (physics, meteorology, biology).",
+        "Dog harnesses and equipment — sized for animals that didn't survive. Six dogs lived through winter; most died on the march.",
+        "Broken Primus stoves — from multiple expeditions. Some functional, some not. A working one could be critical.",
+        "Scott's supplies (1910–13) — scavenged by the Ross Sea party. Some remain.",
+        "Improvised sledging equipment — patched from parts of multiple expeditions, marks of desperate repair."
+      ]
+    },
+    "Hut Point": {
+      "origin": "Scott's Discovery expedition (1901–04)",
+      "description": "Edge of the Barrier. Natural starting point for southern journeys. The Ross Sea party was stranded here March–June 1915, living on seal meat and blubber. The oldest European structure in Antarctica.",
+      "discoverableObjects": [
+        "Minimal supplies — evidence of desperate habitation.",
+        "Cached sledging gear from multiple expeditions.",
+        "Seal bones and blubber residue from the 1915 stranding."
+      ]
+    },
+    "Minna Bluff Depot": {
+      "coordinates": "79°S",
+      "description": "First major depot site on the route south. Laid by the Ross Sea party during both seasons. The first season's push to this point killed all ten dogs.",
+      "discoverableObjects": [
+        "Depot stores or their remains — flags, markers, cached fuel and rations.",
+        "Possible dog remains from the first season's march."
+      ]
+    },
+    "80S Depot": {
+      "coordinates": "80°S",
+      "description": "Second depot site. Reaching this point during the first season cost all ten sled dogs their lives.",
+      "discoverableObjects": [
+        "Cached supplies — 15+ years old by the 1930s. Pemmican and hardtack survive, but the question is whether players trust them."
+      ]
+    },
+    "Mount Hope Depot": {
+      "coordinates": "83°30'S, foot of the Beardmore Glacier",
+      "description": "Final depot. The furthest point the Ross Sea party reached. Also the location closest to the mountains beyond. 198 continuous days of sledging to lay these depots — the longest march in Antarctic history.",
+      "discoverableObjects": [
+        "Ernest Wild's letter to his brother Frank — undelivered, uncollected. Written assuming Frank was crossing from the Weddell Sea. Frank never came. A letter to someone who was never going to arrive.",
+        "Depot supplies — the southernmost cache. Never used. The depots were never needed."
+      ]
+    }
+  },
+  "historicContext": {
+    "rossSea Party": "The Ross Sea party (1914–17) laid depots across the Ice Barrier for Shackleton's transcontinental crossing. The crossing never happened — the Endurance was crushed. Three men died completing a mission that was for nothing. Their ship, the Aurora, was torn from its moorings and drifted for nine months. After the rescue, the Aurora vanished on a coal run — never seen again.",
+    "expeditionLayers": "By the 1930s, McMurdo Sound sites carry remains from four expeditions: Discovery (1901–04), Nimrod (1907–09), Terra Nova (1910–13), and the Ross Sea party (1914–17). Every hut, cache, and inscription is a layer in this palimpsest.",
+    "thematicResonance": "The Ross Sea party's story mirrors the game's core themes: missions pursued past the point of reason, institutional betrayal, cosmic futility, and whether human endurance means anything. Richards said yes — 'it was something the human spirit had accomplished.' Lovecraft's cosmos says no. The players decide.",
+    "theAurora": "The SY Aurora was torn from its moorings at Cape Evans in May 1915, drifted for nine months, was repaired, rescued the survivors, then vanished forever on a coal run in 1917. A ship that survived Antarctica only to be swallowed by the ordinary ocean. The Keeper can deploy this as atmosphere — radio ghosts, cautionary tales, the precedent that ships don't always come back."
+  }
 }
