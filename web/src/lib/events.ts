@@ -45,9 +45,15 @@ export const stateEmitter = new StateEmitter();
 
 // === SSE stream factory ===
 
+export interface SSEFilterContext {
+  role?: string;
+  playerId?: string;
+}
+
 export function createSSEStream(
   subscribeTo: string = "all",
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  filter?: SSEFilterContext
 ): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
 
@@ -55,6 +61,14 @@ export function createSSEStream(
     start(controller) {
       const send = (event: SSEEvent) => {
         try {
+          // Per-client filtering for private channels
+          if (filter && event.type === "message") {
+            const msg = event.data as { channel?: string; playerId?: string };
+            if (msg.channel === "mc-keeper" && filter.role !== "mc") return;
+            if (msg.channel === "keeper-private") {
+              if (filter.role !== "mc" && filter.playerId !== msg.playerId) return;
+            }
+          }
           controller.enqueue(
             encoder.encode(
               `event: ${event.type}\ndata: ${JSON.stringify(event.data)}\n\n`

@@ -5,6 +5,7 @@ import type {
   NarrativeThread,
   NarrativeThreadStatus,
   MEMORY_LEVEL_DIRS,
+  Message,
 } from "./types";
 
 // === Paths ===
@@ -116,6 +117,21 @@ export async function updateThread(
   }
 }
 
+// === Archive session messages (move to archive before session transition) ===
+
+export async function archiveSessionMessages(sessionNumber: number): Promise<void> {
+  const messagesDir = join(SESSION_ROOT, "messages");
+  const archiveDir = join(SESSION_ROOT, "archive", `session-${sessionNumber}`);
+
+  try {
+    await readdir(messagesDir);
+    await mkdir(join(SESSION_ROOT, "archive"), { recursive: true });
+    await rename(messagesDir, archiveDir);
+  } catch {
+    // messages dir may not exist — nothing to archive
+  }
+}
+
 // === Session message persistence (JSONL) ===
 
 export async function appendMessage(
@@ -159,4 +175,73 @@ export async function readSessionSnapshot(): Promise<Record<
   } catch {
     return null;
   }
+}
+
+// === Rebuild messages from JSONL files ===
+
+export async function readAllMessages(): Promise<Message[]> {
+  const messagesDir = join(SESSION_ROOT, "messages");
+  const raw: Record<string, unknown>[] = [];
+
+  try {
+    // Read top-level JSONL files (all.jsonl, mc-keeper.jsonl, etc.)
+    const topFiles = await readdir(messagesDir);
+    for (const file of topFiles) {
+      if (!file.endsWith(".jsonl")) continue;
+      const content = await readFile(join(messagesDir, file), "utf-8");
+      for (const line of content.split("\n")) {
+        if (!line.trim()) continue;
+        try {
+          raw.push(JSON.parse(line));
+        } catch {
+          // Skip malformed lines
+        }
+      }
+    }
+
+    // Read keeper-private subdirectory
+    const privateDir = join(messagesDir, "keeper-private");
+    try {
+      const privateFiles = await readdir(privateDir);
+      for (const file of privateFiles) {
+        if (!file.endsWith(".jsonl")) continue;
+        const content = await readFile(join(privateDir, file), "utf-8");
+        for (const line of content.split("\n")) {
+          if (!line.trim()) continue;
+          try {
+            raw.push(JSON.parse(line));
+          } catch {
+            // Skip malformed lines
+          }
+        }
+      }
+    } catch {
+      // keeper-private dir may not exist
+    }
+  } catch {
+    // messages dir may not exist
+    return [];
+  }
+
+  // Deduplicate by composite key (IDs can reset across restarts)
+  const seen = new Set<string>();
+  const deduped: Message[] = [];
+  for (const msg of raw) {
+    const sender = msg.sender as { role?: string } | undefined;
+    const key = `${msg.timestamp}:${msg.channel}:${sender?.role}:${String(msg.content ?? "").slice(0, 50)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push({
+      id: String(msg.id ?? ""),
+      channel: (msg.channel as Message["channel"]) ?? "all",
+      sender: msg.sender as Message["sender"],
+      content: String(msg.content ?? ""),
+      timestamp: (msg.timestamp as number) ?? 0,
+      playerId: msg.playerId as string | undefined,
+    });
+  }
+
+  // Sort by timestamp
+  deduped.sort((a, b) => a.timestamp - b.timestamp);
+  return deduped;
 }

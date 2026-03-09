@@ -18,6 +18,7 @@
 | `03-beauty-standards.md` | Aesthetic & UX | What beauty means for this specific project — derived from model analysis |
 | `04-keeper-engineering.md` | AI integration | Prompt architecture, caching, token economy — Claude API specifics |
 | `05-code-principles.md` | Code quality | Actionable rules for grading every file written |
+| `06-api-features-audit.md` | API calibration | Every Claude API feature categorized for the Keeper's use |
 
 ## How to Use
 

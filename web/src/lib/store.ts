@@ -1,6 +1,7 @@
-import type { Message, Player, Session, SessionSnapshot } from "./types";
+import { randomUUID } from "crypto";
+import type { Message, Player, Session, SessionSnapshot, Invite } from "./types";
 import { stateEmitter } from "./events";
-import { appendMessage, writeSessionSnapshot, readSessionSnapshot } from "./memory";
+import { appendMessage, writeSessionSnapshot, readSessionSnapshot, readAllMessages, archiveSessionMessages } from "./memory";
 
 // === In-memory state (cache — rebuilt from filesystem on startup) ===
 
@@ -22,9 +23,45 @@ export const session: Session = {
   },
   players: [],
   status: "lobby",
+  keeperAutoRespond: false,
+  number: 0,
+  act: 1,
 };
 
 export const messages: Message[] = [];
+
+// === Invite management ===
+
+const MAX_INVITES = 10;
+export const invites: Invite[] = [];
+
+export function createInvite(): Invite {
+  const invite: Invite = {
+    token: randomUUID(),
+    status: "new",
+    createdAt: Date.now(),
+  };
+  invites.unshift(invite);
+  if (invites.length > MAX_INVITES) invites.pop();
+  persistSnapshot();
+  return invite;
+}
+
+export function validateInvite(token: string): boolean {
+  return invites.some((i) => i.token === token && i.status === "new");
+}
+
+export function consumeInvite(token: string, playerName: string): boolean {
+  const invite = invites.find((i) => i.token === token);
+  if (!invite || invite.status !== "new") {
+    if (invite && invite.status === "new") invite.status = "error";
+    return false;
+  }
+  invite.status = "used";
+  invite.usedBy = playerName;
+  persistSnapshot();
+  return true;
+}
 
 // === Initialize from filesystem (called on startup) ===
 
@@ -42,9 +79,28 @@ export async function initializeStore(): Promise<void> {
     session.scene = s.scene ?? session.scene;
     session.players = s.players ?? session.players;
     session.status = s.status ?? session.status;
+    session.number = s.number ?? session.number;
+    session.act = s.act ?? session.act;
+    const rawSnap = snapshot as Record<string, unknown>;
+    if (typeof rawSnap.keeperAutoRespond === "boolean") {
+      session.keeperAutoRespond = rawSnap.keeperAutoRespond;
+    }
     if (s.lastMessageId) {
       messageIdCounter = parseInt(s.lastMessageId) || messageIdCounter;
     }
+    const raw = snapshot as Record<string, unknown>;
+    if (Array.isArray(raw.invites)) {
+      invites.length = 0;
+      invites.push(...(raw.invites as Invite[]));
+    }
+  }
+
+  // Rebuild messages from JSONL (survives PM2 restart)
+  const restored = await readAllMessages();
+  if (restored.length > 0) {
+    messages.push(...restored);
+    const maxRestoredId = Math.max(...messages.map((m) => parseInt(m.id) || 0));
+    messageIdCounter = Math.max(messageIdCounter, maxRestoredId);
   }
 
   // Seed initial messages if empty
@@ -120,9 +176,13 @@ async function persistSnapshot(): Promise<void> {
     scene: session.scene,
     players: session.players,
     status: session.status,
+    number: session.number,
+    act: session.act,
     lastMessageId: String(messageIdCounter),
+    keeperAutoRespond: session.keeperAutoRespond,
+    invites,
     timestamp: Date.now(),
-  };
+  } as SessionSnapshot & { invites: Invite[]; keeperAutoRespond: boolean };
 
   try {
     await writeSessionSnapshot(snapshot as unknown as Record<string, unknown>);
@@ -148,4 +208,46 @@ export async function updateScene(
   if (scene.location) session.scene.location = scene.location;
   stateEmitter.emit("scene", session.scene);
   await persistSnapshot();
+}
+
+export async function updatePlayerNotes(playerId: string, notes: string): Promise<void> {
+  const player = session.players.find((p) => p.id === playerId);
+  if (!player) return;
+  player.notes = notes;
+  await persistSnapshot();
+}
+
+export async function advanceAct(): Promise<number> {
+  if (session.act < 4) session.act++;
+  stateEmitter.emit("session", { status: session.status, act: session.act });
+  await persistSnapshot();
+  return session.act;
+}
+
+export async function endSession(): Promise<void> {
+  session.status = "ended";
+  stateEmitter.emit("session", { status: "ended" });
+  await persistSnapshot();
+}
+
+export async function nextSession(): Promise<void> {
+  await archiveSessionMessages(session.number);
+  session.number = Math.min(session.number + 1, 4);
+  session.act = 1;
+  session.status = "lobby";
+  messages.length = 0;
+  messageIdCounter = 100;
+  stateEmitter.emit("session", {
+    status: session.status,
+    number: session.number,
+    act: session.act,
+  });
+  await persistSnapshot();
+}
+
+export async function toggleKeeperAutoRespond(): Promise<boolean> {
+  session.keeperAutoRespond = !session.keeperAutoRespond;
+  stateEmitter.emit("session", { status: session.status, keeperAutoRespond: session.keeperAutoRespond });
+  await persistSnapshot();
+  return session.keeperAutoRespond;
 }

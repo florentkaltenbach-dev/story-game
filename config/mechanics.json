@@ -1,0 +1,121 @@
+{
+  "resolution": {
+    "system": "Quality-based. No dice. No numerical stats.",
+    "principle": "The Keeper assesses outcomes based on character qualities, situational context, and narrative appropriateness. The MC may write a light framework underneath, but players never see numbers.",
+    "outcomes": "Not pass/fail. Every action produces a result on a spectrum: clean success, success with complication, partial success, failure that opens a new path, failure with consequence. The Keeper chooses the outcome that best serves the story and respects the character's qualities.",
+    "qualities": "Characters are described in prose qualities, not stats. 'Steady hands under pressure' is a quality. 'Dexterity 14' is not. Qualities emerge from character creation conversation and evolve through play — the Keeper updates them in the journal after significant moments.",
+    "contested": "When players act against each other or against NPCs with competing interests, the Keeper weighs both parties' qualities, motivations, and the narrative stakes. The result should feel inevitable in retrospect, not arbitrary.",
+    "keeperGuidance": "Favor outcomes that generate story over outcomes that shut it down. A failed attempt to fix the radio should reveal something about why it failed, not just 'it doesn't work.' Complications are more interesting than dead ends."
+  },
+  "journal": {
+    "purpose": "The journal is the player's truth. It replaces the character sheet. Who you are, what you've seen, what you carry, how you're feeling. The Keeper writes entries; the player reads them.",
+    "creation": "Initialized during Session 0 character co-creation. The Keeper records: qualities, relationships, motives, fears, and the player's departure statement.",
+    "updates": "The Keeper writes a journal entry after each significant moment — a discovery, a decision, a confrontation, a loss. Not every action, only ones that change what the player knows or feels.",
+    "horrorProgression": [
+      "Sessions 0-1: Full sentences. Analytical voice. The journal reads like a field report or personal diary. Measured, observational, rational.",
+      "Session 2: Sentences shorten. Sensory detail increases. The journal begins noting things the character cannot explain. Qualifiers appear: 'seemed to,' 'almost as if,' 'I must have imagined.'",
+      "Session 3: Fragments. Sensation over analysis. The journal stops explaining and starts recording. Incomplete thoughts. Physical reactions. The prose breaks down as the rational frame breaks down.",
+      "Session 4: Sparse. The journal becomes a record of choices, not observations. What the character decided. Why. The departure statement echoed back. The final entry is the player's moral choice."
+    ],
+    "specialEntries": {
+      "dreamFragments": "The Keeper may write a fragment into a player's journal between acts — a dream they don't remember clearly. Half-formed impressions. These are Stratum IV signals.",
+      "theEmpathyTurn": "'Whatever they had been, they were men.' Written into every player's journal in Session 3. Not as narration — as realization.",
+      "theVision": "Session 4. Fragments from Danforth's list. Not all. Not in order. Not explained. The entry stops mid-sentence. The journal closes."
+    }
+  },
+  "knowledgeFog": {
+    "principle": "All players start with the same base knowledge from the briefing document. What each player knows diverges based on their choices during play.",
+    "baseKnowledge": "The patron's curated briefing: edited Dyer excerpts, selected Lake bulletins, maps, the patron's framing. This is shared in Session 0, Phase 3.",
+    "divergence": "Private Keeper channels exist for secret actions and personal reactions. A player who enters the city sees the murals; one who stays at the plane does not. A player who descends the tunnels witnesses the dead Elder Things; one who refuses has incomplete gnosis. These gaps have consequences in Session 4.",
+    "tracking": "The Keeper tracks per-player knowledge state in the memory system (Level 2 — Character State). The knowledge fog is invisible to players — they experience it as the natural result of their choices, not as a mechanic.",
+    "asymmetry": "No asymmetric revelations about the core mystery unless the MC decides otherwise during play. Private channels are for personal reactions and secret actions, not for giving one player the answer."
+  },
+  "decisionPoints": {
+    "principle": "Genuine choices with real stakes. Some are forced by the narrative (patron overrides, expedition momentum). Some are genuinely optional. Player reluctance is always recorded and pays off later.",
+    "forced": "When the patron's orders or narrative momentum override a player's reluctance, the choice is still recorded. The Keeper notes their hesitation, their objection, their compliance under pressure. In Session 4, the echo of that reluctance shapes the moral weight of their final choice.",
+    "optional": "Entering the city (Session 2) and descending the tunnels (Session 3) are genuinely optional. A player can refuse. They miss content but their refusal is a valid narrative choice with its own consequences — incomplete gnosis, different journal entries, a different relationship to the final question.",
+    "perSession": [
+      { "session": 0, "decision": "Join the expedition", "stakes": "Personal — what they're willing to risk", "ifNo": "Out of scope. All players join. The ceremony requires it." },
+      { "session": 1, "decision": "Press inland toward the mountains", "stakes": "Safety vs. discovery", "ifNo": "The patron's orders override. An NPC pushes forward. The choice is noted but the expedition continues." },
+      { "session": 2, "decision": "Cross the mountains", "stakes": "Point of no return — fuel limits the return", "ifNo": "Someone in the party or the patron's orders force the crossing. The player's reluctance is recorded and pays off later." },
+      { "session": 2, "decision": "Enter the city", "stakes": "Curiosity vs. self-preservation", "ifNo": "Genuinely optional. The player stays at the plane. They miss the murals but are present for the crossing back." },
+      { "session": 3, "decision": "Descend into the tunnels", "stakes": "The deepest Promethean choice", "ifNo": "Genuinely optional. The player stays in the city. They hear the Shoggoth's cry from above. They don't see the dead Elder Things. Their gnosis is incomplete." },
+      { "session": 4, "decision": "What to tell", "stakes": "The entire moral weight of the ceremony", "ifNo": "There is no wrong answer. Every choice has consequences the ceremony doesn't show." }
+    ]
+  },
+  "rescuePivots": {
+    "rule": "No permanent player death by default.",
+    "mechanism": "If a player would die, the Keeper activates an environmental intervention that saves them. The intervention must feel organic — not a deus ex machina but a plausible consequence of the world.",
+    "cost": "The rescue is never free. The cost must be real and felt by the group.",
+    "costTypes": [
+      "An NPC dies in their place",
+      "Critical equipment is destroyed or lost",
+      "A secret is exposed that changes group dynamics",
+      "A path is permanently closed — a location they can never return to",
+      "A narrative thread resolves badly — foreshadowing pays off as loss instead of discovery",
+      "Time is lost — the window for another objective closes"
+    ],
+    "mcOverride": "The MC can override this rule at any time. If the MC decides a death serves the story, permanent death is possible. This should be rare and discussed with the player privately if practical.",
+    "keeperBehavior": "The Keeper should prepare rescue pivot options in advance for high-danger scenes. The pivot should already be in motion before the lethal moment — the NPC was already in the wrong place, the equipment was already strained, the path was already unstable."
+  },
+  "narrativeThreads": {
+    "purpose": "Pre-planted foreshadowing tracked across sessions. The Keeper manages thread lifecycle. Threads are seeded in the memory system (Level 3 — Narrative Threads) and referenced during context assembly.",
+    "statuses": ["dormant", "planted", "growing", "ripe", "resolved"],
+    "statusDefinitions": {
+      "dormant": "Exists in the preset but has not been introduced to the players. Waiting for the right moment.",
+      "planted": "First appearance. A detail noticed but not yet significant. The players may not register it consciously.",
+      "growing": "Recurring. The detail appears again in a different context. Pattern recognition begins.",
+      "ripe": "Ready for payoff. The thread has accumulated enough weight that its resolution will land.",
+      "resolved": "Paid off. The thread has delivered its narrative function. May echo in later moments but its arc is complete."
+    },
+    "presetThreads": [
+      { "thread": "Dogs refuse food / won't face south", "planted": "Session 1", "payoff": "Session 1 Act III", "status": "dormant" },
+      { "thread": "Dyer's private journal page", "planted": "Session 2 Act I", "payoff": "Session 2 Act II", "status": "dormant" },
+      { "thread": "Wind piping musically", "planted": "Session 1 Act I", "payoff": "Sessions 3-4 (crescendo)", "status": "dormant" },
+      { "thread": "Mirage of a city", "planted": "Session 1 Act I", "payoff": "Session 2 Act I", "status": "dormant" },
+      { "thread": "Equipment malfunctions near five-pointed structures", "planted": "Session 1 Act II", "payoff": "Session 2", "status": "dormant" },
+      { "thread": "Radio degradation", "planted": "Session 1 Act II", "payoff": "Session 3 (total blackout)", "status": "dormant" },
+      { "thread": "The nameless scent", "planted": "Session 2 Act III", "payoff": "Session 3 Act II-III", "status": "dormant" },
+      { "thread": "Tekeli-li", "planted": "Session 3 Act I", "payoff": "Session 3 Act III", "status": "dormant" },
+      { "thread": "Crude carvings / palimpsests", "planted": "Session 2 Act II", "payoff": "Session 3 Act I", "status": "dormant" },
+      { "thread": "The violet mountains", "planted": "Session 2 Act III", "payoff": "Session 4 Act II", "status": "dormant" }
+    ]
+  },
+  "previouslyOn": {
+    "purpose": "Period-appropriate recap at the start of each session. Bridges the gap between sessions and re-establishes the emotional register.",
+    "style": "1930s radio serial or expedition log. The voice is not the Keeper's neutral register — it is the era speaking. Clipped, evocative, slightly breathless.",
+    "generation": "The Keeper generates the recap from the memory system — compressed session state, resolved and active threads, last scene's emotional register. The MC reviews before delivery.",
+    "examples": [
+      "Radio serial: 'When last we left our expedition, the team had pressed beyond the ice barrier into territory unmapped and unnamed. The readings make no sense. The dogs have not eaten in two days. And on the horizon — mountains that should not exist...'",
+      "Expedition log: 'Supplementary report, day fourteen. Party pushed inland against my recommendation. Starkweather insists. Geological samples defy classification. Radio contact with Moore increasingly unreliable. The wind sounds wrong.'"
+    ]
+  },
+  "muralExploration": {
+    "purpose": "Room-by-room discovery in the Elder Thing city during Session 2, Act II. The murals tell the billion-year history. Players choose corridors — not every group sees every mural.",
+    "structure": "Seven murals in sequence, but players navigate by choosing corridors. Some murals are damaged. Some are overlaid with crude later carvings. The Keeper adjusts availability based on player choices.",
+    "sequence": [
+      { "number": 1, "title": "Arrival", "content": "Star-headed things descending to a lifeless Earth from cosmic space." },
+      { "number": 2, "title": "Creation", "content": "Building cities. Creating life from inorganic matter. The Shoggoths — protoplasmic servants shaped by hypnotic will." },
+      { "number": 3, "title": "Flourishing", "content": "Art, science, civilization spanning a billion years. Cities across the globe." },
+      { "number": 4, "title": "The Wars", "content": "The Cthulhu spawn. War. Retreat. Peace and territorial division. The Pacific lands sink, taking R'lyeh." },
+      { "number": 5, "title": "The Second Invasion", "content": "The Mi-Go from Yuggoth. The Elder Things try to resume interstellar travel and fail. Trapped on Earth. Retreat to Antarctica." },
+      { "number": 6, "title": "The Decline", "content": "The art of creating life lost. Shoggoth rebellions. The ice advances. The city abandoned above ground. The survivors go underground." },
+      { "number": 7, "title": "The Crude Carvings", "content": "Overlaid on the originals. A different hand. Something else has been here since the builders left. Something that imitated their art badly." }
+    ],
+    "keeperGuidance": "Mural 7 is the most important — the crude carvings foreshadow the Shoggoth encounter in Session 3. Ensure at least one player encounters it. Murals 1-3 establish empathy for the Elder Things, which pays off in the empathy turn. Mural 4-5 provide cosmic context. Mural 6 explains why the city is empty."
+  },
+  "theChoice": {
+    "session": 4,
+    "purpose": "The climax of the entire ceremony. Not an action scene — a moral scene. Each player faces the question Dyer faced: what do you tell?",
+    "format": "Individual. The Keeper asks each player separately. Not a group vote, not consensus. Players may disagree, lie to each other, or align — whatever emerges.",
+    "options": [
+      { "choice": "Tell the truth", "implication": "Dyer tried this. Nobody believed him. His career was destroyed. The players are proof that telling the truth failed. Does the player try again?" },
+      { "choice": "Tell the patron what they want to hear", "implication": "Specimens, coordinates, proof. Guarantees a third expedition aimed at extraction. Whatever is in those tunnels will be disturbed again." },
+      { "choice": "Lie", "implication": "Say there was nothing. Destroy the evidence. Active coverup. It might work. It also means everything they suffered was for nothing." },
+      { "choice": "Keep silent", "implication": "Refuse to file a report. Delays but doesn't resolve. Someone else will go eventually." },
+      { "choice": "Something else", "implication": "The players may invent an option nobody anticipated. This is the point of the ceremony — choices that emerge from the story." }
+    ],
+    "theEcho": "The Keeper reads back each player's departure statement from Session 0. What they said they wanted. What they said they were afraid of. Then what they chose now. The distance between those statements is the measure of what the ceremony did to them.",
+    "resolution": "Each player's journal closes with their choice. The ceremony ends. The wound stays open. There is no epilogue that resolves the tension."
+  }
+}

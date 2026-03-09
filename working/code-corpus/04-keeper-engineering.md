@@ -27,7 +27,7 @@ Every Keeper call assembles context from these tiers, in order:
 | P0 (identity) | Keeper system prompt: identity, tone, behavior rules | Static file | ~800 tokens | YES (cache this) |
 | P1 (preset DNA) | Storytelling DNA, world rules, sensory palette | `config/story.json` + `config/techniques.json` | ~1,200 tokens | YES (cache this) |
 | P2 (scene) | Current scene, location, what just happened | `memory/1-plot-state/` | ~300 tokens | NO (changes often) |
-| P3 (characters) | Characters present in current scene | `memory/2-character-state/` (filtered) | ~400 tokens | NO |
+| P3 (characters) | Characters present — NPC key fields extracted + runtime players | `memory/2-character-state/` (parsed) + runtime | ~300 tokens | NO |
 | P4 (threads) | Active narrative threads whose trigger conditions are met | `memory/3-narrative-threads/` (filtered) | ~300 tokens | NO |
 | P5 (theme) | Cosmological register for current session | `memory/4-thematic-layer/` (filtered) | ~200 tokens | YES (changes per session) |
 | P6 (world) | Relevant world state beyond the players | `memory/5-world-state/` (filtered) | ~200 tokens | Partial |
@@ -375,6 +375,8 @@ The Keeper operates differently depending on who's asking and why:
 | **Thread Evaluation** | Periodic (every N messages) | Check which threads should advance. | Thread status changes |
 
 Each mode has a slightly different system prompt suffix that adjusts the Keeper's output format and register.
+
+**Implemented (keeper-service/server.ts):** `MODE_TIERS` map controls which tiers load per mode. `MODE_MAX_TOKENS` caps output per mode. mc_query loads P2+P3+P7+P8 (skips threads/theme/world, ~2,550 tokens). player_response adds P4 (threads). mc_generate loads all tiers.
 
 ---
 

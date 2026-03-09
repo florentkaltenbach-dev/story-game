@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "chrome": {
+      "command": "npx",
+      "args": ["@anthropic-ai/chrome-mcp@latest"],
+      "env": {
+        "CHROME_CDP_URL": "http://localhost:9222"
+      }
+    }
+  }
+}

@@ -228,20 +228,47 @@ REPORT:
   5. screenshot the running app
 ```
 
+## Architecture Note (March 7, 2026)
+
+The Keeper has been **decoupled into a standalone process**:
+
+```
+[Next.js :3004]  --HTTP-->  [keeper-service :3005]  --HTTPS-->  [Claude API]
+   UI + routes                 ClaudeKeeper
+   RemoteKeeper                RateLimiter
+   store.ts                    context assembly
+   events.ts                   memory (read-only)
+```
+
+- **`keeper-service/server.ts`** — Express server. Houses ClaudeKeeper, RateLimiter, context assembly, system prompt cache.
+- **`web/src/lib/keeper.ts`** — Now contains RemoteKeeper (HTTP proxy) + MockKeeper. No Anthropic SDK in web app.
+- **`ecosystem.config.cjs`** — PM2 config for both processes.
+- Keeper state (rate limiter, prompt cache, Anthropic client) **survives web app restarts**.
+- Context blocks merged into single user message (no "Understood." filler).
+
+Phases 0-4 from this dispatch are **complete**. Phase 5 (Claude API integration) is **done** — the Keeper is live.
+
 ## Meta
 
 ```
 VERSION: 1
 DATE: 2026-03-07
-STATUS: first dispatch — building the skeleton
-NEXT_VERSION_TRIGGERS:
-  - if the Keeper drifts from the design docs, add constraints
-  - if sub-agents produce inconsistent work, tighten the contracts section
-  - if the phase sequence is wrong, reorder
-  - if the reading list is missing something, add it
-  - after first iteration: add Phase 5 (Claude API integration)
+STATUS: phases 0-4 complete, keeper live and decoupled
+COMPLETED:
+  - Phase 0: Read ✓
+  - Phase 1: Define contracts ✓ (types.ts, KeeperBackend, MemoryEngine, EventEmitter, ContextAssembler)
+  - Phase 2: Branch and build ✓ (all modules implemented)
+  - Phase 3: Seed the preset ✓ (config/ and memory/ populated)
+  - Phase 4: Wire and verify ✓ (app running, SSE working, session persistence, Keeper live)
+  - Phase 5: Claude API integration ✓ (Haiku 4.5, structured output, prompt caching)
+  - Phase 6: Keeper decoupled ✓ (standalone Express on :3005, survives web restarts)
+NEXT:
+  - P7 context (recent history) — Keeper is blind to what just happened
+  - Security — no auth, SSE broadcasts everything
+  - Character creation flow
+  - Tests
 ```
 
 ---
 
-*The circle is drawn. The candles are lit. Begin with Phase 0.*
+*The circle is drawn. The candles are lit. The Keeper wakes.*

@@ -1,0 +1,1 @@
+Late November, 1933. Cold New England air. River fog. Electric dock lights. Brine, oil, wet rope. Longshoremen still loading cargo. Last civilized ground.

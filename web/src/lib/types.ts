@@ -35,6 +35,20 @@ export interface Session {
   scene: Scene;
   players: Player[];
   status: SessionStatus;
+  keeperAutoRespond: boolean;
+  number: number;
+  act: number;
+}
+
+// === Invite types ===
+
+export type InviteStatus = "new" | "used" | "error";
+
+export interface Invite {
+  token: string;
+  status: InviteStatus;
+  createdAt: number;
+  usedBy?: string;
 }
 
 // === Keeper types ===
@@ -60,6 +74,8 @@ export interface KeeperInput {
     act: number;
     status: SessionStatus;
   };
+  recentHistory?: Array<{ role: string; name: string; content: string }>;
+  players?: Array<{ name: string; characterName: string; journal: string; notes: string }>;
 }
 
 export interface KeeperResponse {
@@ -155,6 +171,8 @@ export interface SessionSnapshot {
   scene: Scene;
   players: Player[];
   status: SessionStatus;
+  number: number;
+  act: number;
   lastMessageId: string;
   timestamp: number;
 }

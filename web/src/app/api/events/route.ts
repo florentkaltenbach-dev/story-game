@@ -4,7 +4,9 @@ import { createSSEStream } from "@/lib/events";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  const stream = createSSEStream("all", request.signal);
+  const role = request.nextUrl.searchParams.get("role") ?? undefined;
+  const playerId = request.nextUrl.searchParams.get("playerId") ?? undefined;
+  const stream = createSSEStream("all", request.signal, { role, playerId });
 
   return new Response(stream, {
     headers: {

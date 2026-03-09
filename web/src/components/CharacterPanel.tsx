@@ -1,11 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Player } from "@/lib/types";
+import { apiUrl } from "@/lib/api";
 
 export default function CharacterPanel({ player }: { player: Player }) {
   const [tab, setTab] = useState<"journal" | "notes">("journal");
   const [notes, setNotes] = useState(player.notes);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  // Debounced save: 1s after last keystroke
+  useEffect(() => {
+    if (notes === player.notes) return;
+
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetch(apiUrl("/api/session"), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId: player.id, notes }),
+      }).catch(() => {});
+    }, 1000);
+
+    return () => clearTimeout(debounceRef.current);
+  }, [notes, player.id, player.notes]);
 
   return (
     <div className="flex flex-col h-full border-l border-border bg-surface">

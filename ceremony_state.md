@@ -28,11 +28,11 @@
 | Component | Tech | Status |
 |-----------|------|--------|
 | Voice | Jitsi Meet (self-hosted, Docker) | To deploy |
-| Text companion | Next.js web app | To build |
-| AI brain | Claude API (console.anthropic.com credits) | Available |
+| Text companion | Next.js web app (`:3004`, PM2 `ceremony`) | Running |
+| AI brain (Keeper) | Standalone Express service (`:3005`, PM2 `keeper`) → Claude API (Haiku 4.5) | Running |
 | Embeddings | Hugging Face free tier (semantic search) | To evaluate |
-| Memory engine | Node.js file system | To build |
-| Infrastructure | Hetzner Cloud, Docker, Caddy | Existing |
+| Memory engine | Node.js file system (5 levels, atomic writes) | Running |
+| Infrastructure | Hetzner Cloud, PM2, Caddy | Running |
 
 ---
 
@@ -215,71 +215,57 @@ MC reviews character. Can request adjustments for story balance.
 
 **Principle:** Small precise queries, not big dumps.
 
-**Per-turn Keeper context (~1,500 tokens target):**
-- ~500 tokens — system prompt (Keeper identity + preset tone)
-- ~300 tokens — current scene state (Level 1)
-- ~200 tokens — active characters present (Level 2, filtered)
-- ~200 tokens — relevant threads (Level 3, only triggered ones)
-- ~100 tokens — MC's latest instruction
-- ~variable — player action to respond to
+**Per-turn Keeper context (mode-aware, 4,000 budget):**
+- ~800 tokens — P0: system prompt (Keeper identity)
+- ~1,200 tokens — P1: preset DNA (story, world, techniques) — cached with system prompt
+- ~300 tokens — P2: current scene state (Level 1)
+- ~300 tokens — P3: characters present (Level 2, extracted key fields + runtime players)
+- ~300 tokens — P4: relevant threads (Level 3, active only)
+- ~200 tokens — P5: thematic register (Level 4)
+- ~200 tokens — P6: world state (Level 5)
+- ~500 tokens — P7: recent history (last 6 messages)
+- ~200 tokens — P8: player action / MC query
 
-**Compression:** After each scene, raw exchange compressed into state update. Raw text archived. Keeper works from summaries.
+**Mode-aware loading (`MODE_TIERS`):** Not all modes load all tiers:
+- `mc_query` loads P2+P3+P7+P8 (~2,550 tokens). Skips threads/theme/world.
+- `player_response` loads P2+P3+P4+P7+P8. Skips theme/world.
+- `mc_generate` loads all tiers (fullest context).
+- `journal_write` loads P3+P7+P8 only.
+- `compression` and `thread_evaluation` load minimal tiers.
 
-**Caching:** Static content (world lore, character baselines, preset DNA) loaded once, reused. Only deltas refreshed per turn.
+**Mode-aware output caps (`MODE_MAX_TOKENS`):** mc_query=512, player_response=768, mc_generate=1024, thread_evaluation=256.
 
-**Smart routing:** Before each Keeper call, system asks "what does the Keeper need to know right now?" and assembles minimal relevant context.
+**NPC extraction:** P3 parses NPC JSON files and extracts only: name, role, location, motive, personality, hiddenKnowledge, vulnerabilities. Drops metadata (id, type, status), verbose prose (background, relationship, qualities). Eliminates truncation — content fits within 600 budget with room for player data.
 
----
+**Implementation:** `keeper-service/server.ts` — mode-aware context assembly. P0+P1 in system prompt with `cache_control: ephemeral`. P2-P8 merged into a single user message (saves ~50 tokens vs alternating user/assistant turns).
 
-## REMAINING WALKTHROUGHS
+**Structured output:** JSON schema enforced (narrative + journalUpdate + stateUpdates + internalNotes). No parsing failures.
 
-### ✅ Completed
-1. ~~Overall architecture and tech stack~~
-2. ~~Memory system (5 levels + permissions)~~
-3. ~~Messaging system~~
-4. ~~Interfaces (MC dashboard + player board)~~
-5. ~~Ingestion pipeline (source → config)~~
-6. ~~Character creation workflow~~
-7. ~~Session flow overview~~
-8. ~~Roles and permissions~~
-9. ~~First ceremony premise (Mountains of Madness)~~
+**Caching:** System prompt (P0+P1) marked with `cache_control: ephemeral` — reused across turns within the same Keeper process. Process persists independently of web app restarts.
 
-### 🔲 MC delivers separately
-**10. Dice & mechanics system** — MC writes this. Integrate when ready.
+**Rate limits:** 10 requests/minute, 100 requests/session. Configured via env vars.
 
-### 🔲 Still to walk through
-
-**11. Keeper prompt architecture**
-How exactly does the Keeper query the file system each turn? What goes into its context window? How do we keep it from going shallow? The prompt engineering that makes the whole thing work.
-
-**12. MC-Keeper interaction patterns**
-Specific commands/queries the MC uses during live sessions. The backstage vocabulary.
-
-**13. PvP mechanics**
-How does the Keeper manage competing player interests? Resolution systems. Fairness. Secrets.
-
-**14. NPC system**
-How are NPCs generated, remembered, evolved? When does the MC voice them vs the Keeper?
-
-**15. Onboarding flow**
-First-time player journey. From invitation to first ceremony.
-
-**16. Story archive / showcase**
-How are finished stories preserved? What format? How does the theater element work?
-
-**17. Hugging Face integration**
-Semantic search setup. What embeddings model? How does it connect to the memory engine?
-
-**18. Deployment plan**
-Docker compose for the full stack. Domain, SSL, Jitsi config.
-
-**19. Mountains of Madness — first preset**
-Actually run the ingestion pipeline on Lovecraft. Build the first config. Design the first ceremony.
-
-**20. API cost modeling**
-Estimate Claude API usage per session. Budget for a weekly campaign.
+**Compression:** After each scene, raw exchange compressed into state update. Raw text archived. Keeper works from summaries. (Designed, not yet implemented.)
 
 ---
 
-*Last updated: This conversation, March 5, 2026*
-*Next: Walk through items 9–20 one by one*
+## Design Walkthroughs Completed
+
+1. Overall architecture and tech stack
+2. Memory system (5 levels + permissions)
+3. Messaging system
+4. Interfaces (MC dashboard + player board)
+5. Ingestion pipeline (source → config)
+6. Character creation workflow
+7. Session flow overview
+8. Roles and permissions
+9. First ceremony premise (Mountains of Madness)
+10. Dice & mechanics — MC delivers separately
+11. Keeper prompt architecture — implemented in `keeper-service/server.ts`
+19. MoM first preset — config files built, memory seeded
+
+*Remaining design items (12-18, 20) tracked in `working/TODO.md`.*
+
+---
+
+*Last updated: March 7, 2026*

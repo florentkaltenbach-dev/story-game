@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Channel, Message, Player, Session, Scene } from "@/lib/types";
+import { apiUrl } from "@/lib/api";
 import { useEventStream } from "@/lib/useEventStream";
 import SceneDisplay from "@/components/SceneDisplay";
 import StoryLog from "@/components/StoryLog";
@@ -93,15 +95,91 @@ function StatusDot({ status }: { status: string }) {
   );
 }
 
-export default function PlayPage() {
+function NoInvite() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-surface/30 to-background" />
+      <div className="relative z-10 bg-surface border border-border rounded-lg p-8 max-w-md w-full mx-4 text-center">
+        <h2 className="narrative-text text-xl text-accent mb-3">
+          The Ceremony
+        </h2>
+        <div className="h-px bg-border mb-4" />
+        <p className="text-sm text-foreground/70 mb-1">
+          This gathering is by invitation only.
+        </p>
+        <p className="text-xs text-muted/50">
+          Ask your MC for a link to join.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function PlayPageInner() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get("invite");
+
+  const [reconnecting, setReconnecting] = useState(true);
+  const [inviteValid, setInviteValid] = useState<boolean | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [channel, setChannel] = useState<Channel>("all");
   const [showPanel, setShowPanel] = useState(true);
 
+  // Reconnect from localStorage on mount
+  useEffect(() => {
+    async function tryReconnect() {
+      try {
+        const saved = localStorage.getItem("ceremony_player");
+        if (!saved) return;
+
+        const { name, sessionId } = JSON.parse(saved);
+        if (!name || !sessionId) return;
+
+        const sessionRes = await fetch(apiUrl("/api/session"));
+        const currentSession = await sessionRes.json();
+        if (currentSession.id !== sessionId) {
+          localStorage.removeItem("ceremony_player");
+          return;
+        }
+
+        const res = await fetch(apiUrl("/api/session"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "reconnect", name }),
+        });
+
+        if (res.ok) {
+          setPlayer(await res.json());
+          setSession(currentSession);
+        } else {
+          localStorage.removeItem("ceremony_player");
+        }
+      } catch {
+        localStorage.removeItem("ceremony_player");
+      } finally {
+        setReconnecting(false);
+      }
+    }
+    tryReconnect();
+  }, []);
+
+  // Validate invite token after reconnect attempt
+  useEffect(() => {
+    if (reconnecting || player) return;
+    if (!token) {
+      setInviteValid(false);
+      return;
+    }
+    fetch(apiUrl(`/api/invites?validate=${encodeURIComponent(token)}`))
+      .then((res) => res.json())
+      .then((data) => setInviteValid(data.valid))
+      .catch(() => setInviteValid(false));
+  }, [token, reconnecting, player]);
+
   const fetchSession = useCallback(async () => {
-    const res = await fetch("/api/session");
+    const res = await fetch(apiUrl("/api/session"));
     setSession(await res.json());
   }, []);
 
@@ -111,7 +189,7 @@ export default function PlayPage() {
     if (channel === "keeper-private") {
       params.set("playerId", player.id);
     }
-    const res = await fetch(`/api/messages?${params}`);
+    const res = await fetch(apiUrl(`/api/messages?${params}`));
     const data = await res.json();
     setMessages(data);
   }, [channel, player]);
@@ -132,6 +210,7 @@ export default function PlayPage() {
 
   // SSE for real-time updates after joining
   useEventStream({
+    url: player ? apiUrl(`/api/events?role=player&playerId=${player.id}`) : apiUrl("/api/events"),
     enabled: !!player,
     onMessage: (data) => {
       const msg = data as Message;
@@ -146,8 +225,19 @@ export default function PlayPage() {
       );
     },
     onSession: (data) => {
-      const { status } = data as { status: Session["status"] };
-      setSession((prev) => (prev ? { ...prev, status } : prev));
+      const d = data as { status: Session["status"]; act?: number; number?: number };
+      setSession((prev) => {
+        if (!prev) return prev;
+        if (typeof d.number === "number" && d.number !== prev.number) {
+          setMessages([]);
+        }
+        return {
+          ...prev,
+          status: d.status,
+          ...(typeof d.act === "number" ? { act: d.act } : {}),
+          ...(typeof d.number === "number" ? { number: d.number } : {}),
+        };
+      });
     },
     onPlayerJoined: (data) => {
       const { player: p } = data as { player: Player };
@@ -159,18 +249,26 @@ export default function PlayPage() {
   });
 
   async function handleJoin(name: string) {
-    const res = await fetch("/api/session", {
+    const res = await fetch(apiUrl("/api/session"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "join", name }),
+      body: JSON.stringify({ action: "join", name, token }),
     });
+    if (!res.ok) {
+      setInviteValid(false);
+      return;
+    }
     const p = await res.json();
     setPlayer(p);
+    localStorage.setItem(
+      "ceremony_player",
+      JSON.stringify({ name: p.name, playerId: p.id, sessionId: session?.id })
+    );
   }
 
   async function handleSend(content: string) {
     if (!player) return;
-    await fetch("/api/messages", {
+    await fetch(apiUrl("/api/messages"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -182,6 +280,9 @@ export default function PlayPage() {
     });
   }
 
+  if (reconnecting) return null; // attempting reconnect
+  if (inviteValid === null && !player) return null; // validating invite
+  if (!inviteValid && !player) return <NoInvite />;
   if (!player) return <JoinForm onJoin={handleJoin} session={session} />;
 
   return (
@@ -248,5 +349,13 @@ export default function PlayPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function PlayPage() {
+  return (
+    <Suspense>
+      <PlayPageInner />
+    </Suspense>
   );
 }

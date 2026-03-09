@@ -1,0 +1,1 @@
+Aboard vessel. True believer in Dyer's account. Motive: vindication of the first expedition findings.

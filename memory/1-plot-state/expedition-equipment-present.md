@@ -1,0 +1,1 @@
+9 Greenland huskies (3 cages), Dornier-Wal seaplane (crated), drilling apparatus (copper piping), 40 cases canned provisions, medical supplies, wireless radio sets, cold-weather gear for 12.
