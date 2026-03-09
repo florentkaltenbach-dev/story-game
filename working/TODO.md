@@ -1,6 +1,6 @@
 # The Ceremony — TODO
 
-*Single source of truth for task tracking. Updated March 7, 2026.*
+*Single source of truth for task tracking. Updated March 9, 2026.*
 
 ---
 
@@ -18,6 +18,8 @@
 - **Player State in Context** — players field on KeeperInput, P3 includes NPCs + runtime players
 - **Token Optimization** — mode-aware tiers (MODE_TIERS), NPC field extraction, output caps (MODE_MAX_TOKENS), MAX_HISTORY 10→6. mc_query: ~2,950→~2,551 tokens (14% reduction)
 - **Grading Audit** — 6 parallel agents, full report in working/grading-report.md
+- **Security** — HMAC token auth, role enforcement, invite validation (grade D→B)
+- **Tests** — vitest suite: 56 tests covering routes, context assembly, store/memory (grade F→C)
 
 ---
 
@@ -34,31 +36,63 @@ Rewriting `mountains_of_madness_preset_v0.md` with 9 improvements:
 
 ## Next Up
 
-### 1. Security (audit grade: D)
-No auth. Anyone can pass `role=mc`. No session tokens.
-- Session token generation on join (signed, short-lived)
-- Role enforcement on SSE channels and API routes
-- Invite token validation on all protected endpoints
-
-### 2. Character Creation Flow
+### 1. Character Creation Flow
 No way to create player characters yet. Session 0 depends on this.
 - Keeper-guided conversation (questions shaped by preset)
 - Quality generation from conversation (no numerical stats)
 - Starting journal template written by Keeper
 - MC approval step before session starts
 
-### 3. Tests (audit grade: F)
-Zero test files. No test runner configured.
-- vitest setup with tsconfig paths
-- Route handler tests (messages, keeper, session)
-- Keeper context assembly tests (verify MODE_TIERS, NPC extraction)
-- Store/memory round-trip tests
-
-### 4. Keeper Intelligence
+### 2. Keeper Intelligence
 The Keeper responds but doesn't fully close the loop yet.
 - **Journal write-back** — `journalUpdate` field returned by Keeper is not persisted to player's journal. CharacterPanel shows static text.
 - **Internal notes visibility** — `internalNotes` returned but discarded. Should appear in MC dashboard sidebar.
 - **Keeper memory validation** — verify stateUpdates round-trip: Keeper writes → filesystem → appears in next call's context.
+
+---
+
+## Lore & Content
+
+New source material added. Gap tracking from `working/lore-expansion-brief.md`.
+
+### Source Texts Added
+- `sources/byrd-little-america.txt` — Byrd's first expedition, full text
+- `sources/fungi_from_yuggoth.txt`, `sources/the_haunter_of_the_dark.txt`, `sources/the_whisperer_in_darkness.txt`, `sources/through_the_gates_of_the_silver_key.txt` — Lovecraft Mythos texts
+- `sources/historical-notes-1930s.md` — period research (expeditions, psychology, funding, fringe science)
+- `sources/ross_sea_party_supplement.md` — location catalog, NPC archetypes, discoverable objects
+- `working/lore-expansion-brief.md` — gap tracking and research prompts
+
+### Design Gaps
+
+- D1 Other 1933 expeditions — ✅ Filled (historical-notes, byrd-little-america)
+- D2 Depression-era funding — ✅ Filled (historical-notes §Academic/Funding)
+- D3 Real Antarctic logistics — 🔶 Partial (Byrd text has detail; needs extraction into usable notes)
+- D4 1933 communication tech — ❌ Open
+- D5 Dornier seaplane specs — ❌ Open
+- D6 Lovecraft's own context — 🔶 Partial (Mythos texts added; biographical context still open)
+- D7 1930s academic culture — ✅ Filled (historical-notes §Academic)
+- D8 Period media/public knowledge — ❌ Open
+
+### In-Game Gaps
+
+- G1 Gedney's fate — ❌ Open (design decision needed)
+- G2 Dyer's private account — ❌ Open
+- G3 Lake's final hours — ❌ Open
+- G4 Miskatonic's response to Dyer — ❌ Open
+- G5 Danforth's condition — ❌ Open
+- G6 Dog handler and breeder — ❌ Open (design decision needed)
+- G7 Starkweather-Moore partnership origin — ❌ Open
+- G8 Public story of first expedition — ❌ Open
+- G9 Geographic error — ❌ Open (design decision needed)
+- G10 Dyer's 1933 daily life — ❌ Open
+- G11 Dogs from same breeder — ❌ Open (design decision needed)
+
+### Integration Tasks
+
+- [ ] Update `config/world.json` with Ross Sea Party locations and discoverable objects
+- [ ] Update `config/characters.json` with NPC archetypes from Ross Sea Party supplement
+- [ ] Seed memory level 5 (World State) with historical/lore material
+- [ ] Update `mountains_of_madness_preset_v0.md` with new lore references
 
 ---
 
@@ -101,8 +135,7 @@ The Keeper responds but doesn't fully close the loop yet.
 - **API cost modeling** — estimate per-session costs with current token usage (#20)
 
 ### Content (MoM Preset)
-- **Reality document** — Lovecraft vs real Antarctic science reference for the Keeper
-- **Character creation material** — preset-shaped prompts, atmospheric intro, quality vocabulary
+Now tracked in the **Lore & Content** section above (gap checklists + integration tasks).
 
 ---
 
