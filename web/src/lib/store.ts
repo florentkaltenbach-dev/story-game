@@ -51,12 +51,10 @@ export function validateInvite(token: string): boolean {
   return invites.some((i) => i.token === token && i.status === "new");
 }
 
-export function consumeInvite(token: string, playerName: string): boolean {
-  const invite = invites.find((i) => i.token === token);
-  if (!invite || invite.status !== "new") {
-    if (invite && invite.status === "new") invite.status = "error";
-    return false;
-  }
+/** Atomic validate + consume in one step (single-threaded JS guarantees no race) */
+export function claimInvite(token: string, playerName: string): boolean {
+  const invite = invites.find((i) => i.token === token && i.status === "new");
+  if (!invite) return false;
   invite.status = "used";
   invite.usedBy = playerName;
   persistSnapshot();
@@ -134,7 +132,7 @@ export function addPlayer(name: string): Player {
   if (existing) return existing;
 
   const player: Player = {
-    id: `player-${Date.now()}`,
+    id: `player-${randomUUID().slice(0, 8)}`,
     name,
     characterName: name,
     journal:
@@ -250,4 +248,22 @@ export async function toggleKeeperAutoRespond(): Promise<boolean> {
   stateEmitter.emit("session", { status: session.status, keeperAutoRespond: session.keeperAutoRespond });
   await persistSnapshot();
   return session.keeperAutoRespond;
+}
+
+// === Test helpers ===
+
+export function _resetForTesting(): void {
+  session.id = "session-test";
+  session.name = "Test Session";
+  session.preset = "test";
+  session.scene = { title: "", description: "", location: "" };
+  session.players = [];
+  session.status = "lobby";
+  session.keeperAutoRespond = false;
+  session.number = 0;
+  session.act = 1;
+  messages.length = 0;
+  invites.length = 0;
+  messageIdCounter = 100;
+  initialized = false;
 }

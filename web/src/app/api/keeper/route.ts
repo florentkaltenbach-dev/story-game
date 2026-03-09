@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { nextMessageId, addMessage, initializeStore, messages, session } from "@/lib/store";
 import { queryKeeper } from "@/lib/keeper";
 import { writeMemoryLevel } from "@/lib/memory";
+import { authenticateRequest, requireRole } from "@/lib/auth";
+import type { AuthContext } from "@/lib/auth";
 import type { Message, MemoryLevelNumber } from "@/lib/types";
 
 const MAX_HISTORY = 6;
@@ -17,6 +19,13 @@ export async function POST(request: Request) {
   try {
     await initializeStore();
 
+    // MC-only endpoint
+    const auth = authenticateRequest(request);
+    if (auth instanceof Response) return auth;
+    if (!requireRole(auth as AuthContext, "mc")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { query } = await request.json();
 
     const keeperResponse = await queryKeeper({
@@ -31,7 +40,6 @@ export async function POST(request: Request) {
       players: session.players.map(p => ({ name: p.name, characterName: p.characterName, journal: p.journal, notes: p.notes })),
     });
 
-    // Store the MC query and Keeper response in mc-keeper channel
     const mcMsg: Message = {
       id: nextMessageId(),
       channel: "mc-keeper",
@@ -51,7 +59,6 @@ export async function POST(request: Request) {
     await addMessage(mcMsg);
     await addMessage(keeperMsg);
 
-    // Write state updates from Keeper to filesystem memory
     for (const update of keeperResponse.stateUpdates) {
       await writeMemoryLevel(update.level as MemoryLevelNumber, update.key, update.value);
     }

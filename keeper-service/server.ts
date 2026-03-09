@@ -3,6 +3,14 @@ import express from "express";
 import Anthropic from "@anthropic-ai/sdk";
 import { readFile, readdir } from "fs/promises";
 import { join, extname } from "path";
+import {
+  MODE_TIERS,
+  MODE_MAX_TOKENS,
+  TIER_BUDGETS,
+  estimateTokens,
+  truncateToTokens,
+  RateLimiter,
+} from "./lib";
 
 // === Types (duplicated from web — minimal subset) ===
 
@@ -58,28 +66,6 @@ interface NarrativeThread {
   status: NarrativeThreadStatus;
   content: string;
 }
-
-// === Mode-aware tier loading ===
-
-const MODE_TIERS: Record<KeeperMode, Set<string>> = {
-  player_response:   new Set(["P2", "P3", "P4", "P7", "P8"]),
-  mc_query:          new Set(["P2", "P3", "P7", "P8"]),
-  mc_generate:       new Set(["P2", "P3", "P4", "P5", "P6", "P7", "P8"]),
-  journal_write:     new Set(["P3", "P7", "P8"]),
-  compression:       new Set(["P7", "P8"]),
-  thread_evaluation: new Set(["P4", "P7", "P8"]),
-};
-
-// === Mode-aware output caps ===
-
-const MODE_MAX_TOKENS: Record<KeeperMode, number> = {
-  player_response:   768,
-  mc_query:          512,
-  mc_generate:       1024,
-  journal_write:     512,
-  compression:       512,
-  thread_evaluation: 256,
-};
 
 // === Paths ===
 
@@ -141,34 +127,6 @@ async function listThreads(status?: NarrativeThreadStatus): Promise<NarrativeThr
 
   return threads;
 }
-
-// === Token estimation ===
-
-const CHARS_PER_TOKEN = 4;
-
-function estimateTokens(text: string): number {
-  return Math.ceil(text.length / CHARS_PER_TOKEN);
-}
-
-function truncateToTokens(text: string, maxTokens: number): string {
-  const maxChars = maxTokens * CHARS_PER_TOKEN;
-  if (text.length <= maxChars) return text;
-  return text.slice(0, maxChars) + "\n[...truncated]";
-}
-
-// === Token budgets per tier ===
-
-const TIER_BUDGETS: Record<string, number> = {
-  P0_identity: 800,
-  P1_preset: 1200,
-  P2_scene: 300,
-  P3_characters: 600,
-  P4_threads: 300,
-  P5_theme: 200,
-  P6_world: 200,
-  P7_history: 500,
-  P8_input: 200,
-};
 
 // === Preset DNA loader (P1, cached alongside P0) ===
 
@@ -366,47 +324,6 @@ async function assembleContext(input: KeeperInput): Promise<{
   };
 }
 
-// === Rate limiter ===
-
-class RateLimiter {
-  private requestsThisMinute = 0;
-  private requestsThisSession = 0;
-  private minuteStart = Date.now();
-
-  private readonly maxPerMinute: number;
-  private readonly maxPerSession: number;
-
-  constructor() {
-    this.maxPerMinute = parseInt(process.env.KEEPER_MAX_REQUESTS_PER_MINUTE ?? "10");
-    this.maxPerSession = parseInt(process.env.KEEPER_MAX_REQUESTS_PER_SESSION ?? "100");
-  }
-
-  check(): { allowed: boolean; reason?: string } {
-    const now = Date.now();
-    if (now - this.minuteStart > 60_000) {
-      this.requestsThisMinute = 0;
-      this.minuteStart = now;
-    }
-
-    if (this.requestsThisSession >= this.maxPerSession) {
-      return { allowed: false, reason: `Session limit reached (${this.maxPerSession} requests). The Keeper rests.` };
-    }
-    if (this.requestsThisMinute >= this.maxPerMinute) {
-      return { allowed: false, reason: `Rate limit reached (${this.maxPerMinute}/min). Wait a moment.` };
-    }
-    return { allowed: true };
-  }
-
-  record(): void {
-    this.requestsThisMinute++;
-    this.requestsThisSession++;
-  }
-
-  get usage() {
-    return { session: this.requestsThisSession, limit: this.maxPerSession };
-  }
-}
-
 // === Keeper output schema ===
 
 const KEEPER_OUTPUT_SCHEMA = {
@@ -518,8 +435,25 @@ class ClaudeKeeper {
 const app = express();
 app.use(express.json());
 
+// Inter-process auth: validate shared secret from web process
+const KEEPER_SHARED_SECRET = process.env.KEEPER_SHARED_SECRET;
+if (KEEPER_SHARED_SECRET) {
+  app.use((req, res, next) => {
+    // Health endpoint is unauthenticated
+    if (req.path === "/health") return next();
+    if (req.headers["x-ceremony-secret"] !== KEEPER_SHARED_SECRET) {
+      res.status(401).json({ error: "Invalid inter-process secret" });
+      return;
+    }
+    next();
+  });
+}
+
 const PORT = parseInt(process.env.KEEPER_PORT ?? "3005");
-const limiter = new RateLimiter();
+const limiter = new RateLimiter(
+  parseInt(process.env.KEEPER_MAX_REQUESTS_PER_MINUTE ?? "10"),
+  parseInt(process.env.KEEPER_MAX_REQUESTS_PER_SESSION ?? "100"),
+);
 let keeper: ClaudeKeeper | null = null;
 
 if (process.env.ANTHROPIC_API_KEY) {

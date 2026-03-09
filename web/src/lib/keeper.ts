@@ -57,15 +57,22 @@ export class MockKeeper implements KeeperBackend {
 
 export class RemoteKeeper implements KeeperBackend {
   private url: string;
+  private sharedSecret: string | undefined;
 
   constructor() {
     this.url = process.env.KEEPER_URL ?? "http://localhost:3005";
+    this.sharedSecret = process.env.KEEPER_SHARED_SECRET;
   }
 
   async query(input: KeeperInput): Promise<KeeperResponse> {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (this.sharedSecret) {
+      headers["X-Ceremony-Secret"] = this.sharedSecret;
+    }
+
     const res = await fetch(`${this.url}/query`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ input }),
     });
 

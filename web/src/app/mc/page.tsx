@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Channel, Message, Session, Player, Invite } from "@/lib/types";
-import { apiUrl } from "@/lib/api";
+import { apiUrl, authHeaders, authQueryParam, getStoredToken, setStoredToken, clearStoredToken, authFetch } from "@/lib/api";
 import { useEventStream } from "@/lib/useEventStream";
 import SceneDisplay from "@/components/SceneDisplay";
 import StoryLog from "@/components/StoryLog";
@@ -17,7 +17,75 @@ interface MemoryLevelSummary {
   files: string[];
 }
 
+function MCLogin({ onAuth }: { onAuth: () => void }) {
+  const [secret, setSecret] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(apiUrl("/api/auth"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "mc_auth", secret }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Authentication failed");
+        return;
+      }
+      const { token } = await res.json();
+      setStoredToken(token);
+      onAuth();
+    } catch {
+      setError("Network error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-surface/30 to-background" />
+      <div className="relative z-10 bg-surface border border-border rounded-lg p-8 max-w-md w-full mx-4">
+        <h2 className="narrative-text text-xl text-accent text-center mb-1">
+          The Ceremony
+        </h2>
+        <p className="text-xs text-muted/60 text-center mb-6">
+          Master of Ceremonies login
+        </p>
+        <div className="h-px bg-border mb-6" />
+        <form onSubmit={handleSubmit}>
+          <input
+            type="password"
+            value={secret}
+            onChange={(e) => setSecret(e.target.value)}
+            placeholder="MC Secret"
+            autoFocus
+            className="w-full bg-surface-light border border-border rounded px-4 py-2.5 text-sm text-foreground placeholder:text-muted/40 focus:outline-none focus:border-accent/50 mb-4"
+          />
+          {error && (
+            <p className="text-xs text-red-400 mb-3">{error}</p>
+          )}
+          <button
+            type="submit"
+            disabled={!secret || loading}
+            className="w-full py-2.5 bg-accent/20 text-accent border border-accent/30 rounded text-sm tracking-wide hover:bg-accent/30 transition-colors disabled:opacity-30"
+          >
+            {loading ? "Authenticating..." : "Enter"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function MCDashboard() {
+  const [authenticated, setAuthenticated] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [channel, setChannel] = useState<Channel>("all");
@@ -32,15 +100,32 @@ export default function MCDashboard() {
   const [inviteList, setInviteList] = useState<Invite[]>([]);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
+  // Check existing token on mount
+  useEffect(() => {
+    const token = getStoredToken();
+    if (token) {
+      // Verify token is still valid by trying a protected endpoint
+      fetch(apiUrl("/api/invites"), { headers: { Authorization: `Bearer ${token}` } })
+        .then((res) => {
+          if (res.ok) setAuthenticated(true);
+          else clearStoredToken();
+        })
+        .catch(() => clearStoredToken())
+        .finally(() => setChecking(false));
+    } else {
+      setChecking(false);
+    }
+  }, []);
+
   const fetchInvites = useCallback(async () => {
     try {
-      const res = await fetch(apiUrl("/api/invites"));
-      setInviteList(await res.json());
+      const res = await authFetch("/api/invites");
+      if (res.ok) setInviteList(await res.json());
     } catch { /* non-critical */ }
   }, []);
 
   async function handleGenerateInvite() {
-    const res = await fetch(apiUrl("/api/invites"), { method: "POST" });
+    const res = await authFetch("/api/invites", { method: "POST" });
     if (res.ok) fetchInvites();
   }
 
@@ -74,23 +159,27 @@ export default function MCDashboard() {
 
   const fetchMessages = useCallback(async () => {
     const params = new URLSearchParams({ channel });
-    const res = await fetch(apiUrl(`/api/messages?${params}`));
-    setMessages(await res.json());
+    const res = await authFetch(`/api/messages?${params}`);
+    if (res.ok) setMessages(await res.json());
   }, [channel]);
 
   // Initial fetch (no polling — SSE handles real-time updates)
   useEffect(() => {
+    if (!authenticated) return;
     fetchSession();
     fetchInvites();
-  }, [fetchSession, fetchInvites]);
+  }, [fetchSession, fetchInvites, authenticated]);
 
   useEffect(() => {
+    if (!authenticated) return;
     fetchMessages();
-  }, [fetchMessages]);
+  }, [fetchMessages, authenticated]);
 
-  // SSE for real-time updates
+  // SSE for real-time updates (uses token query param)
+  const sseTokenParam = authQueryParam();
   useEventStream({
-    url: apiUrl("/api/events?role=mc"),
+    url: apiUrl(`/api/events?${sseTokenParam}`),
+    enabled: authenticated && !!sseTokenParam,
     onMessage: (data) => {
       const msg = data as Message;
       if (channel !== "all" && msg.channel !== channel) return;
@@ -129,32 +218,33 @@ export default function MCDashboard() {
 
   const fetchMemory = useCallback(async () => {
     try {
-      const res = await fetch(apiUrl("/api/memory"));
-      setMemoryLevels(await res.json());
+      const res = await authFetch("/api/memory");
+      if (res.ok) setMemoryLevels(await res.json());
     } catch { /* non-critical */ }
   }, []);
 
   useEffect(() => {
+    if (!authenticated) return;
     fetchMemory();
     const interval = setInterval(fetchMemory, 10000);
     return () => clearInterval(interval);
-  }, [fetchMemory]);
+  }, [fetchMemory, authenticated]);
 
   async function handleSend(content: string) {
     if (mode === "narrate") {
-      await fetch(apiUrl("/api/messages"), {
+      await authFetch("/api/messages", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({
           channel: "all",
-          sender: { role: "mc", name: "The Narrator" },
+          sender: { name: "The Narrator" },
           content,
         }),
       });
     } else {
-      const res = await fetch(apiUrl("/api/keeper"), {
+      const res = await authFetch("/api/keeper", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({ query: content }),
       });
       const data = await res.json();
@@ -168,22 +258,30 @@ export default function MCDashboard() {
   }
 
   async function handleSessionAction(action: string) {
-    await fetch(apiUrl("/api/session"), {
+    await authFetch("/api/session", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ action }),
     });
     fetchSession();
   }
 
   async function handleSceneUpdate(scene: Partial<Scene>) {
-    await fetch(apiUrl("/api/session"), {
+    await authFetch("/api/session", {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ scene }),
     });
     fetchSession();
   }
+
+  function handleLogout() {
+    clearStoredToken();
+    setAuthenticated(false);
+  }
+
+  if (checking) return null;
+  if (!authenticated) return <MCLogin onAuth={() => setAuthenticated(true)} />;
 
   return (
     <div className="h-screen flex flex-col">
@@ -276,6 +374,13 @@ export default function MCDashboard() {
               </button>
             </>
           )}
+          <span className="text-xs text-muted/20">|</span>
+          <button
+            onClick={handleLogout}
+            className="text-xs px-2 py-1 text-muted/50 hover:text-foreground transition-colors"
+          >
+            Logout
+          </button>
         </div>
       </div>
 

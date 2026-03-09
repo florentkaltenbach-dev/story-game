@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Channel, Message, Player, Session, Scene } from "@/lib/types";
-import { apiUrl } from "@/lib/api";
+import { apiUrl, authHeaders, authQueryParam, getStoredToken, setStoredToken, clearStoredToken, authFetch } from "@/lib/api";
 import { useEventStream } from "@/lib/useEventStream";
 import SceneDisplay from "@/components/SceneDisplay";
 import StoryLog from "@/components/StoryLog";
@@ -117,7 +117,7 @@ function NoInvite() {
 
 function PlayPageInner() {
   const searchParams = useSearchParams();
-  const token = searchParams.get("invite");
+  const inviteToken = searchParams.get("invite");
 
   const [reconnecting, setReconnecting] = useState(true);
   const [inviteValid, setInviteValid] = useState<boolean | null>(null);
@@ -132,7 +132,8 @@ function PlayPageInner() {
     async function tryReconnect() {
       try {
         const saved = localStorage.getItem("ceremony_player");
-        if (!saved) return;
+        const storedToken = getStoredToken();
+        if (!saved || !storedToken) return;
 
         const { name, sessionId } = JSON.parse(saved);
         if (!name || !sessionId) return;
@@ -141,23 +142,29 @@ function PlayPageInner() {
         const currentSession = await sessionRes.json();
         if (currentSession.id !== sessionId) {
           localStorage.removeItem("ceremony_player");
+          clearStoredToken();
           return;
         }
 
-        const res = await fetch(apiUrl("/api/session"), {
+        const res = await authFetch("/api/session", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authHeaders() },
           body: JSON.stringify({ action: "reconnect", name }),
         });
 
         if (res.ok) {
-          setPlayer(await res.json());
+          const data = await res.json();
+          // Server re-issues token on reconnect
+          if (data.token) setStoredToken(data.token);
+          setPlayer(data);
           setSession(currentSession);
         } else {
           localStorage.removeItem("ceremony_player");
+          clearStoredToken();
         }
       } catch {
         localStorage.removeItem("ceremony_player");
+        clearStoredToken();
       } finally {
         setReconnecting(false);
       }
@@ -168,15 +175,15 @@ function PlayPageInner() {
   // Validate invite token after reconnect attempt
   useEffect(() => {
     if (reconnecting || player) return;
-    if (!token) {
+    if (!inviteToken) {
       setInviteValid(false);
       return;
     }
-    fetch(apiUrl(`/api/invites?validate=${encodeURIComponent(token)}`))
+    fetch(apiUrl(`/api/invites?validate=${encodeURIComponent(inviteToken)}`))
       .then((res) => res.json())
       .then((data) => setInviteValid(data.valid))
       .catch(() => setInviteValid(false));
-  }, [token, reconnecting, player]);
+  }, [inviteToken, reconnecting, player]);
 
   const fetchSession = useCallback(async () => {
     const res = await fetch(apiUrl("/api/session"));
@@ -186,12 +193,11 @@ function PlayPageInner() {
   const fetchMessages = useCallback(async () => {
     if (!player) return;
     const params = new URLSearchParams({ channel });
-    if (channel === "keeper-private") {
-      params.set("playerId", player.id);
+    const res = await authFetch(`/api/messages?${params}`);
+    if (res.ok) {
+      const data = await res.json();
+      setMessages(data);
     }
-    const res = await fetch(apiUrl(`/api/messages?${params}`));
-    const data = await res.json();
-    setMessages(data);
   }, [channel, player]);
 
   // Poll session only before joining (for join form display)
@@ -208,10 +214,11 @@ function PlayPageInner() {
     fetchMessages();
   }, [player, fetchMessages]);
 
-  // SSE for real-time updates after joining
+  // SSE for real-time updates after joining (uses token query param)
+  const sseTokenParam = authQueryParam();
   useEventStream({
-    url: player ? apiUrl(`/api/events?role=player&playerId=${player.id}`) : apiUrl("/api/events"),
-    enabled: !!player,
+    url: apiUrl(`/api/events?${sseTokenParam}`),
+    enabled: !!player && !!sseTokenParam,
     onMessage: (data) => {
       const msg = data as Message;
       if (channel !== "all" && msg.channel !== channel) return;
@@ -252,30 +259,33 @@ function PlayPageInner() {
     const res = await fetch(apiUrl("/api/session"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "join", name, token }),
+      body: JSON.stringify({ action: "join", name, token: inviteToken }),
     });
     if (!res.ok) {
       setInviteValid(false);
       return;
     }
-    const p = await res.json();
-    setPlayer(p);
+    const data = await res.json();
+    // Store auth token returned from join
+    if (data.token) {
+      setStoredToken(data.token);
+    }
+    setPlayer(data);
     localStorage.setItem(
       "ceremony_player",
-      JSON.stringify({ name: p.name, playerId: p.id, sessionId: session?.id })
+      JSON.stringify({ name: data.name, playerId: data.id, sessionId: session?.id })
     );
   }
 
   async function handleSend(content: string) {
     if (!player) return;
-    await fetch(apiUrl("/api/messages"), {
+    await authFetch("/api/messages", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({
         channel,
-        sender: { role: "player", name: player.name },
+        sender: { name: player.name },
         content,
-        playerId: player.id,
       }),
     });
   }

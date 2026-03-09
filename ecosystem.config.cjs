@@ -8,6 +8,9 @@ module.exports = {
       env: {
         PORT: 3004,
         KEEPER_URL: "http://localhost:3005",
+        CEREMONY_TOKEN_SECRET: process.env.CEREMONY_TOKEN_SECRET || "",
+        MC_SECRET: process.env.MC_SECRET || "",
+        KEEPER_SHARED_SECRET: process.env.KEEPER_SHARED_SECRET || "",
       },
     },
     {
@@ -17,6 +20,7 @@ module.exports = {
       args: "tsx server.ts",
       env: {
         KEEPER_PORT: 3005,
+        KEEPER_SHARED_SECRET: process.env.KEEPER_SHARED_SECRET || "",
       },
     },
     {

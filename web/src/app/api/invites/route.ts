@@ -5,15 +5,25 @@ import {
   validateInvite,
   initializeStore,
 } from "@/lib/store";
+import { authenticateRequest, requireRole } from "@/lib/auth";
+import type { AuthContext } from "@/lib/auth";
 
-// GET /api/invites — list invites or validate a token
+// GET /api/invites — list invites (MC auth) or validate a token (public)
 export async function GET(request: NextRequest) {
   try {
     await initializeStore();
 
+    // Validate is public (needed before join)
     const token = request.nextUrl.searchParams.get("validate");
     if (token) {
       return NextResponse.json({ valid: validateInvite(token) });
+    }
+
+    // List requires MC auth
+    const auth = authenticateRequest(request);
+    if (auth instanceof Response) return auth;
+    if (!requireRole(auth as AuthContext, "mc")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     return NextResponse.json(invites);
@@ -23,10 +33,17 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/invites — generate a new invite
-export async function POST() {
+// POST /api/invites — generate a new invite (MC-only)
+export async function POST(request: Request) {
   try {
     await initializeStore();
+
+    const auth = authenticateRequest(request);
+    if (auth instanceof Response) return auth;
+    if (!requireRole(auth as AuthContext, "mc")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const invite = createInvite();
     return NextResponse.json(invite, { status: 201 });
   } catch (err) {
