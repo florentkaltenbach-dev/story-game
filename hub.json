@@ -12,6 +12,8 @@
     { "name": "MC Dashboard", "path": "/the-ceremony/mc", "type": "app", "description": "Storyteller controls" },
     { "name": "Codebase Map", "path": "/the-ceremony/codebase-map.html", "type": "visualization", "description": "D3 force graph of all files and connections" },
     { "name": "Runtime Architecture", "path": "/the-ceremony/engine-skeleton.html", "type": "visualization", "description": "Two-process data flow with context assembly tiers" },
-    { "name": "Narrative Architecture", "path": "/the-ceremony/story-skeleton.html", "type": "visualization", "description": "5-session story structure with acts and journey" }
+    { "name": "Narrative Architecture", "path": "/the-ceremony/story-skeleton.html", "type": "visualization", "description": "5-session story structure with acts and journey" },
+    { "name": "Relationship Map", "path": "/the-ceremony/relationship-map.html", "type": "visualization", "description": "Force-directed entity graph of NPCs, locations, and threads" },
+    { "name": "Knowledge Fog Matrix", "path": "/the-ceremony/fog-matrix.html", "type": "visualization", "description": "Player × secrets revelation heatmap" }
   ]
 }

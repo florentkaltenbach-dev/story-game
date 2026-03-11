@@ -1,22 +1,32 @@
 "use client";
 
 import type { NpcDossierData } from "@/lib/types";
+import StateBadge from "./StateBadge";
 
 interface NpcDossierWidgetProps {
   npc: NpcDossierData;
 }
 
-const ATTITUDE_COLORS: Record<string, string> = {
-  friendly: "text-keeper bg-keeper/10 border-keeper/20",
-  neutral: "text-muted bg-surface-light border-border",
-  suspicious: "text-accent bg-accent/10 border-accent/20",
-  hostile: "text-danger bg-danger/10 border-danger/20",
-};
+const DANGER_CHAIN = ["neutral", "wary", "suspicious", "hostile"] as const;
+const POSITIVE_CHAIN = ["neutral", "curious", "friendly", "allied"] as const;
+
+function getAttitudeChain(attitude: string): {
+  states: string[];
+  variant: "danger" | "positive";
+} {
+  const lower = attitude.toLowerCase();
+  if ((POSITIVE_CHAIN as readonly string[]).includes(lower)) {
+    return { states: [...POSITIVE_CHAIN], variant: "positive" };
+  }
+  if ((DANGER_CHAIN as readonly string[]).includes(lower)) {
+    return { states: [...DANGER_CHAIN], variant: "danger" };
+  }
+  // Default fallback
+  return { states: [...DANGER_CHAIN], variant: "danger" };
+}
 
 export default function NpcDossierWidget({ npc }: NpcDossierWidgetProps) {
-  const attitudeClass = npc.attitude
-    ? ATTITUDE_COLORS[npc.attitude.toLowerCase()] || ATTITUDE_COLORS.neutral
-    : null;
+  const attitudeBadge = npc.attitude ? getAttitudeChain(npc.attitude) : null;
 
   return (
     <div className="space-y-3">
@@ -29,10 +39,13 @@ export default function NpcDossierWidget({ npc }: NpcDossierWidgetProps) {
       </div>
 
       {/* Attitude badge */}
-      {npc.attitude && attitudeClass && (
-        <span className={`inline-block text-[10px] px-2 py-0.5 rounded border ${attitudeClass}`}>
-          {npc.attitude}
-        </span>
+      {npc.attitude && attitudeBadge && (
+        <StateBadge
+          states={attitudeBadge.states}
+          current={npc.attitude.toLowerCase()}
+          variant={attitudeBadge.variant}
+          size="sm"
+        />
       )}
 
       {/* Description */}

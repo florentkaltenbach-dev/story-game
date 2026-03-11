@@ -338,3 +338,20 @@ export interface TechniquesConfig {
   };
   keeperBehaviorRules: string[];
 }
+
+// === State chain types ===
+
+export interface StateChainDef {
+  states: string[];
+  variant: "default" | "danger" | "positive" | "neutral";
+}
+
+export const STATE_CHAINS: Record<string, StateChainDef> = {
+  "npc-disposition-negative": { states: ["neutral", "wary", "suspicious", "hostile"], variant: "danger" },
+  "npc-disposition-positive": { states: ["neutral", "curious", "friendly", "allied"], variant: "positive" },
+  "radio-condition": { states: ["clear", "static", "degraded", "intermittent", "blackout"], variant: "neutral" },
+  "injury-severity": { states: ["healthy", "shaken", "injured", "critical", "incapacitated"], variant: "danger" },
+  "fuel-level": { states: ["full", "adequate", "low", "critical", "empty"], variant: "danger" },
+  "weather": { states: ["calm", "wind", "storm", "whiteout"], variant: "neutral" },
+  "narrative-thread": { states: ["dormant", "planted", "growing", "ripe", "resolved"], variant: "default" },
+} as const;

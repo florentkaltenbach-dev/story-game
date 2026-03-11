@@ -796,6 +796,8 @@ const server = http.createServer(async (req, res) => {
     "/viz/codebase-map": path.resolve(__dirname, "../web/public/codebase-map.html"),
     "/viz/engine-skeleton": path.resolve(__dirname, "../web/public/engine-skeleton.html"),
     "/viz/story-skeleton": path.resolve(__dirname, "../web/public/story-skeleton.html"),
+    "/viz/relationship-map": path.resolve(__dirname, "../web/public/relationship-map.html"),
+    "/viz/fog-matrix": path.resolve(__dirname, "../web/public/fog-matrix.html"),
   };
 
   const vizPath = req.url.replace(/\.html$/, "").replace(/\/$/, "");
@@ -823,6 +825,8 @@ li{margin:8px 0;font-size:14px}</style></head><body>
 <li><a href="/viz/codebase-map">Codebase Map</a> — D3 force-graph of all files and connections</li>
 <li><a href="/viz/engine-skeleton">Runtime Architecture</a> — two-process data flow</li>
 <li><a href="/viz/story-skeleton">Narrative Architecture</a> — 5-session story structure</li>
+<li><a href="/viz/relationship-map">Relationship Map</a> — force-directed entity graph (NPCs, locations, threads)</li>
+<li><a href="/viz/fog-matrix">Knowledge Fog Matrix</a> — player × secrets revelation heatmap</li>
 </ul></body></html>`);
     return;
   }
