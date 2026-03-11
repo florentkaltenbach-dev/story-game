@@ -1,13 +1,7 @@
 # System Map — The Ceremony
 
-*What exists, where it lives, how it connects. Updated March 7, 2026.*
-*For tasks and priorities, see `working/TODO.md`. For design spec, see `ceremony_state.md`.*
-
----
-
-## The Idea
-
-An engagement platform for stories. Live ceremonies where an MC narrates by voice, players interact by text, and an AI agent — the Keeper — holds the full picture in a filesystem that IS its mind. The data is the pattern. The coarse-grained files carry the spirits of characters, threads, world state. The Keeper develops cognition through what it reads and writes.
+*What exists, where it lives, how it connects. Updated March 11, 2026.*
+*For tasks, see `working/TODO.md`. For design spec, see `ceremony_state.md`.*
 
 ---
 
@@ -19,160 +13,156 @@ An engagement platform for stories. Live ceremonies where an MC narrates by voic
   /mc                events.ts                   context assembly
                      memory.ts                   prompt cache
                      keeper.ts (proxy)            rate limiter
+                     compression.ts              cost tracker
+                     scripts/pipeline.ts         model routing
+                     scripts/knowledge.ts        streaming
 ```
 
-**Two-process split.** Next.js handles UI/routes/state; Keeper runs as standalone Express service. Keeper state (rate limiter, prompt cache, Anthropic client) survives web app restarts.
+**Two-process split.** Next.js handles UI/routes/state; Keeper runs as standalone Express service.
 
-**PM2 config:** `ecosystem.config.cjs` manages both processes.
+**PM2 config:** `ecosystem.config.cjs` — ceremony :3004, keeper :3005, rigging :3006.
+**Docker:** `docker-compose.yml` — web, keeper, caddy containers.
 
 ---
 
-## Web App (`web/`, PM2 `ceremony`, port 3004)
+## Web App (`web/`, port 3004)
 
 ### Pages
 
-| Route | File | Purpose |
-|-------|------|---------|
-| `/` | `app/page.tsx` | Landing — links to /play and /mc |
-| `/play` | `app/play/page.tsx` | Player view: join → story log + messages + character panel |
-| `/mc` | `app/mc/page.tsx` | MC dashboard: scene editor, story log, narrate/query modes, session controls |
+| Route | Purpose |
+|-------|---------|
+| `/` | Landing — theatrical intro, Enter as Player / MC Dashboard |
+| `/play` | Player: invite gate → onboarding wizard → game (scene + channels + story log) |
+| `/mc` | MC dashboard: scene editor, story log, narrate/query modes, right panel shelf |
 
 ### Components
 
-| Component | File | Purpose |
-|-----------|------|---------|
-| SceneDisplay | `components/SceneDisplay.tsx` | Current scene (location, title, description). MC edits inline. |
-| StoryLog | `components/StoryLog.tsx` | Scrolling message feed. Role-styled: MC (gold border), Keeper (green italic), player (ice blue) |
-| CharacterPanel | `components/CharacterPanel.tsx` | Journal + Notes tabs. Notes auto-save via debounced PATCH. |
-| ChannelTabs | `components/ChannelTabs.tsx` | Switch between message channels |
-| MessageInput | `components/MessageInput.tsx` | Text input with context-aware placeholder |
+| Component | Purpose |
+|-----------|---------|
+| SceneDisplay | Current scene with inline MC editing |
+| StoryLog | Message feed with streaming indicator, role-styled |
+| CharacterPanel | Journal + Notes tabs, debounced auto-save |
+| ChannelTabs | All, keeper-private, MC↔Keeper, group channels |
+| MessageInput | Text input with mobile keyboard handling |
+| OnboardingWizard | welcome → briefing → character → waiting state machine |
+| mc/panels/MemoryPanel | 5-level memory browser with expandable file content |
+| mc/panels/NpcPanel | NPC CRUD (voicedBy, status, preset vs memory) |
+| mc/panels/SessionPanel | Session controls + cost tracking display |
 
 ### Libraries
 
-| Module | File | Purpose |
-|--------|------|---------|
-| Types | `lib/types.ts` | Role, Channel, Message, Player, Session, KeeperInput/Response, SSE types |
-| Store | `lib/store.ts` | In-memory state cache, session persistence (atomic JSON), player/invite management |
-| Keeper | `lib/keeper.ts` | RemoteKeeper (HTTP proxy to :3005) + MockKeeper (KEEPER_BACKEND=mock) |
-| Memory | `lib/memory.ts` | Filesystem engine: atomic writes, JSONL append, level dirs, thread management |
-| Events | `lib/events.ts` | SSE emitter singleton + stream factory. Per-player filtering. |
-| useEventStream | `lib/useEventStream.ts` | Client SSE hook (ref-based handlers) |
+| Module | Purpose |
+|--------|---------|
+| types.ts | All shared types (Channel, Message, Player, Session, Widget, etc.) |
+| store.ts | In-memory state, session persistence, group channels, invites |
+| keeper.ts | RemoteKeeper (query, streamQuery, compress, getCost) + MockKeeper |
+| memory.ts | Filesystem engine: atomic writes, JSONL, archive |
+| events.ts | SSE emitter + per-player/channel/widget filtering |
+| auth.ts | HMAC token creation/verification, role enforcement |
+| compression.ts | Act compression orchestrator, recap builder |
+| mc-commands.ts | MC backstage command parser (/generate, /reveal, /hint, /npc) |
+| scripts/pipeline.ts | Deterministic extraction: journal, NPC, location, environment |
+| scripts/knowledge.ts | Knowledge fog ledger (per-player, derive from events) |
+| scripts/triggers.ts | Event matching, cooldowns, Keeper invocation |
 
 ### API Routes
 
-| Endpoint | File | What it does |
-|----------|------|-------------|
-| GET/POST `/api/session` | `api/session/route.ts` | Session state, join/start/pause/reconnect, scene PATCH, player notes |
-| GET/POST `/api/messages` | `api/messages/route.ts` | Messages (filtered by channel/player). Auto-triggers Keeper on keeper-private + all. Writes stateUpdates. MAX_HISTORY=6. |
-| POST `/api/keeper` | `api/keeper/route.ts` | MC → Keeper query proxy. Stores exchange in mc-keeper channel. Writes stateUpdates. MAX_HISTORY=6. |
-| GET `/api/events` | `api/events/route.ts` | SSE stream. Per-player filtering (mc-keeper → MC only, keeper-private → target player + MC). |
-| POST `/api/invites` | `api/invites/route.ts` | Create/validate invite tokens |
+| Endpoint | Purpose |
+|----------|---------|
+| GET/POST `/api/session` | Session state, join/start/pause/advance/end, scene PATCH, characters |
+| GET/POST `/api/messages` | Messages + pipeline + triggers + streaming + knowledge fog + PvP |
+| POST `/api/keeper` | MC → Keeper query with backstage commands |
+| GET `/api/events` | SSE stream with per-player/channel filtering |
+| POST `/api/invites` | Create/validate invite tokens |
+| GET/POST `/api/channels` | Group channel CRUD |
+| GET/POST `/api/archive` | Story archive (create snapshot, list, read) |
+| GET `/api/presets` | Preset registry |
+| POST `/api/triggers` | Manual trigger fire (MC-only) |
+| POST `/api/auth` | MC authentication, token refresh |
+| GET `/api/keeper/cost` | Cost tracking proxy |
+| GET `/api/memory` | Memory level browser |
 
 ---
 
-## Keeper Service (`keeper-service/`, PM2 `keeper`, port 3005)
+## Keeper Service (`keeper-service/`, port 3005)
 
-| Component | File | Purpose |
-|-----------|------|---------|
-| Server | `server.ts` | Express. POST /query, GET /health. ClaudeKeeper, RateLimiter, context assembly. |
-| Config | `.env` | ANTHROPIC_API_KEY, KEEPER_MODEL, rate limits, port |
+### Endpoints
 
-### Context Assembly (server.ts)
+| Endpoint | Purpose |
+|----------|---------|
+| POST /query | Single Keeper call with context assembly |
+| POST /query/stream | SSE streaming for player_response (no json_schema) |
+| POST /compress | Act compression with structured output |
+| POST /evaluate-threads | Thread status evaluation |
+| GET /cost | Cost tracking summary by mode |
+| GET /health | Status check |
 
-**Mode-aware tier loading** — `MODE_TIERS` maps each KeeperMode to the context tiers it loads:
+### Context Assembly (8 tiers, mode-aware)
 
-| Mode | Tiers loaded | Max output tokens |
-|------|-------------|-------------------|
-| `player_response` | P2 P3 P4 P7 P8 | 768 |
-| `mc_query` | P2 P3 P7 P8 | 512 |
-| `mc_generate` | P2 P3 P4 P5 P6 P7 P8 | 1024 |
-| `journal_write` | P3 P7 P8 | 512 |
-| `compression` | P7 P8 | 512 |
-| `thread_evaluation` | P4 P7 P8 | 256 |
+| Tier | Budget | Source |
+|------|--------|--------|
+| P0+P1 | ~2,000 | System prompt (cached) — identity + preset DNA |
+| P2 | 300 | Level 1: current scene |
+| P3 | 600 | Level 2: NPCs + runtime players (key fields extracted) |
+| P4 | 300 | Level 3: active narrative threads |
+| P5 | 200 | Level 4: thematic register (cached in system prompt) |
+| P6 | 200 | Level 5: world state (cached in system prompt) |
+| P7 | 500 | Recent 6 messages |
+| P8 | 200 | Input (player action or MC query) |
 
-**Tier definitions:**
-
-| Tier | Budget | Source | Notes |
-|------|--------|--------|-------|
-| P0+P1 | ~2,000 | System prompt (cached) | Keeper identity + preset DNA. `cache_control: ephemeral`. |
-| P2 | 300 | `memory/1-plot-state/` | Current scene |
-| P3 | 600 | `memory/2-character-state/` + runtime players | NPC key fields extracted (name, role, location, motive, personality, hiddenKnowledge, vulnerabilities). No raw JSON dump. |
-| P4 | 300 | `memory/3-narrative-threads/` | Active threads only (not dormant/resolved) |
-| P5 | 200 | `memory/4-thematic-layer/` | Thematic register |
-| P6 | 200 | `memory/5-world-state/` | World beyond the players |
-| P7 | 500 | Recent 6 messages | Conversation context |
-| P8 | 200 | Trigger content | Player action or MC query |
-
-**Measured token usage:** mc_query ~2,551 tokens (was ~2,950 before optimization).
+Dynamic budgets: skipped tiers redistribute 60/40 to P3 + P7.
+Model routing: Haiku for speed modes, KEEPER_QUALITY_MODEL for compression/journal.
 
 ---
 
 ## Memory Filesystem (`memory/`)
 
 ```
-memory/
-  1-plot-state/         9 files — current scene, session status, location, expedition, patrons, vessel, equipment, environment
-  2-character-state/    2 files — NPC Starkweather (JSON), NPC Moore (JSON)
-  3-narrative-threads/  10 files — dogs, journal, wind, mirage, equipment, radio, scent, tekeli-li, crude-carvings, violet-mountains
-  4-thematic-layer/     3 files — session-0 register, recurring symbols, tone calibration
-  5-world-state/        4 files — expedition status, offscreen events, wider world 1933, Antarctic conditions
+1-plot-state/         9 files — scene, location, expedition, patrons, vessel, equipment, environment, session
+2-character-state/    2 files — NPC Starkweather, NPC Moore (+ runtime knowledge ledgers)
+3-narrative-threads/  10 files — dogs, journal, wind, mirage, equipment, radio, scent, tekeli-li, carvings, mountains
+4-thematic-layer/     3 files — session register, recurring symbols, tone calibration
+5-world-state/        5 files — expedition status, offscreen events, wider world, Antarctic conditions, Ross Sea Party
 ```
-
-Each level is a different grain of attention. The Keeper reads all levels; route handlers write stateUpdates from Keeper responses.
 
 ---
 
-## Config Files (`config/`)
+## Auth
+
+- HMAC-SHA256 tokens: `base64url(payload).base64url(hmac)`, 24h expiry
+- MC: MC_SECRET → POST /api/auth → token
+- Players: invite → join → token
+- SSE: `?token=` query param
+- Inter-process: X-Ceremony-Secret header
+- Session gate: Session 0 RW, Sessions 1+ RO (override with audit log)
+
+---
+
+## Config & Presets
 
 | File | Purpose |
 |------|---------|
-| `story.json` | Genre, tone, atmosphere, pacing, 5-session act structure |
-| `world.json` | Era, geography, environment rules, technology |
-| `characters.json` | 7 archetypes + 7 NPCs (incl. Starkweather/Moore) |
-| `mechanics.json` | Quality-based resolution, journal system, knowledge fog, decision points, rescue pivots |
-| `techniques.json` | 10 narrative techniques, sensory palette, 12 Keeper behavior rules |
+| config/story.json | Genre, tone, atmosphere, 5-session structure |
+| config/world.json | Geography, environment, technology |
+| config/characters.json | Archetypes + NPCs |
+| config/mechanics.json | Quality-based resolution, journal system |
+| config/techniques.json | Narrative techniques, sensory palette, Keeper rules |
+| config/triggers.json | Event triggers (location, NPC, keywords) |
+| presets/index.json | Preset registry metadata |
+| presets/mountains-of-madness/ | Full preset with all config files |
 
 ---
 
-## Design Documents
+## Tests (109 passing)
 
-| Document | Path | Purpose |
-|----------|------|---------|
-| Project state | `ceremony_state.md` | Architecture, roles, memory, interfaces, token economy — the design contract |
-| Preset v0 | `mountains_of_madness_preset_v0.md` | MoM storytelling DNA, world, characters, threads, Keeper behavior |
-| Session structure v2 | `sources/session-structure-v2.md` | 5-session structure, decision points, timing, cosmological registers |
-| Cosmological architecture | `sources/cosmological-architecture-v2.1.md` | 62KB Keeper philosophical operating system (Level 4+5 enrichment) |
-| Patron design | `working/starkweather-moore.md` | Option B: True Believer + Skeptic profiles |
-| Briefing document | `working/briefing-document.md` | Player-facing prop with HS/JM annotations |
-| Evidence inventory | `working/evidence-inventory.md` | Every evidence piece, line-numbered from Lovecraft source |
-| Code corpus | `working/code-corpus/` | 6 reference files for code quality grading |
-| Source text | `sources/at_the_mountains_of_madness.txt` | Full Lovecraft (Project Gutenberg) |
-
----
-
-## Infrastructure
-
-| Resource | Details |
-|----------|---------|
-| Server | Hetzner VPS, Helsinki, 8GB RAM, ARM64, Ubuntu 24.04. IP: 46.62.231.96 |
-| Runtime | Node.js v22 (nvm), npm 10.9.4 |
-| Process manager | PM2 — `ceremony` :3004, `keeper` :3005. Config: `ecosystem.config.cjs` |
-| Web server | Caddy — port 80 (gamedev only, not yet routing ceremony) |
-| AI | Claude API via Haiku 4.5. Prompt caching, structured JSON output, rate-limited 10/min 100/session |
-| Dev tools | Chrome DevTools MCP (`.mcp.json`), Git (main branch) |
-
-### Design System (globals.css)
-
-- Dark palette: background `#0a0e17`, surface `#131a2b`, accent gold `#c4a35a`, ice blue `#7ba4c7`, keeper green `#6b9e7a`
-- Narrative text: Crimson font family, 1.8 line-height
-- Custom scrollbars, role-based message styling
-
----
-
-## The Keeper's Mind
-
-The filesystem IS the Keeper's cognition. Not a database — a mind structured in five layers of increasingly abstract pattern. Each layer is a different grain of attention. The Keeper assembles context per turn by asking: *what does the Keeper need to know right now?* Mode-aware tier loading (`MODE_TIERS`) answers this question differently for each type of call.
-
-The cosmological architecture (`sources/cosmological-architecture-v2.1.md`) is the most developed piece — 62KB of ontological structure, mythological grammar, entity taxonomy. It operates at Level 4 (Thematic) and Level 5 (World State). The Keeper doesn't quote it; it operates from it.
-
-The vision: the Keeper develops its own patterns through what it reads and writes. Each session's state updates change the filesystem, which changes what the Keeper reads next turn, which changes how it responds. The data is the pattern. The observer shapes the observed.
+| File | Tests | Coverage |
+|------|-------|----------|
+| keeper-service/__tests__/lib.test.ts | 19 | Token estimation, rate limiter, cost tracker |
+| web/lib/__tests__/auth.test.ts | 19 | HMAC tokens, verification, request auth |
+| web/lib/__tests__/store.test.ts | 15 | Session state, players, characters, invites |
+| web/lib/__tests__/events.test.ts | 7 | SSE filtering, event routing |
+| web/lib/__tests__/mc-commands.test.ts | 12 | Command parsing |
+| web/lib/scripts/__tests__/pipeline.test.ts | 20 | Extraction pipeline |
+| web/lib/scripts/__tests__/triggers.test.ts | 7 | Event matching, cooldowns |
+| web/lib/scripts/__tests__/widget-deriver.test.ts | 7 | Widget derivation |
+| web/lib/scripts/__tests__/roundtrip.test.ts | 3 | Pipeline round-trip |
