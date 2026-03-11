@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Ceremony — Codebase Map</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0e17;
+    color: #e8dcc8;
+    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  header {
+    background: #0d1220;
+    border-bottom: 1px solid #1e2d44;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    z-index: 10;
+    position: relative;
+  }
+
+  header h1 {
+    font-family: 'Crimson Text', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #c4a35a;
+    letter-spacing: 1px;
+  }
+
+  header h1 span {
+    color: #6a6a7a;
+    font-weight: 400;
+    font-size: 16px;
+    margin-left: 12px;
+  }
+
+  #controls {
+    background: #0d1220;
+    border-bottom: 1px solid #1e2d44;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    z-index: 10;
+    position: relative;
+  }
+
+  .view-toggle {
+    display: flex;
+    background: #131a2b;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #1e2d44;
+  }
+
+  .view-toggle button {
+    background: transparent;
+    border: none;
+    color: #6a7a8a;
+    padding: 6px 16px;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .view-toggle button.active {
+    background: #1e2d44;
+    color: #c4a35a;
+  }
+
+  .view-toggle button:hover:not(.active) {
+    color: #e8dcc8;
+  }
+
+  .category-filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .cat-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    cursor: pointer;
+    border: 1px solid #1e2d44;
+    background: #131a2b;
+    color: #e8dcc8;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .cat-chip.hidden {
+    opacity: 0.35;
+    border-color: transparent;
+  }
+
+  .cat-chip .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  #search-box {
+    background: #131a2b;
+    border: 1px solid #1e2d44;
+    border-radius: 6px;
+    padding: 6px 12px;
+    color: #e8dcc8;
+    font-family: inherit;
+    font-size: 12px;
+    width: 200px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  #search-box:focus {
+    border-color: #c4a35a;
+  }
+
+  #search-box::placeholder {
+    color: #4a5568;
+  }
+
+  #reset-btn {
+    background: transparent;
+    border: 1px solid #1e2d44;
+    border-radius: 6px;
+    padding: 6px 12px;
+    color: #6a7a8a;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  #reset-btn:hover {
+    color: #e8dcc8;
+    border-color: #c4a35a;
+  }
+
+  .stats {
+    margin-left: auto;
+    font-size: 11px;
+    color: #4a5568;
+  }
+
+  #main {
+    display: flex;
+    height: calc(100vh - 56px - 46px);
+    position: relative;
+  }
+
+  #graph-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #graph {
+    width: 100%;
+    height: 100%;
+  }
+
+  .hull {
+    fill-opacity: 0.04;
+    stroke-opacity: 0.15;
+    stroke-width: 1.5;
+    stroke-dasharray: 4 3;
+  }
+
+  .link {
+    fill: none;
+    stroke-opacity: 0.12;
+    transition: stroke-opacity 0.2s;
+  }
+
+  .link.highlighted {
+    stroke-opacity: 0.7;
+  }
+
+  .link.dimmed {
+    stroke-opacity: 0.03;
+  }
+
+  .link.dashed {
+    stroke-dasharray: 6 4;
+  }
+
+  .node-circle {
+    stroke-width: 1.5;
+    cursor: pointer;
+    transition: stroke-width 0.15s;
+  }
+
+  .node-circle.selected {
+    stroke-width: 3;
+    stroke: #c4a35a !important;
+  }
+
+  .node-circle.dimmed {
+    opacity: 0.08;
+  }
+
+  .node-label {
+    fill: #e8dcc8;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    pointer-events: none;
+    text-anchor: middle;
+    dominant-baseline: central;
+    opacity: 0.85;
+  }
+
+  .node-label.dimmed {
+    opacity: 0.06;
+  }
+
+  .tooltip {
+    position: absolute;
+    background: #1a2236;
+    border: 1px solid #2a3a54;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 100;
+    max-width: 320px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .tooltip.visible { opacity: 1; }
+
+  .tt-name {
+    font-weight: 500;
+    color: #c4a35a;
+    margin-bottom: 4px;
+  }
+
+  .tt-cat {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 6px;
+  }
+
+  .tt-lines {
+    color: #6a7a8a;
+    font-size: 11px;
+  }
+
+  .tt-desc {
+    color: #a8b8c8;
+    font-size: 11px;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  /* Sidebar */
+  #sidebar {
+    width: 340px;
+    background: #0d1220;
+    border-left: 1px solid #1e2d44;
+    overflow-y: auto;
+    padding: 0;
+    transition: transform 0.3s;
+    flex-shrink: 0;
+  }
+
+  .sidebar-empty {
+    padding: 32px 20px;
+    color: #4a5568;
+    font-size: 12px;
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .sidebar-content {
+    padding: 20px;
+  }
+
+  .sb-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .sb-name {
+    font-size: 16px;
+    font-weight: 500;
+    color: #e8dcc8;
+    word-break: break-all;
+  }
+
+  .sb-close {
+    background: transparent;
+    border: none;
+    color: #4a5568;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 2px 6px;
+    line-height: 1;
+  }
+
+  .sb-close:hover { color: #e8dcc8; }
+
+  .sb-badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .sb-path {
+    font-size: 11px;
+    color: #4a5568;
+    margin-bottom: 16px;
+    word-break: break-all;
+  }
+
+  .sb-section {
+    margin-bottom: 16px;
+  }
+
+  .sb-section-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #4a5568;
+    margin-bottom: 8px;
+  }
+
+  .sb-lines-bar {
+    height: 6px;
+    background: #131a2b;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+
+  .sb-lines-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+
+  .sb-lines-label {
+    font-size: 22px;
+    font-weight: 500;
+    color: #e8dcc8;
+  }
+
+  .sb-lines-unit {
+    font-size: 11px;
+    color: #4a5568;
+    margin-left: 4px;
+  }
+
+  .sb-desc {
+    font-size: 12px;
+    color: #a8b8c8;
+    line-height: 1.5;
+  }
+
+  .sb-link-list {
+    list-style: none;
+  }
+
+  .sb-link-list li {
+    padding: 4px 0;
+  }
+
+  .sb-link-list a {
+    color: #7ba4c7;
+    text-decoration: none;
+    font-size: 12px;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  .sb-link-list a:hover {
+    color: #c4a35a;
+  }
+
+  .sb-link-list .arrow {
+    color: #2a3a54;
+    margin-right: 4px;
+    font-size: 10px;
+  }
+
+  /* Legend */
+  #legend-toggle {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    background: #131a2b;
+    border: 1px solid #1e2d44;
+    border-radius: 6px;
+    padding: 6px 12px;
+    color: #6a7a8a;
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    z-index: 5;
+  }
+
+  #legend-toggle:hover { color: #e8dcc8; }
+
+  #legend {
+    position: absolute;
+    bottom: 48px;
+    left: 16px;
+    background: #131a2bee;
+    border: 1px solid #1e2d44;
+    border-radius: 8px;
+    padding: 14px 18px;
+    z-index: 5;
+    font-size: 11px;
+    display: none;
+  }
+
+  #legend.visible { display: block; }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 0;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: inline-block;
+  }
+
+  .legend-label { color: #a8b8c8; }
+
+  /* Arrow marker */
+  marker path {
+    fill: #4a5568;
+  }
+
+  /* Tree-specific */
+  .tree-link {
+    fill: none;
+    stroke: #1e2d44;
+    stroke-width: 1;
+  }
+
+  .tree-arc {
+    fill: none;
+    stroke-opacity: 0.2;
+    stroke-width: 1;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>The Ceremony <span>Codebase Map</span></h1>
+  <div class="stats" id="stats"></div>
+</header>
+<div id="controls">
+  <div class="view-toggle">
+    <button id="btn-constellation" class="active">Constellation</button>
+    <button id="btn-tree">Tree</button>
+  </div>
+  <div class="category-filters" id="cat-filters"></div>
+  <input type="text" id="search-box" placeholder="Search files...">
+  <button id="reset-btn">Reset</button>
+</div>
+<div id="main">
+  <div id="graph-container">
+    <svg id="graph"></svg>
+    <div class="tooltip" id="tooltip"></div>
+    <button id="legend-toggle">Legend</button>
+    <div id="legend"></div>
+  </div>
+  <aside id="sidebar">
+    <div class="sidebar-empty">Click a node to inspect<br>its details and connections</div>
+  </aside>
+</div>
+
+<script>
+// ─────────────────────────────────────────
+// SAFE DOM HELPERS
+// ─────────────────────────────────────────
+
+function el(tag, attrs, children) {
+  const e = document.createElement(tag);
+  if (attrs) {
+    Object.entries(attrs).forEach(function(kv) {
+      var k = kv[0], v = kv[1];
+      if (k === 'text') e.textContent = v;
+      else if (k === 'className') e.className = v;
+      else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+      else e.setAttribute(k, v);
+    });
+  }
+  if (children) {
+    (Array.isArray(children) ? children : [children]).forEach(function(c) {
+      if (typeof c === 'string') e.appendChild(document.createTextNode(c));
+      else if (c) e.appendChild(c);
+    });
+  }
+  return e;
+}
+
+function clearEl(e) { while (e.firstChild) e.removeChild(e.firstChild); }
+
+// ─────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────
+
+var CATEGORIES = {
+  lib:       { label: 'Library',        color: '#7ba4c7' },
+  component: { label: 'Component',      color: '#6b9e7a' },
+  page:      { label: 'Page',           color: '#9b7ed4' },
+  api:       { label: 'API Route',      color: '#d4a05a' },
+  keeper:    { label: 'Keeper Service',  color: '#e06f6f' },
+  config:    { label: 'Config',         color: '#c4a35a' },
+  memory:    { label: 'Memory',         color: '#22d3ee' },
+  test:      { label: 'Test',           color: '#4ade80' },
+  infra:     { label: 'Infrastructure', color: '#8b9bb4' },
+  docs:      { label: 'Documentation',  color: '#6a6a7a' },
+};
+
+var nodes = [
+  // Library
+  { id: 'types',          name: 'types.ts',          path: 'web/src/lib/types.ts',          category: 'lib', lines: 260, folder: 'lib', description: 'Shared TypeScript types: Role, Channel, Message, Player, Session, KeeperInput/Response, Memory levels, SSE events, Preset configs, Invite management. Gravity center \u2014 imported by ~20 files.' },
+  { id: 'store',          name: 'store.ts',          path: 'web/src/lib/store.ts',          category: 'lib', lines: 367, folder: 'lib', description: 'In-memory session state: players, messages, invites, scene. Initialization from filesystem, session persistence, atomic invite claiming. State nexus of the web process.' },
+  { id: 'memory',         name: 'memory.ts',         path: 'web/src/lib/memory.ts',         category: 'lib', lines: 247, folder: 'lib', description: 'Filesystem memory engine: read/write 5 memory levels, thread management, message archival. Atomic writes with .tmp rename. Bridge between code and the memory/ tree.' },
+  { id: 'auth',           name: 'auth.ts',           path: 'web/src/lib/auth.ts',           category: 'lib', lines: 119, folder: 'lib', description: 'HMAC-SHA256 token auth: createToken, verifyToken, authenticateRequest, requireRole. Security perimeter \u2014 imported by all 7 API routes.' },
+  { id: 'events',         name: 'events.ts',         path: 'web/src/lib/events.ts',         category: 'lib', lines: 109, folder: 'lib', description: 'SSE emitter: StateEmitter class, createSSEStream(). Per-client filtering by role/playerId. 30s keepalive heartbeat.' },
+  { id: 'keeper-client',  name: 'keeper.ts',         path: 'web/src/lib/keeper.ts',         category: 'lib', lines: 118, folder: 'lib', description: 'Keeper backend abstraction: MockKeeper (local), RemoteKeeper (proxy to :3005 via X-Ceremony-Secret). Factory pattern with createKeeper().' },
+  { id: 'api-helpers',    name: 'api.ts',            path: 'web/src/lib/api.ts',            category: 'lib', lines: 50,  folder: 'lib', description: 'Client-side API utilities: apiUrl(), token storage (localStorage), authHeaders(), authFetch() wrapper for authenticated requests.' },
+  { id: 'useEventStream', name: 'useEventStream.ts', path: 'web/src/lib/useEventStream.ts', category: 'lib', lines: 104, folder: 'lib', description: 'React hook connecting EventSource to component callbacks: onMessage, onScene, onSession, onPlayerJoined, onKeeperResponse, onCharacterUpdate.' },
+
+  // Components
+  { id: 'CharacterCreation', name: 'CharacterCreation.tsx', path: 'web/src/components/CharacterCreation.tsx', category: 'component', lines: 392, folder: 'components', description: 'Character creation flow: pending \u2192 draft \u2192 submitted \u2192 approved. Multi-step form for archetype, background, motivation, fear, qualities. Largest component.' },
+  { id: 'StoryLog',          name: 'StoryLog.tsx',          path: 'web/src/components/StoryLog.tsx',          category: 'component', lines: 104, folder: 'components', description: 'Message display: MessageBubble formats by role (system/mc/keeper/player). Auto-scrolls to latest message.' },
+  { id: 'SceneDisplay',      name: 'SceneDisplay.tsx',      path: 'web/src/components/SceneDisplay.tsx',      category: 'component', lines: 91,  folder: 'components', description: 'Scene card showing title, description, location. Optionally editable (MC-only) with state callbacks.' },
+  { id: 'CharacterPanel',    name: 'CharacterPanel.tsx',    path: 'web/src/components/CharacterPanel.tsx',    category: 'component', lines: 76,  folder: 'components', description: 'Player character summary: archetype, background, motivation, fear, qualities, relationships display.' },
+  { id: 'MessageInput',      name: 'MessageInput.tsx',      path: 'web/src/components/MessageInput.tsx',      category: 'component', lines: 66,  folder: 'components', description: 'Textarea input with placeholder for narrative queries. Handles submit and enter-key events.' },
+  { id: 'ChannelTabs',       name: 'ChannelTabs.tsx',       path: 'web/src/components/ChannelTabs.tsx',       category: 'component', lines: 44,  folder: 'components', description: 'Tab buttons for channel switching: "all", "keeper-private", "mc-keeper".' },
+
+  // Pages
+  { id: 'mc-page',    name: 'mc/page.tsx',   path: 'web/src/app/mc/page.tsx',   category: 'page', lines: 769, folder: 'pages', description: 'MC Dashboard: login, session control (start/pause/end), keeper queries, invite generation, character review, memory sidebar, player list. Largest file in the codebase.' },
+  { id: 'play-page',  name: 'play/page.tsx', path: 'web/src/app/play/page.tsx', category: 'page', lines: 424, folder: 'pages', description: 'Player view: JoinForm (invite code), character creation, scene display, story log, SSE event streaming.' },
+  { id: 'landing',    name: 'page.tsx',      path: 'web/src/app/page.tsx',      category: 'page', lines: 56,  folder: 'pages', description: 'Landing page: "The Ceremony" title, description, navigation to /play and /mc.' },
+  { id: 'layout',     name: 'layout.tsx',    path: 'web/src/app/layout.tsx',    category: 'page', lines: 41,  folder: 'pages', description: 'Root layout: Geist + Crimson Text fonts, metadata, global CSS import.' },
+
+  // API Routes
+  { id: 'api-session',  name: 'session/route.ts',  path: 'web/src/app/api/session/route.ts',  category: 'api', lines: 191, folder: 'api', description: 'Session control: join (invite), reconnect, MC actions (start, pause, advance_act, end_session, next_session, update_scene, character approve/revise).' },
+  { id: 'api-messages', name: 'messages/route.ts', path: 'web/src/app/api/messages/route.ts', category: 'api', lines: 153, folder: 'api', description: 'Message storage: GET (filtered by channel/role/timestamp), POST (add message, auto-trigger keeper response for player messages).' },
+  { id: 'api-keeper',   name: 'keeper/route.ts',   path: 'web/src/app/api/keeper/route.ts',   category: 'api', lines: 77,  folder: 'api', description: 'MC-only keeper query endpoint: sends query to Keeper, persists narrative and state updates to memory.' },
+  { id: 'api-invites',  name: 'invites/route.ts',  path: 'web/src/app/api/invites/route.ts',  category: 'api', lines: 53,  folder: 'api', description: 'Invite management: GET (list/validate), POST (create new invite code). MC-only for creation.' },
+  { id: 'api-auth',     name: 'auth/route.ts',     path: 'web/src/app/api/auth/route.ts',     category: 'api', lines: 47,  folder: 'api', description: 'Auth endpoint: POST mc_auth (secret validation \u2192 token), refresh (token renewal).' },
+  { id: 'api-memory',   name: 'memory/route.ts',   path: 'web/src/app/api/memory/route.ts',   category: 'api', lines: 36,  folder: 'api', description: 'MC-only memory read: all 5 levels summary or specific level detail.' },
+  { id: 'api-events',   name: 'events/route.ts',   path: 'web/src/app/api/events/route.ts',   category: 'api', lines: 26,  folder: 'api', description: 'SSE stream endpoint: token auth via ?token= query param, per-client event filtering.' },
+
+  // Keeper Service
+  { id: 'keeper-server', name: 'server.ts',  path: 'keeper-service/server.ts',  category: 'keeper', lines: 521, folder: 'keeper', description: 'Main Keeper brain: Express server, reads memory/ and config/, builds context (P0-P8 priority tiers), queries Claude API (Haiku 4.5), NPC extraction, rate limiting, system prompt builder.' },
+  { id: 'keeper-lib',    name: 'lib.ts',     path: 'keeper-service/lib.ts',     category: 'keeper', lines: 97,  folder: 'keeper', description: 'Pure functions: MODE_TIERS, MODE_MAX_TOKENS, TIER_BUDGETS, estimateTokens(), truncateToTokens(), RateLimiter class.' },
+  { id: 'keeper-types',  name: 'types.ts',   path: 'keeper-service/types.ts',   category: 'keeper', lines: 9,   folder: 'keeper', description: 'KeeperMode type export (player_response, mc_query, mc_generate, journal_write, compression, thread_evaluation).' },
+
+  // Config
+  { id: 'config-story',      name: 'story.json',      path: 'config/story.json',      category: 'config', lines: 20,  folder: 'config', description: 'Preset story config: genre, tone, atmosphere, pacing structure, act structure, session count.' },
+  { id: 'config-world',      name: 'world.json',       path: 'config/world.json',      category: 'config', lines: 91,  folder: 'config', description: 'World definition: era (1933), geography, environment rules, timeline, technology constraints.' },
+  { id: 'config-characters', name: 'characters.json',  path: 'config/characters.json', category: 'config', lines: 140, folder: 'config', description: 'Character archetypes (5 player roles) and NPC definitions (Starkweather, Moore, crew).' },
+  { id: 'config-techniques', name: 'techniques.json',  path: 'config/techniques.json', category: 'config', lines: 55,  folder: 'config', description: 'Narrative techniques, sensory palette (sight/sound/touch/smell/taste), keeper behavior rules.' },
+  { id: 'config-mechanics',  name: 'mechanics.json',   path: 'config/mechanics.json',  category: 'config', lines: 121, folder: 'config', description: 'Game mechanics: quality-based resolution, no dice, danger/stress system, character progression rules.' },
+
+  // Memory (folder-level aggregate nodes)
+  { id: 'mem-plot',      name: '1-plot-state',        path: 'memory/1-plot-state/',        category: 'memory', lines: 80,  folder: 'memory', description: 'Current scene, expedition location/status, environment, vessel specs, patrons, equipment. 8 markdown files.' },
+  { id: 'mem-character', name: '2-character-state',   path: 'memory/2-character-state/',   category: 'memory', lines: 40,  folder: 'memory', description: 'NPC state as JSON. Extracted from keeper responses. Updated after each scene.' },
+  { id: 'mem-threads',   name: '3-narrative-threads', path: 'memory/3-narrative-threads/', category: 'memory', lines: 30,  folder: 'memory', description: 'Active story threads: trigger conditions, status lifecycle (dormant \u2192 planted \u2192 growing \u2192 ripe \u2192 resolved).' },
+  { id: 'mem-thematic',  name: '4-thematic-layer',   path: 'memory/4-thematic-layer/',    category: 'memory', lines: 50,  folder: 'memory', description: 'Tone calibration, recurring symbols, session register. Keeper tonal compass.' },
+  { id: 'mem-world',     name: '5-world-state',      path: 'memory/5-world-state/',       category: 'memory', lines: 60,  folder: 'memory', description: 'Antarctic conditions, expedition status, offscreen events, Ross Sea party, wider world 1933. Ambient context.' },
+
+  // Tests
+  { id: 'test-auth',   name: 'auth.test.ts',   path: 'web/src/lib/__tests__/auth.test.ts',   category: 'test', lines: 181, folder: 'tests', description: 'Auth test suite: token creation, verification, expiry, role enforcement, edge cases.' },
+  { id: 'test-store',  name: 'store.test.ts',  path: 'web/src/lib/__tests__/store.test.ts',  category: 'test', lines: 139, folder: 'tests', description: 'Store test suite: session state, message handling, invite claiming, player management.' },
+  { id: 'test-events', name: 'events.test.ts', path: 'web/src/lib/__tests__/events.test.ts', category: 'test', lines: 110, folder: 'tests', description: 'Events test suite: SSE emitter, stream creation, per-client filtering, keepalive.' },
+  { id: 'test-lib',    name: 'lib.test.ts',    path: 'keeper-service/__tests__/lib.test.ts',  category: 'test', lines: 108, folder: 'tests', description: 'Keeper lib tests: token estimation, truncation, rate limiter, mode tiers, budgets.' },
+
+  // Infrastructure
+  { id: 'ecosystem',    name: 'ecosystem.config.cjs', path: 'ecosystem.config.cjs',    category: 'infra', lines: 37,  folder: 'infra', description: 'PM2 config: ceremony (:3004), keeper (:3005), rigging (:3006). Environment variables for secrets.' },
+  { id: 'rigging',      name: 'rigging/server.js',    path: 'rigging/server.js',       category: 'infra', lines: 800, folder: 'infra', description: 'Rigging service: Jitsi/voice integration layer. Separate Express server on :3006.' },
+
+  // Docs
+  { id: 'ceremony-state', name: 'ceremony_state.md',     path: 'ceremony_state.md',                    category: 'docs', lines: 271, folder: 'docs', description: 'Master design spec: architecture, roles, memory system, interfaces, session flow, token economy, remaining design tasks.' },
+  { id: 'preset-v0',      name: 'mountains_preset.md',   path: 'mountains_of_madness_preset_v0.md',    category: 'docs', lines: 689, folder: 'docs', description: 'First story preset: Lovecraft-inspired At the Mountains of Madness campaign. 5 sessions, story config, world config, character archetypes.' },
+  { id: 'todo',            name: 'TODO.md',               path: 'working/TODO.md',                      category: 'docs', lines: 159, folder: 'docs', description: 'Task tracker: done/active/next/future items, decisions log, open questions.' },
+  { id: 'state-map',       name: 'keeper-state-map.md',   path: 'working/keeper-state-map.md',          category: 'docs', lines: 178, folder: 'docs', description: 'System inventory: components, architecture diagram, infrastructure status, deployment details.' },
+];
+
+var edges = [
+  // store.ts imports
+  { source: 'store',   target: 'types' },
+  { source: 'store',   target: 'memory' },
+  { source: 'store',   target: 'events' },
+
+  // memory.ts imports
+  { source: 'memory',  target: 'types' },
+
+  // events.ts imports
+  { source: 'events',  target: 'types' },
+
+  // keeper.ts imports
+  { source: 'keeper-client', target: 'types' },
+  { source: 'keeper-client', target: 'memory' },
+
+  // useEventStream imports
+  { source: 'useEventStream', target: 'types' },
+
+  // Components imports
+  { source: 'StoryLog',          target: 'types' },
+  { source: 'SceneDisplay',      target: 'types' },
+  { source: 'CharacterPanel',    target: 'types' },
+  { source: 'CharacterCreation', target: 'types' },
+  { source: 'CharacterCreation', target: 'api-helpers' },
+
+  // MC page imports
+  { source: 'mc-page', target: 'types' },
+  { source: 'mc-page', target: 'api-helpers' },
+  { source: 'mc-page', target: 'useEventStream' },
+  { source: 'mc-page', target: 'StoryLog' },
+  { source: 'mc-page', target: 'SceneDisplay' },
+  { source: 'mc-page', target: 'CharacterPanel' },
+  { source: 'mc-page', target: 'MessageInput' },
+  { source: 'mc-page', target: 'ChannelTabs' },
+
+  // Play page imports
+  { source: 'play-page', target: 'types' },
+  { source: 'play-page', target: 'api-helpers' },
+  { source: 'play-page', target: 'useEventStream' },
+  { source: 'play-page', target: 'StoryLog' },
+  { source: 'play-page', target: 'SceneDisplay' },
+  { source: 'play-page', target: 'CharacterPanel' },
+  { source: 'play-page', target: 'CharacterCreation' },
+  { source: 'play-page', target: 'MessageInput' },
+
+  // API route imports
+  { source: 'api-session',  target: 'store' },
+  { source: 'api-session',  target: 'auth' },
+
+  { source: 'api-messages', target: 'store' },
+  { source: 'api-messages', target: 'keeper-client' },
+  { source: 'api-messages', target: 'memory' },
+  { source: 'api-messages', target: 'auth' },
+  { source: 'api-messages', target: 'types' },
+
+  { source: 'api-keeper',   target: 'store' },
+  { source: 'api-keeper',   target: 'keeper-client' },
+  { source: 'api-keeper',   target: 'memory' },
+  { source: 'api-keeper',   target: 'auth' },
+  { source: 'api-keeper',   target: 'types' },
+
+  { source: 'api-invites',  target: 'store' },
+  { source: 'api-invites',  target: 'auth' },
+
+  { source: 'api-auth',     target: 'auth' },
+
+  { source: 'api-memory',   target: 'memory' },
+  { source: 'api-memory',   target: 'auth' },
+
+  { source: 'api-events',   target: 'events' },
+  { source: 'api-events',   target: 'auth' },
+
+  // Keeper service internal imports
+  { source: 'keeper-server', target: 'keeper-lib' },
+  { source: 'keeper-server', target: 'keeper-types' },
+  { source: 'keeper-lib',    target: 'keeper-types' },
+
+  // Inter-process HTTP edge (keeper-client -> keeper-server)
+  { source: 'keeper-client', target: 'keeper-server', dashed: true },
+
+  // Keeper server reads config
+  { source: 'keeper-server', target: 'config-story',      dashed: true },
+  { source: 'keeper-server', target: 'config-world',      dashed: true },
+  { source: 'keeper-server', target: 'config-characters', dashed: true },
+  { source: 'keeper-server', target: 'config-techniques', dashed: true },
+  { source: 'keeper-server', target: 'config-mechanics',  dashed: true },
+
+  // Keeper server reads memory
+  { source: 'keeper-server', target: 'mem-plot',      dashed: true },
+  { source: 'keeper-server', target: 'mem-character', dashed: true },
+  { source: 'keeper-server', target: 'mem-threads',   dashed: true },
+  { source: 'keeper-server', target: 'mem-thematic',  dashed: true },
+  { source: 'keeper-server', target: 'mem-world',     dashed: true },
+
+  // memory.ts reads/writes memory filesystem
+  { source: 'memory', target: 'mem-plot',      dashed: true },
+  { source: 'memory', target: 'mem-character', dashed: true },
+  { source: 'memory', target: 'mem-threads',   dashed: true },
+  { source: 'memory', target: 'mem-thematic',  dashed: true },
+  { source: 'memory', target: 'mem-world',     dashed: true },
+
+  // Test imports
+  { source: 'test-auth',   target: 'auth' },
+  { source: 'test-store',  target: 'store' },
+  { source: 'test-events', target: 'events' },
+  { source: 'test-lib',    target: 'keeper-lib' },
+];
+
+var FOLDERS = {
+  lib:        { label: 'web/src/lib',          color: '#7ba4c7' },
+  components: { label: 'web/src/components',   color: '#6b9e7a' },
+  pages:      { label: 'web/src/app',          color: '#9b7ed4' },
+  api:        { label: 'web/src/app/api',      color: '#d4a05a' },
+  keeper:     { label: 'keeper-service',       color: '#e06f6f' },
+  config:     { label: 'config',               color: '#c4a35a' },
+  memory:     { label: 'memory',               color: '#22d3ee' },
+  tests:      { label: 'tests',                color: '#4ade80' },
+  infra:      { label: 'root',                 color: '#8b9bb4' },
+  docs:       { label: 'docs',                 color: '#6a6a7a' },
+};
+
+// ─────────────────────────────────────────
+// GRAPH ENGINE
+// ─────────────────────────────────────────
+
+function getWidth() { return document.getElementById('graph-container').clientWidth; }
+function getHeight() { return document.getElementById('graph-container').clientHeight; }
+
+var currentView = 'constellation';
+var selectedNode = null;
+var hiddenCategories = new Set();
+var searchQuery = '';
+var simulation;
+var legendVisible = false;
+
+// Build index maps
+var nodeMap = {};
+nodes.forEach(function(n) { nodeMap[n.id] = n; });
+
+// Compute imports/imported-by
+var importsOf = {};
+var importedBy = {};
+nodes.forEach(function(n) { importsOf[n.id] = []; importedBy[n.id] = []; });
+edges.forEach(function(e) {
+  if (!importsOf[e.source]) importsOf[e.source] = [];
+  if (!importedBy[e.target]) importedBy[e.target] = [];
+  importsOf[e.source].push(e.target);
+  importedBy[e.target].push(e.source);
+});
+
+var maxLines = Math.max.apply(null, nodes.map(function(n) { return n.lines; }));
+
+function nodeRadius(d) {
+  return Math.max(6, Math.sqrt(d.lines) * 1.1);
+}
+
+// ─────────────────────────────────────────
+// SETUP SVG
+// ─────────────────────────────────────────
+
+var svg = d3.select('#graph');
+var graphContainer = svg.append('g').attr('class', 'zoom-container');
+
+var zoom = d3.zoom()
+  .scaleExtent([0.2, 4])
+  .on('zoom', function(event) {
+    graphContainer.attr('transform', event.transform);
+  });
+
+svg.call(zoom);
+
+// Arrow marker
+svg.append('defs').append('marker')
+  .attr('id', 'arrow')
+  .attr('viewBox', '0 -5 10 10')
+  .attr('refX', 20)
+  .attr('refY', 0)
+  .attr('markerWidth', 6)
+  .attr('markerHeight', 6)
+  .attr('orient', 'auto')
+  .append('path')
+  .attr('d', 'M0,-4L10,0L0,4')
+  .attr('fill', '#4a5568');
+
+// Layers
+var hullLayer = graphContainer.append('g').attr('class', 'hulls');
+var linkLayer = graphContainer.append('g').attr('class', 'links');
+var nodeLayer = graphContainer.append('g').attr('class', 'nodes');
+var labelLayer = graphContainer.append('g').attr('class', 'labels');
+
+// Tree layers (hidden initially)
+var treeLinkLayer = graphContainer.append('g').attr('class', 'tree-links').style('display', 'none');
+var treeArcLayer = graphContainer.append('g').attr('class', 'tree-arcs').style('display', 'none');
+
+// ─────────────────────────────────────────
+// CONSTELLATION VIEW
+// ─────────────────────────────────────────
+
+// Folder cluster centers
+var folderKeys = Object.keys(FOLDERS);
+var clusterCenters = {};
+var angleStep = (2 * Math.PI) / folderKeys.length;
+folderKeys.forEach(function(key, i) {
+  var angle = angleStep * i - Math.PI / 2;
+  var r = 280;
+  clusterCenters[key] = { x: r * Math.cos(angle), y: r * Math.sin(angle) };
+});
+
+// Initialize node positions near their cluster
+nodes.forEach(function(n) {
+  var c = clusterCenters[n.folder] || { x: 0, y: 0 };
+  n.x = c.x + (Math.random() - 0.5) * 80;
+  n.y = c.y + (Math.random() - 0.5) * 80;
+});
+
+// Build link data
+var linkData = edges.map(function(e) {
+  return { source: e.source, target: e.target, dashed: e.dashed || false };
+});
+
+// Force simulation
+simulation = d3.forceSimulation(nodes)
+  .force('link', d3.forceLink(linkData).id(function(d) { return d.id; }).distance(60).strength(0.3))
+  .force('charge', d3.forceManyBody().strength(-160))
+  .force('center', d3.forceCenter(0, 0).strength(0.06))
+  .force('collide', d3.forceCollide().radius(function(d) { return nodeRadius(d) + 6; }))
+  .force('cluster', clusterForce(0.12))
+  .on('tick', ticked);
+
+function clusterForce(strength) {
+  return function(alpha) {
+    nodes.forEach(function(n) {
+      var c = clusterCenters[n.folder];
+      if (c) {
+        n.vx += (c.x - n.x) * strength * alpha;
+        n.vy += (c.y - n.y) * strength * alpha;
+      }
+    });
+  };
+}
+
+// Draw links
+var links = linkLayer.selectAll('line')
+  .data(linkData)
+  .join('line')
+  .attr('class', function(d) { return 'link' + (d.dashed ? ' dashed' : ''); })
+  .attr('stroke', function(d) {
+    var sNode = nodeMap[typeof d.source === 'object' ? d.source.id : d.source];
+    return sNode ? CATEGORIES[sNode.category].color : '#4a5568';
+  })
+  .attr('stroke-width', 1)
+  .attr('marker-end', 'url(#arrow)');
+
+// Draw nodes
+var nodeCircles = nodeLayer.selectAll('circle')
+  .data(nodes)
+  .join('circle')
+  .attr('class', 'node-circle')
+  .attr('r', function(d) { return nodeRadius(d); })
+  .attr('fill', function(d) { return CATEGORIES[d.category].color; })
+  .attr('stroke', function(d) { return d3.color(CATEGORIES[d.category].color).darker(0.5); })
+  .on('mouseenter', onNodeHover)
+  .on('mouseleave', onNodeLeave)
+  .on('click', onNodeClick)
+  .call(d3.drag()
+    .on('start', dragStart)
+    .on('drag', dragging)
+    .on('end', dragEnd));
+
+// Draw labels
+var labels = labelLayer.selectAll('text')
+  .data(nodes)
+  .join('text')
+  .attr('class', 'node-label')
+  .text(function(d) { return d.name.replace(/\.(tsx?|json|md|cjs|js)$/, ''); })
+  .style('font-size', function(d) { return d.lines > 150 ? '10px' : '8px'; })
+  .style('opacity', function(d) { return d.lines > 80 ? 0.85 : 0; });
+
+function ticked() {
+  links
+    .attr('x1', function(d) { return d.source.x; })
+    .attr('y1', function(d) { return d.source.y; })
+    .attr('x2', function(d) {
+      var r = nodeRadius(d.target);
+      var dx = d.target.x - d.source.x;
+      var dy = d.target.y - d.source.y;
+      var dist = Math.sqrt(dx*dx + dy*dy) || 1;
+      return d.target.x - (dx / dist) * r;
+    })
+    .attr('y2', function(d) {
+      var r = nodeRadius(d.target);
+      var dx = d.target.x - d.source.x;
+      var dy = d.target.y - d.source.y;
+      var dist = Math.sqrt(dx*dx + dy*dy) || 1;
+      return d.target.y - (dy / dist) * r;
+    });
+
+  nodeCircles
+    .attr('cx', function(d) { return d.x; })
+    .attr('cy', function(d) { return d.y; });
+
+  labels
+    .attr('x', function(d) { return d.x; })
+    .attr('y', function(d) { return d.y - nodeRadius(d) - 6; });
+
+  drawHulls();
+}
+
+// ─────────────────────────────────────────
+// CONVEX HULLS
+// ─────────────────────────────────────────
+
+function drawHulls() {
+  var folderGroups = {};
+  nodes.forEach(function(n) {
+    if (isNodeVisible(n)) {
+      if (!folderGroups[n.folder]) folderGroups[n.folder] = [];
+      folderGroups[n.folder].push([n.x, n.y]);
+    }
+  });
+
+  var hullData = Object.entries(folderGroups)
+    .filter(function(entry) { return entry[1].length >= 3; })
+    .map(function(entry) {
+      var folder = entry[0], pts = entry[1];
+      var padded = [];
+      pts.forEach(function(pt) {
+        var pad = 25;
+        padded.push([pt[0] - pad, pt[1] - pad]);
+        padded.push([pt[0] + pad, pt[1] - pad]);
+        padded.push([pt[0] - pad, pt[1] + pad]);
+        padded.push([pt[0] + pad, pt[1] + pad]);
+      });
+      return { folder: folder, hull: d3.polygonHull(padded) };
+    })
+    .filter(function(d) { return d.hull; });
+
+  var hulls = hullLayer.selectAll('path')
+    .data(hullData, function(d) { return d.folder; });
+
+  hulls.exit().remove();
+
+  hulls.enter().append('path')
+    .attr('class', 'hull')
+    .merge(hulls)
+    .attr('d', function(d) { return 'M' + d.hull.join('L') + 'Z'; })
+    .attr('fill', function(d) { return (FOLDERS[d.folder] || {}).color || '#4a5568'; })
+    .attr('stroke', function(d) { return (FOLDERS[d.folder] || {}).color || '#4a5568'; });
+}
+
+// ─────────────────────────────────────────
+// INTERACTIONS
+// ─────────────────────────────────────────
+
+var tooltipEl = document.getElementById('tooltip');
+
+function onNodeHover(event, d) {
+  if (!isNodeVisible(d)) return;
+
+  // Build tooltip using safe DOM methods
+  var cat = CATEGORIES[d.category];
+  clearEl(tooltipEl);
+
+  var nameDiv = el('div', { className: 'tt-name', text: d.name });
+  var catSpan = el('span', { className: 'tt-cat', text: cat.label });
+  catSpan.style.background = cat.color + '22';
+  catSpan.style.color = cat.color;
+  var linesDiv = el('div', { className: 'tt-lines', text: d.lines + ' lines' });
+  var descDiv = el('div', { className: 'tt-desc', text: d.description.split('.')[0] + '.' });
+
+  tooltipEl.appendChild(nameDiv);
+  tooltipEl.appendChild(catSpan);
+  tooltipEl.appendChild(linesDiv);
+  tooltipEl.appendChild(descDiv);
+
+  tooltipEl.classList.add('visible');
+
+  var rect = document.getElementById('graph-container').getBoundingClientRect();
+  tooltipEl.style.left = (event.clientX - rect.left + 16) + 'px';
+  tooltipEl.style.top = (event.clientY - rect.top - 10) + 'px';
+
+  // Clamp tooltip within view
+  var ttRect = tooltipEl.getBoundingClientRect();
+  if (ttRect.right > rect.right - 10) {
+    tooltipEl.style.left = (event.clientX - rect.left - ttRect.width - 16) + 'px';
+  }
+  if (ttRect.bottom > rect.bottom - 10) {
+    tooltipEl.style.top = (event.clientY - rect.top - ttRect.height - 10) + 'px';
+  }
+
+  // Highlight connected edges + neighbors
+  if (!selectedNode) {
+    highlightConnections(d);
+  }
+}
+
+function onNodeLeave() {
+  tooltipEl.classList.remove('visible');
+  if (!selectedNode) {
+    clearHighlights();
+  }
+}
+
+function onNodeClick(event, d) {
+  event.stopPropagation();
+
+  if (selectedNode === d.id) {
+    selectedNode = null;
+    clearHighlights();
+    showEmptySidebar();
+    return;
+  }
+
+  selectedNode = d.id;
+  highlightConnections(d);
+  showSidebar(d);
+
+  nodeCircles.classed('selected', function(n) { return n.id === d.id; });
+}
+
+function highlightConnections(d) {
+  var connected = new Set([d.id]);
+  (importsOf[d.id] || []).forEach(function(id) { connected.add(id); });
+  (importedBy[d.id] || []).forEach(function(id) { connected.add(id); });
+
+  nodeCircles.classed('dimmed', function(n) { return !connected.has(n.id) && isNodeVisible(n); });
+  labels.classed('dimmed', function(n) { return !connected.has(n.id) && isNodeVisible(n); });
+
+  links
+    .classed('highlighted', function(l) {
+      var sid = typeof l.source === 'object' ? l.source.id : l.source;
+      var tid = typeof l.target === 'object' ? l.target.id : l.target;
+      return sid === d.id || tid === d.id;
+    })
+    .classed('dimmed', function(l) {
+      var sid = typeof l.source === 'object' ? l.source.id : l.source;
+      var tid = typeof l.target === 'object' ? l.target.id : l.target;
+      return sid !== d.id && tid !== d.id;
+    });
+}
+
+function clearHighlights() {
+  nodeCircles.classed('dimmed', false).classed('selected', false);
+  labels.classed('dimmed', false);
+  links.classed('highlighted', false).classed('dimmed', false);
+  applyFilters();
+}
+
+// ─────────────────────────────────────────
+// DRAG
+// ─────────────────────────────────────────
+
+function dragStart(event, d) {
+  if (!event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x;
+  d.fy = d.y;
+}
+
+function dragging(event, d) {
+  d.fx = event.x;
+  d.fy = event.y;
+}
+
+function dragEnd(event, d) {
+  if (!event.active) simulation.alphaTarget(0);
+}
+
+// ─────────────────────────────────────────
+// SIDEBAR
+// ─────────────────────────────────────────
+
+function showEmptySidebar() {
+  var sidebar = document.getElementById('sidebar');
+  clearEl(sidebar);
+  var empty = el('div', { className: 'sidebar-empty' });
+  empty.appendChild(document.createTextNode('Click a node to inspect'));
+  empty.appendChild(document.createElement('br'));
+  empty.appendChild(document.createTextNode('its details and connections'));
+  sidebar.appendChild(empty);
+}
+
+function showSidebar(d) {
+  var sidebar = document.getElementById('sidebar');
+  clearEl(sidebar);
+
+  var cat = CATEGORIES[d.category];
+  var imports = importsOf[d.id] || [];
+  var importers = importedBy[d.id] || [];
+  var linesPct = Math.round((d.lines / maxLines) * 100);
+
+  var content = el('div', { className: 'sidebar-content' });
+
+  // Header
+  var header = el('div', { className: 'sb-header' }, [
+    el('div', { className: 'sb-name', text: d.name }),
+    el('button', { className: 'sb-close', text: '\u00d7', onclick: function() { closeSidebar(); } })
+  ]);
+  content.appendChild(header);
+
+  // Badge
+  var badge = el('span', { className: 'sb-badge', text: cat.label });
+  badge.style.background = cat.color + '22';
+  badge.style.color = cat.color;
+  content.appendChild(badge);
+
+  // Path
+  content.appendChild(el('div', { className: 'sb-path', text: d.path }));
+
+  // Lines section
+  var linesSection = el('div', { className: 'sb-section' }, [
+    el('div', { className: 'sb-section-title', text: 'Lines of code' }),
+  ]);
+  var linesLabel = el('span', { className: 'sb-lines-label', text: String(d.lines) });
+  var linesUnit = el('span', { className: 'sb-lines-unit', text: 'lines' });
+  linesSection.appendChild(linesLabel);
+  linesSection.appendChild(linesUnit);
+  var bar = el('div', { className: 'sb-lines-bar' });
+  var fill = el('div', { className: 'sb-lines-fill' });
+  fill.style.width = linesPct + '%';
+  fill.style.background = cat.color;
+  bar.appendChild(fill);
+  linesSection.appendChild(bar);
+  content.appendChild(linesSection);
+
+  // Role section
+  content.appendChild(el('div', { className: 'sb-section' }, [
+    el('div', { className: 'sb-section-title', text: 'Role' }),
+    el('div', { className: 'sb-desc', text: d.description })
+  ]));
+
+  // Imports section
+  if (imports.length > 0) {
+    var importsSection = el('div', { className: 'sb-section' }, [
+      el('div', { className: 'sb-section-title', text: 'Imports (' + imports.length + ')' })
+    ]);
+    var importsList = el('ul', { className: 'sb-link-list' });
+    imports.forEach(function(id) {
+      var n = nodeMap[id];
+      var li = el('li');
+      var arrow = el('span', { className: 'arrow', text: '\u2192 ' });
+      var link = el('a', { text: n ? n.name : id });
+      link.addEventListener('click', function() { selectNodeById(id); });
+      li.appendChild(arrow);
+      li.appendChild(link);
+      importsList.appendChild(li);
+    });
+    importsSection.appendChild(importsList);
+    content.appendChild(importsSection);
+  }
+
+  // Imported by section
+  if (importers.length > 0) {
+    var importersSection = el('div', { className: 'sb-section' }, [
+      el('div', { className: 'sb-section-title', text: 'Imported by (' + importers.length + ')' })
+    ]);
+    var importersList = el('ul', { className: 'sb-link-list' });
+    importers.forEach(function(id) {
+      var n = nodeMap[id];
+      var li = el('li');
+      var arrow = el('span', { className: 'arrow', text: '\u2190 ' });
+      var link = el('a', { text: n ? n.name : id });
+      link.addEventListener('click', function() { selectNodeById(id); });
+      li.appendChild(arrow);
+      li.appendChild(link);
+      importersList.appendChild(li);
+    });
+    importersSection.appendChild(importersList);
+    content.appendChild(importersSection);
+  }
+
+  sidebar.appendChild(content);
+}
+
+function closeSidebar() {
+  selectedNode = null;
+  clearHighlights();
+  showEmptySidebar();
+}
+
+function selectNodeById(id) {
+  var node = nodes.find(function(n) { return n.id === id; });
+  if (node) {
+    selectedNode = id;
+    highlightConnections(node);
+    showSidebar(node);
+    nodeCircles.classed('selected', function(n) { return n.id === id; });
+
+    // Pan to node
+    var transform = d3.zoomTransform(svg.node());
+    var tx = -node.x * transform.k + getWidth() / 2;
+    var ty = -node.y * transform.k + getHeight() / 2;
+    svg.transition().duration(500)
+      .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(transform.k));
+  }
+}
+
+// ─────────────────────────────────────────
+// SEARCH & FILTERS
+// ─────────────────────────────────────────
+
+function isNodeVisible(d) {
+  if (hiddenCategories.has(d.category)) return false;
+  if (searchQuery && d.name.toLowerCase().indexOf(searchQuery) === -1 &&
+      d.path.toLowerCase().indexOf(searchQuery) === -1 &&
+      d.description.toLowerCase().indexOf(searchQuery) === -1) return false;
+  return true;
+}
+
+function applyFilters() {
+  nodeCircles
+    .style('opacity', function(d) { return isNodeVisible(d) ? 1 : 0.06; })
+    .style('pointer-events', function(d) { return isNodeVisible(d) ? 'all' : 'none'; });
+
+  labels
+    .style('opacity', function(d) {
+      if (!isNodeVisible(d)) return 0;
+      return d.lines > 80 ? 0.85 : 0;
+    });
+
+  links
+    .style('opacity', function(l) {
+      var sid = typeof l.source === 'object' ? l.source.id : l.source;
+      var tid = typeof l.target === 'object' ? l.target.id : l.target;
+      var sNode = nodeMap[sid];
+      var tNode = nodeMap[tid];
+      if (!sNode || !tNode) return 0;
+      return (isNodeVisible(sNode) && isNodeVisible(tNode)) ? null : 0.02;
+    });
+
+  updateStats();
+}
+
+function onSearch(query) {
+  searchQuery = query.toLowerCase().trim();
+  if (selectedNode && !isNodeVisible(nodeMap[selectedNode])) {
+    selectedNode = null;
+    clearHighlights();
+    showEmptySidebar();
+  }
+  applyFilters();
+  drawHulls();
+}
+
+function toggleCategory(cat) {
+  if (hiddenCategories.has(cat)) {
+    hiddenCategories.delete(cat);
+  } else {
+    hiddenCategories.add(cat);
+  }
+  renderCategoryChips();
+  applyFilters();
+  drawHulls();
+}
+
+function renderCategoryChips() {
+  var container = document.getElementById('cat-filters');
+  clearEl(container);
+  Object.entries(CATEGORIES).forEach(function(entry) {
+    var key = entry[0], val = entry[1];
+    var hidden = hiddenCategories.has(key);
+    var chip = el('div', { className: 'cat-chip' + (hidden ? ' hidden' : '') });
+    var dot = el('span', { className: 'dot' });
+    dot.style.background = val.color;
+    chip.appendChild(dot);
+    chip.appendChild(document.createTextNode(val.label));
+    chip.addEventListener('click', function() { toggleCategory(key); });
+    container.appendChild(chip);
+  });
+}
+
+function resetAll() {
+  searchQuery = '';
+  document.getElementById('search-box').value = '';
+  hiddenCategories.clear();
+  selectedNode = null;
+  renderCategoryChips();
+  clearHighlights();
+  showEmptySidebar();
+  applyFilters();
+
+  // Unpin all
+  nodes.forEach(function(n) { n.fx = null; n.fy = null; });
+  simulation.alpha(0.5).restart();
+
+  // Reset zoom
+  svg.transition().duration(500)
+    .call(zoom.transform, d3.zoomIdentity.translate(getWidth() / 2, getHeight() / 2).scale(0.72));
+}
+
+function updateStats() {
+  var visible = nodes.filter(isNodeVisible);
+  var totalLines = visible.reduce(function(s, n) { return s + n.lines; }, 0);
+  document.getElementById('stats').textContent =
+    visible.length + ' files \u00b7 ' + totalLines.toLocaleString() + ' lines';
+}
+
+// ─────────────────────────────────────────
+// LEGEND
+// ─────────────────────────────────────────
+
+function toggleLegend() {
+  legendVisible = !legendVisible;
+  document.getElementById('legend').classList.toggle('visible', legendVisible);
+}
+
+function renderLegend() {
+  var legendEl = document.getElementById('legend');
+  clearEl(legendEl);
+  Object.entries(CATEGORIES).forEach(function(entry) {
+    var val = entry[1];
+    var item = el('div', { className: 'legend-item' });
+    var dot = el('span', { className: 'legend-dot' });
+    dot.style.background = val.color;
+    item.appendChild(dot);
+    item.appendChild(el('span', { className: 'legend-label', text: val.label }));
+    legendEl.appendChild(item);
+  });
+  var edgeItem = el('div', { className: 'legend-item' });
+  edgeItem.style.marginTop = '8px';
+  edgeItem.style.paddingTop = '8px';
+  edgeItem.style.borderTop = '1px solid #1e2d44';
+  var edgeLabel = el('span', { text: '\u2500\u2500 import   \u2504\u2504 HTTP/FS' });
+  edgeLabel.style.color = '#4a5568';
+  edgeLabel.style.fontSize = '10px';
+  edgeItem.appendChild(edgeLabel);
+  legendEl.appendChild(edgeItem);
+}
+
+// ─────────────────────────────────────────
+// TREE VIEW
+// ─────────────────────────────────────────
+
+function buildTree() {
+  var root = { name: 'story-game', children: [] };
+  var folderNodes = {};
+
+  Object.entries(FOLDERS).forEach(function(entry) {
+    var key = entry[0], val = entry[1];
+    var fNode = { name: val.label, children: [], _folder: key };
+    folderNodes[key] = fNode;
+    root.children.push(fNode);
+  });
+
+  nodes.forEach(function(n) {
+    var fn = folderNodes[n.folder];
+    if (fn) {
+      fn.children.push({ name: n.name, _data: n, children: [] });
+    }
+  });
+
+  // Remove empty
+  root.children = root.children.filter(function(c) { return c.children.length > 0; });
+
+  return d3.hierarchy(root);
+}
+
+var treePositions = {};
+
+function computeTreeLayout() {
+  var hierarchy = buildTree();
+  var radius = Math.min(getWidth(), getHeight()) * 0.38;
+
+  var tree = d3.tree()
+    .size([2 * Math.PI, radius])
+    .separation(function(a, b) { return (a.parent === b.parent ? 1 : 2) / a.depth; });
+
+  tree(hierarchy);
+
+  treePositions = {};
+  hierarchy.descendants().forEach(function(d) {
+    if (d.data._data) {
+      var angle = d.x;
+      var r = d.y;
+      treePositions[d.data._data.id] = {
+        x: r * Math.cos(angle - Math.PI / 2),
+        y: r * Math.sin(angle - Math.PI / 2),
+      };
+    }
+  });
+
+  return hierarchy;
+}
+
+function setView(view) {
+  if (view === currentView) return;
+  currentView = view;
+
+  document.getElementById('btn-constellation').classList.toggle('active', view === 'constellation');
+  document.getElementById('btn-tree').classList.toggle('active', view === 'tree');
+
+  if (view === 'tree') {
+    enterTreeView();
+  } else {
+    enterConstellationView();
+  }
+}
+
+function enterTreeView() {
+  simulation.stop();
+
+  var hierarchy = computeTreeLayout();
+
+  // Animate nodes to tree positions
+  nodes.forEach(function(n) {
+    var pos = treePositions[n.id];
+    if (pos) {
+      n._targetX = pos.x;
+      n._targetY = pos.y;
+      n._startX = n.x;
+      n._startY = n.y;
+    }
+  });
+
+  // Build tree links
+  var treeLinks = [];
+  hierarchy.links().forEach(function(link) {
+    var sx = link.source.y * Math.cos(link.source.x - Math.PI / 2);
+    var sy = link.source.y * Math.sin(link.source.x - Math.PI / 2);
+    var tx = link.target.y * Math.cos(link.target.x - Math.PI / 2);
+    var ty = link.target.y * Math.sin(link.target.x - Math.PI / 2);
+    treeLinks.push({ x1: sx, y1: sy, x2: tx, y2: ty });
+  });
+
+  // Animate transition
+  var duration = 800;
+  var t = d3.timer(function(elapsed) {
+    var progress = Math.min(1, elapsed / duration);
+    var ease = d3.easeCubicInOut(progress);
+
+    nodes.forEach(function(n) {
+      if (n._targetX !== undefined) {
+        n.x = n._startX + (n._targetX - n._startX) * ease;
+        n.y = n._startY + (n._targetY - n._startY) * ease;
+      }
+    });
+
+    nodeCircles.attr('cx', function(d) { return d.x; }).attr('cy', function(d) { return d.y; });
+    labels.attr('x', function(d) { return d.x; }).attr('y', function(d) { return d.y - nodeRadius(d) - 6; });
+
+    // Fade out constellation links
+    links.style('opacity', 1 - ease);
+    hullLayer.style('opacity', 1 - ease);
+
+    if (progress >= 1) {
+      t.stop();
+
+      links.style('display', 'none');
+      hullLayer.style('display', 'none');
+
+      // Show tree links
+      treeLinkLayer.style('display', null);
+      treeLinkLayer.selectAll('line').remove();
+      treeLinkLayer.selectAll('line')
+        .data(treeLinks)
+        .join('line')
+        .attr('class', 'tree-link')
+        .attr('x1', function(d) { return d.x1; }).attr('y1', function(d) { return d.y1; })
+        .attr('x2', function(d) { return d.x2; }).attr('y2', function(d) { return d.y2; })
+        .style('opacity', 0)
+        .transition().duration(300)
+        .style('opacity', 1);
+
+      // Show import arcs
+      treeArcLayer.style('display', null);
+      treeArcLayer.selectAll('path').remove();
+      var arcData = edges.filter(function(e) {
+        return treePositions[e.source] && treePositions[e.target];
+      });
+
+      treeArcLayer.selectAll('path')
+        .data(arcData)
+        .join('path')
+        .attr('class', 'tree-arc')
+        .attr('d', function(e) {
+          var s = treePositions[e.source];
+          var t = treePositions[e.target];
+          var dx = t.x - s.x;
+          var dy = t.y - s.y;
+          var dr = Math.sqrt(dx * dx + dy * dy) * 1.5;
+          return 'M' + s.x + ',' + s.y + 'A' + dr + ',' + dr + ' 0 0,1 ' + t.x + ',' + t.y;
+        })
+        .attr('stroke', function(e) {
+          var sNode = nodeMap[e.source];
+          return sNode ? CATEGORIES[sNode.category].color : '#4a5568';
+        })
+        .style('opacity', 0)
+        .transition().duration(300)
+        .style('opacity', 0.15);
+    }
+  });
+}
+
+function enterConstellationView() {
+  // Hide tree elements
+  treeLinkLayer.style('display', 'none');
+  treeArcLayer.style('display', 'none');
+
+  // Show constellation elements
+  links.style('display', null);
+  hullLayer.style('display', null);
+
+  // Unpin and restart
+  nodes.forEach(function(n) { n.fx = null; n.fy = null; });
+
+  links.style('opacity', 0);
+  hullLayer.style('opacity', 0);
+
+  simulation.alpha(0.5).restart();
+
+  // Fade in
+  var duration = 800;
+  links.transition().duration(duration).style('opacity', null);
+  hullLayer.transition().duration(duration).style('opacity', null);
+}
+
+// ─────────────────────────────────────────
+// EVENT LISTENERS
+// ─────────────────────────────────────────
+
+svg.on('click', function() {
+  if (selectedNode) {
+    selectedNode = null;
+    clearHighlights();
+    showEmptySidebar();
+  }
+});
+
+document.getElementById('btn-constellation').addEventListener('click', function() { setView('constellation'); });
+document.getElementById('btn-tree').addEventListener('click', function() { setView('tree'); });
+document.getElementById('search-box').addEventListener('input', function() { onSearch(this.value); });
+document.getElementById('reset-btn').addEventListener('click', resetAll);
+document.getElementById('legend-toggle').addEventListener('click', toggleLegend);
+
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
+
+renderCategoryChips();
+renderLegend();
+updateStats();
+
+// Initial zoom to fit
+setTimeout(function() {
+  var w = getWidth();
+  var h = getHeight();
+  svg.call(zoom.transform, d3.zoomIdentity.translate(w / 2, h / 2).scale(0.72));
+}, 100);
+
+// Handle resize
+window.addEventListener('resize', function() {
+  if (currentView === 'constellation') {
+    simulation.alpha(0.1).restart();
+  }
+});
+</script>
+</body>
+</html>

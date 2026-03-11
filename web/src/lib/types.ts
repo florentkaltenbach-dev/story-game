@@ -1,7 +1,16 @@
 // === Existing types (preserved) ===
 
 export type Role = "player" | "mc" | "keeper" | "system";
-export type Channel = "all" | "keeper-private" | "mc-keeper";
+export type BuiltInChannel = "all" | "keeper-private" | "mc-keeper" | "secret-action";
+export type Channel = BuiltInChannel | `group-${string}`;
+
+export interface GroupChannel {
+  id: string;           // e.g. "group-abc123"
+  name: string;         // player-chosen display name
+  members: string[];    // player IDs
+  createdBy: string;    // player ID
+  createdAt: number;
+}
 
 export interface Message {
   id: string;
@@ -12,12 +21,26 @@ export interface Message {
   playerId?: string;
 }
 
+export type CharacterStatus = "pending" | "draft" | "submitted" | "approved";
+
+export interface CharacterSheet {
+  status: CharacterStatus;
+  archetype: string;
+  background: string;
+  motivation: string;
+  fear: string;
+  qualities: string[];
+  relationships: string[];
+  revisionComment?: string;
+}
+
 export interface Player {
   id: string;
   name: string;
   characterName: string;
   journal: string;
   notes: string;
+  character: CharacterSheet;
 }
 
 export interface Scene {
@@ -76,12 +99,13 @@ export interface KeeperInput {
   };
   recentHistory?: Array<{ role: string; name: string; content: string }>;
   players?: Array<{ name: string; characterName: string; journal: string; notes: string }>;
+  playerKnowledge?: string[];
 }
 
 export interface KeeperResponse {
   narrative: string;
   journalUpdate?: string;
-  stateUpdates: StateUpdate[];
+  stateUpdates?: StateUpdate[];
   internalNotes?: string;
   degraded?: boolean;
 }
@@ -175,6 +199,52 @@ export interface SessionSnapshot {
   act: number;
   lastMessageId: string;
   timestamp: number;
+  widgets?: GameWidget[];
+}
+
+// === Widget types ===
+
+export type WidgetKind = "inventory" | "npc_dossier" | "environment" | "status" | "custom";
+
+export interface InventoryItem {
+  name: string;
+  description?: string;
+  quantity?: number;
+  category?: string;
+}
+
+export interface NpcDossierData {
+  name: string;
+  role: string;
+  description?: string;
+  knownFacts: string[];
+  attitude?: string;
+}
+
+export interface EnvironmentData {
+  conditions: Array<{ label: string; value: string; unit?: string }>;
+  narrative?: string;
+}
+
+export interface StatusData {
+  entries: Array<{ label: string; value: string; color?: string }>;
+}
+
+export interface CustomData {
+  markdown: string;
+}
+
+export type WidgetData = InventoryItem[] | NpcDossierData | EnvironmentData | StatusData | CustomData;
+
+export interface GameWidget {
+  id: string;
+  kind: WidgetKind;
+  label: string;
+  icon?: string;
+  target: "all" | string;   // "all" or playerId
+  data: WidgetData;
+  updatedAt: number;
+  priority?: number;         // sort order (lower = first)
 }
 
 // === SSE event types ===
@@ -184,12 +254,36 @@ export type EventType =
   | "scene"
   | "session"
   | "player_joined"
+  | "player_kicked"
   | "keeper_response"
-  | "memory_update";
+  | "keeper_typing"
+  | "memory_update"
+  | "character_update"
+  | "widget_update"
+  | "widget_remove";
 
 export interface SSEEvent {
   type: EventType;
   data: unknown;
+}
+
+// === Journal voice type ===
+
+export type JournalVoice = "player" | "narrator";
+
+// === Event trigger types ===
+
+export interface EventTrigger {
+  id: string;
+  event: string;
+  mode: KeeperMode;
+  cooldownMinutes: number;
+  conditions?: Record<string, unknown>;
+  description?: string;
+}
+
+export interface TriggerState {
+  lastFired: Record<string, number>;  // trigger id → timestamp
 }
 
 // === Preset config types ===

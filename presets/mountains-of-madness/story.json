@@ -1,0 +1,20 @@
+{
+  "genre": "Cosmic horror. Lovecraftian exploration narrative set in 1930s Antarctica.",
+  "tone": [
+    "Academic dread — horror through precise, scientific observation of impossible things",
+    "Retrospective urgency — the original narrator wrote after the events, trying to prevent what the players are now doing",
+    "Cosmic insignificance — human civilization is a footnote in a story that began a billion years ago",
+    "Nature as adversary — the cold, the wind, the distances are as dangerous as anything alive"
+  ],
+  "atmosphere": "The horror is patient. Early sessions are almost entirely preparation and transit. Anomalies accumulate individually explainable but collectively impossible. Compression serves horror — less time to rationalize. The descent is felt in the body, not just the intellect.",
+  "pacingStructure": [
+    "Preparation — mundane logistics, equipment, expertise. Characters bond. Deceptively normal.",
+    "Transit — the journey into remoteness. Each stage removes one more layer of civilization. The world gets quieter, colder, more empty.",
+    "Discovery — small anomalies accumulate. Each one explainable on its own. Together they form a pattern that shouldn't exist.",
+    "Revelation — the pattern becomes undeniable. The scale of what they've found dwarfs everything they thought they knew.",
+    "Confrontation — not combat. Encounter. Witnessing something that breaks their model of reality.",
+    "Flight — getting out alive, carrying knowledge that nobody will believe and that changes them permanently."
+  ],
+  "actStructure": "Five sessions total. Session 0 is character co-creation and world discovery. Sessions 1-4 are play. Each play session has its own dramatic question answered by session end. The Lovecraft Curve spans all four play sessions but each session is satisfying alone. Session 0: The Circle (co-creation, briefing, departure). Session 1: The Ice (transit, discovery, Lake's camp). Session 2: The Mountains (discovery peaks, revelation, the city and murals). Session 3: The Descent (revelation completes, confrontation, the Shoggoth, flight begins). Session 4: The Return (flight, the vision, the moral choice). Target duration: ~90 minutes per session, ~7.5 hours total.",
+  "sessionCount": 5
+}

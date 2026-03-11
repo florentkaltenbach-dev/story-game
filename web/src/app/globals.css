@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0e17;
-  --foreground: #e8dcc8;
-  --surface: #131a2b;
-  --surface-light: #1c2640;
-  --accent: #c4a35a;
-  --accent-hover: #d4b76a;
-  --ice: #7ba4c7;
-  --keeper: #6b9e7a;
-  --danger: #8b3a3a;
-  --border: #1e2d44;
-  --muted: #8b9bb4;
+  --background: #060a11;
+  --foreground: #f2e8d6;
+  --surface: #0e1420;
+  --surface-light: #182236;
+  --accent: #d4b36a;
+  --accent-hover: #e4c77a;
+  --ice: #8db8d8;
+  --keeper: #7cb88c;
+  --danger: #c55050;
+  --border: #2a3a55;
+  --muted: #b0c0d8;
 }
 
 @theme inline {
@@ -56,4 +56,83 @@ body {
   font-family: var(--font-narrative), Georgia, "Times New Roman", serif;
   line-height: 1.8;
   letter-spacing: 0.01em;
+}
+
+/* Dossier form styling */
+.dossier-label {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+  font-family: var(--font-mono);
+}
+
+.dossier-prompt {
+  font-size: 12px;
+  color: color-mix(in srgb, var(--muted) 75%, transparent);
+  font-style: italic;
+  margin-bottom: 6px;
+}
+
+.dossier-textarea {
+  width: 100%;
+  background: var(--surface-light);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--foreground);
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.dossier-textarea::placeholder {
+  color: color-mix(in srgb, var(--muted) 65%, transparent);
+}
+
+.dossier-textarea:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+/* Bottom sheet transitions */
+.bottom-sheet-open {
+  transform: translateY(0);
+}
+.bottom-sheet-closed {
+  transform: translateY(100%);
+  pointer-events: none;
+}
+
+/* Safe area handling for notched/rounded devices */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Fixed toolbar positioning */
+.panel-toolbar {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Input area: avoid keyboard overlap on iOS */
+.input-safe-area {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+}
+
+/* Touch-friendly: show elements that are normally hover-gated */
+@media (hover: none) {
+  .touch-visible {
+    opacity: 1 !important;
+    color: inherit;
+  }
+}
+@media (hover: hover) {
+  .touch-visible {
+    opacity: 0;
+  }
+  .group:hover .touch-visible {
+    opacity: 1;
+  }
 }

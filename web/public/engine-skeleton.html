@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Ceremony — Runtime Architecture</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0e17;
+    color: #e8dcc8;
+    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  header {
+    background: #0d1220;
+    border-bottom: 1px solid #1e2d44;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    z-index: 10;
+    position: relative;
+  }
+
+  header h1 {
+    font-family: 'Crimson Text', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #c4a35a;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  header h1 span {
+    color: #6a6a7a;
+    font-weight: 400;
+    font-size: 16px;
+    margin-left: 12px;
+  }
+
+  .trace-buttons {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .trace-btn {
+    background: #131a2b;
+    border: 1px solid #1e2d44;
+    border-radius: 6px;
+    padding: 5px 12px;
+    color: #6a7a8a;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .trace-btn:hover {
+    color: #e8dcc8;
+    border-color: #c4a35a;
+  }
+
+  .trace-btn.active {
+    background: #1e2d44;
+    color: #c4a35a;
+    border-color: #c4a35a;
+  }
+
+  .trace-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  #layout {
+    display: grid;
+    grid-template-columns: 240px 1fr 320px;
+    grid-template-rows: 1fr 140px;
+    height: calc(100vh - 56px);
+  }
+
+  /* Left panel: context assembly */
+  #context-panel {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    background: #0d1220;
+    border-right: 1px solid #1e2d44;
+    padding: 16px;
+    overflow-y: auto;
+  }
+
+  #context-panel h2 {
+    font-family: 'Crimson Text', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #c4a35a;
+    margin-bottom: 14px;
+    letter-spacing: 0.5px;
+  }
+
+  .tier-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    transition: opacity 0.4s ease;
+    cursor: default;
+    position: relative;
+  }
+
+  .tier-row.dimmed {
+    opacity: 0.1;
+  }
+
+  .tier-label {
+    font-size: 10px;
+    color: #8b9bb4;
+    width: 22px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .tier-bar-wrap {
+    flex: 1;
+    height: 18px;
+    background: #131a2b;
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .tier-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+    position: relative;
+  }
+
+  .tier-bar-text {
+    position: absolute;
+    right: 4px;
+    top: 2px;
+    font-size: 9px;
+    color: #0a0e17;
+    font-weight: 500;
+  }
+
+  .tier-name {
+    position: absolute;
+    left: 4px;
+    top: 2px;
+    font-size: 9px;
+    color: #0a0e17;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .tier-tooltip {
+    display: none;
+    position: absolute;
+    left: 30px;
+    top: 22px;
+    background: #1a2236;
+    border: 1px solid #2a3a54;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 10px;
+    color: #c8bca8;
+    z-index: 20;
+    width: 190px;
+    line-height: 1.4;
+    pointer-events: none;
+  }
+
+  .tier-row:hover .tier-tooltip {
+    display: block;
+  }
+
+  .cached-badge {
+    font-size: 8px;
+    color: #c4a35a;
+    background: #2a2a1a;
+    border: 1px solid #3a3a2a;
+    border-radius: 3px;
+    padding: 1px 4px;
+    margin-left: 4px;
+  }
+
+  .mode-selector {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #1e2d44;
+  }
+
+  .mode-selector label {
+    font-size: 10px;
+    color: #6a7a8a;
+    display: block;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .mode-selector select {
+    width: 100%;
+    background: #131a2b;
+    border: 1px solid #1e2d44;
+    border-radius: 4px;
+    color: #e8dcc8;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 6px 8px;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .mode-selector select:focus {
+    border-color: #c4a35a;
+  }
+
+  .mode-total {
+    margin-top: 10px;
+    font-size: 11px;
+    color: #8b9bb4;
+  }
+
+  .mode-total strong {
+    color: #c4a35a;
+  }
+
+  .mode-output {
+    margin-top: 4px;
+    font-size: 10px;
+    color: #6a7a8a;
+  }
+
+  /* Main SVG area */
+  #graph-container {
+    grid-column: 2;
+    grid-row: 1;
+    position: relative;
+    overflow: hidden;
+    background: #0a0e17;
+  }
+
+  #graph {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Sidebar */
+  #sidebar {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    background: #0d1220;
+    border-left: 1px solid #1e2d44;
+    padding: 16px;
+    overflow-y: auto;
+  }
+
+  #sidebar h2 {
+    font-family: 'Crimson Text', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #c4a35a;
+    margin-bottom: 12px;
+  }
+
+  .sidebar-empty {
+    font-size: 12px;
+    color: #4a5568;
+    font-style: italic;
+    margin-top: 40px;
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .sidebar-section {
+    margin-bottom: 14px;
+  }
+
+  .sidebar-section h3 {
+    font-size: 10px;
+    color: #6a7a8a;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #1e2d44;
+  }
+
+  .sidebar-section p {
+    font-size: 11px;
+    line-height: 1.5;
+    color: #c8bca8;
+  }
+
+  .sidebar-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .sidebar-list li {
+    font-size: 10px;
+    color: #8b9bb4;
+    padding: 2px 0;
+    padding-left: 10px;
+    position: relative;
+  }
+
+  .sidebar-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #4a5568;
+  }
+
+  .sidebar-type-badge {
+    display: inline-block;
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .sidebar-edge-row {
+    font-size: 10px;
+    color: #8b9bb4;
+    padding: 3px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .sidebar-edge-dir {
+    font-size: 9px;
+    color: #4a5568;
+    width: 14px;
+    text-align: center;
+  }
+
+  .sidebar-edge-label {
+    color: #6a7a8a;
+    font-size: 9px;
+    margin-left: auto;
+  }
+
+  .sidebar-sse-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4px;
+  }
+
+  .sidebar-sse-table th {
+    font-size: 9px;
+    color: #6a7a8a;
+    text-align: left;
+    padding: 3px 4px;
+    border-bottom: 1px solid #1e2d44;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .sidebar-sse-table td {
+    font-size: 9px;
+    color: #8b9bb4;
+    padding: 3px 4px;
+    border-bottom: 1px solid #0f1624;
+    vertical-align: top;
+  }
+
+  .sidebar-sse-type {
+    color: #c4a35a;
+    font-weight: 500;
+  }
+
+  /* Bottom panel: memory levels */
+  #memory-panel {
+    grid-column: 2;
+    background: #0d1220;
+    border-top: 1px solid #1e2d44;
+    padding: 12px 16px;
+    overflow-x: auto;
+    display: flex;
+    gap: 2px;
+  }
+
+  .memory-col {
+    flex: 1;
+    min-width: 140px;
+    background: #0f1624;
+    border-radius: 4px;
+    padding: 8px 10px;
+    transition: box-shadow 0.4s ease;
+  }
+
+  .memory-col.glow {
+    box-shadow: 0 0 12px rgba(196, 163, 90, 0.35), inset 0 0 8px rgba(196, 163, 90, 0.1);
+  }
+
+  .memory-col-title {
+    font-size: 10px;
+    color: #c4a35a;
+    font-weight: 500;
+    margin-bottom: 2px;
+    white-space: nowrap;
+  }
+
+  .memory-col-desc {
+    font-size: 9px;
+    color: #4a5568;
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+
+  .memory-file {
+    font-size: 9px;
+    color: #6a7a8a;
+    padding: 1px 0;
+    transition: color 0.3s, text-shadow 0.3s;
+  }
+
+  .memory-file.highlight {
+    color: #c4a35a;
+    text-shadow: 0 0 4px rgba(196, 163, 90, 0.4);
+  }
+
+  /* SVG styles */
+  .node-rect {
+    cursor: pointer;
+    transition: filter 0.2s;
+  }
+
+  .node-rect:hover {
+    filter: brightness(1.3);
+  }
+
+  .node-label {
+    pointer-events: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    fill: #e8dcc8;
+    text-anchor: middle;
+    dominant-baseline: central;
+    font-weight: 500;
+  }
+
+  .node-sublabel {
+    pointer-events: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    fill: #6a7a8a;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+
+  .edge-path {
+    fill: none;
+    stroke: #2a3a54;
+    stroke-width: 1.5;
+    transition: stroke 0.3s, stroke-opacity 0.3s;
+  }
+
+  .edge-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    fill: #4a5568;
+    pointer-events: none;
+  }
+
+  .step-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    fill: #e8dcc8;
+    text-anchor: middle;
+    pointer-events: none;
+  }
+
+  .step-label-bg {
+    fill: #0d1220;
+    stroke: #1e2d44;
+    stroke-width: 1;
+    rx: 4;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0a0e17; }
+  ::-webkit-scrollbar-thumb { background: #1e2d44; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #2a3a54; }
+</style>
+</head>
+<body>
+<script>
+(function() {
+  'use strict';
+
+  // ─── Helpers ──────────────────────────────────────────────────
+  function el(tag, attrs, children) {
+    var e = document.createElement(tag);
+    if (attrs) {
+      Object.entries(attrs).forEach(function(kv) {
+        var k = kv[0], v = kv[1];
+        if (k === 'text') e.textContent = v;
+        else if (k === 'className') e.className = v;
+        else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+        else e.setAttribute(k, v);
+      });
+    }
+    if (children) {
+      (Array.isArray(children) ? children : [children]).forEach(function(c) {
+        if (typeof c === 'string') e.appendChild(document.createTextNode(c));
+        else if (c) e.appendChild(c);
+      });
+    }
+    return e;
+  }
+  function clearEl(e) { while (e.firstChild) e.removeChild(e.firstChild); }
+
+  // ─── Data ─────────────────────────────────────────────────────
+
+  var TYPE_COLORS = {
+    client: '#9b7ed4',
+    server: '#7ba4c7',
+    state: '#6b9e7a',
+    keeper: '#e06f6f',
+    external: '#8b9bb4',
+    storage: '#c4a35a'
+  };
+
+  var COMPONENTS = [
+    { id: 'player-browser', name: 'Player Browser', type: 'client', x: 120, y: 180,
+      description: 'React SPA served by Next.js. Handles character creation, story log, message input, SSE event stream. Up to 5 concurrent players.',
+      functions: ['CharacterCreation.tsx', 'StoryLog.tsx', 'MessageInput.tsx', 'useEventStream.ts', 'api.ts'],
+      state: ['localStorage token', 'player session state', 'message history'],
+      events: ['POST /session (join)', 'POST /messages', 'PATCH /session (character)', 'GET /events (SSE)'] },
+    { id: 'mc-browser', name: 'MC Browser', type: 'client', x: 120, y: 420,
+      description: 'MC Dashboard \u2014 login, session control, keeper queries, invite generation, character review, memory sidebar. Largest view in the app (769 lines).',
+      functions: ['mc/page.tsx', 'SceneDisplay.tsx', 'ChannelTabs.tsx', 'CharacterPanel.tsx'],
+      state: ['localStorage MC token', 'session state', 'memory cache'],
+      events: ['POST /auth', 'POST /session', 'POST /messages', 'POST /keeper', 'POST /invites', 'GET /events (SSE)'] },
+    { id: 'web-server', name: 'Web Server :3004', type: 'server', x: 420, y: 300,
+      description: 'Next.js app on port 3004, managed by PM2 as "ceremony". 7 API routes handling session, messages, keeper proxy, invites, auth, memory, and SSE events.',
+      functions: ['session/route.ts', 'messages/route.ts', 'keeper/route.ts', 'invites/route.ts', 'auth/route.ts', 'memory/route.ts', 'events/route.ts'],
+      state: ['Request routing', 'Auth middleware'],
+      events: ['HTTP request handling', 'SSE stream creation'] },
+    { id: 'state-store', name: 'State Store', type: 'state', x: 420, y: 120,
+      description: 'In-memory session state (store.ts, 367 lines). Players, messages, invites, scene. Initialized from filesystem snapshots on startup. Atomic invite claiming.',
+      functions: ['addPlayer()', 'addMessage()', 'claimInvite()', 'advanceAct()', 'updateScene()', 'updateCharacter()', 'submitCharacter()'],
+      state: ['session object', 'messages[]', 'invites[]', 'messageIdCounter'],
+      events: ['Emits to SSE on every mutation'] },
+    { id: 'memory-engine', name: 'Memory Engine', type: 'state', x: 280, y: 500,
+      description: 'Filesystem memory engine (memory.ts, 247 lines). Read/write 5 memory levels, thread management, message archival. Atomic writes with .tmp rename.',
+      functions: ['readMemoryLevel()', 'writeMemoryLevel()', 'appendMessage()', 'writeSessionSnapshot()', 'archiveSessionMessages()'],
+      state: ['5 memory level directories', 'session snapshot JSON', 'message JSONL files'],
+      events: ['File read/write operations'] },
+    { id: 'sse-emitter', name: 'SSE Emitter', type: 'server', x: 200, y: 300,
+      description: 'StateEmitter singleton (events.ts, 109 lines). Per-client filtering by role/playerId. 30s keepalive heartbeat. Channels: all, mc-keeper, keeper-private.',
+      functions: ['subscribe()', 'emit()', 'createSSEStream()'],
+      state: ['Active listener map', 'Keepalive intervals'],
+      events: ['message', 'scene', 'session', 'player_joined', 'keeper_response', 'memory_update', 'character_update'] },
+    { id: 'keeper-service', name: 'Keeper Service :3005', type: 'keeper', x: 650, y: 300,
+      description: 'Express server on port 3005 (server.ts, 521 lines). Reads memory/ and config/, builds context tiers P0-P8, queries Claude API. Rate limiting, NPC extraction.',
+      functions: ['assembleContext()', 'buildSystemPrompt()', 'readMemoryLevel()', 'listThreads()', 'loadPresetDNA()', 'ClaudeKeeper.query()'],
+      state: ['Cached system prompt', 'Rate limiter counters'],
+      events: ['POST /query', 'GET /health'] },
+    { id: 'claude-api', name: 'Claude API', type: 'external', x: 870, y: 300,
+      description: 'Anthropic Claude API (Haiku 4.5 model). Receives system prompt + context block, returns structured JSON: narrative, journalUpdate, stateUpdates, internalNotes.',
+      functions: ['messages.create()'],
+      state: ['Ephemeral cache (system prompt)'],
+      events: ['Structured JSON response'] },
+    { id: 'filesystem', name: 'Filesystem', type: 'storage', x: 560, y: 520,
+      description: 'The Keeper\'s long-term memory. 5 level directories under memory/. Config files under config/. Session snapshots. Message JSONL archives.',
+      functions: ['memory/1-plot-state/', 'memory/2-character-state/', 'memory/3-narrative-threads/', 'memory/4-thematic-layer/', 'memory/5-world-state/'],
+      state: ['23 seeded memory files', '4 config JSON files', 'session-snapshot.json', 'messages JSONL'],
+      events: ['Read by Keeper on each query', 'Written by Web on state updates'] }
+  ];
+
+  var EDGES = [
+    { source: 'player-browser', target: 'web-server', label: 'HTTP', protocol: 'REST API' },
+    { source: 'mc-browser', target: 'web-server', label: 'HTTP', protocol: 'REST API' },
+    { source: 'sse-emitter', target: 'player-browser', label: 'SSE', protocol: 'EventSource' },
+    { source: 'sse-emitter', target: 'mc-browser', label: 'SSE', protocol: 'EventSource' },
+    { source: 'web-server', target: 'state-store', label: 'internal', protocol: 'Direct import' },
+    { source: 'web-server', target: 'memory-engine', label: 'internal', protocol: 'Direct import' },
+    { source: 'state-store', target: 'sse-emitter', label: 'emit()', protocol: 'Event bus' },
+    { source: 'web-server', target: 'keeper-service', label: 'X-Ceremony-Secret', protocol: 'HTTP + HMAC' },
+    { source: 'keeper-service', target: 'claude-api', label: 'API', protocol: 'Anthropic SDK' },
+    { source: 'keeper-service', target: 'filesystem', label: 'read', protocol: 'fs.readFile' },
+    { source: 'memory-engine', target: 'filesystem', label: 'read/write', protocol: 'fs atomic' },
+    { source: 'state-store', target: 'memory-engine', label: 'persist', protocol: 'Snapshot + JSONL' }
+  ];
+
+  var CONTEXT_TIERS = [
+    { id: 'P0', name: 'System Prompt', tokens: 800, color: '#e06f6f', cached: true, source: 'Hardcoded identity + preset DNA' },
+    { id: 'P1', name: 'Preset DNA', tokens: 1200, color: '#e06f6f', cached: true, source: 'config/story.json + techniques.json + world.json' },
+    { id: 'P2', name: 'Scene/Plot', tokens: 300, color: '#6b9e7a', cached: false, source: 'memory/1-plot-state/' },
+    { id: 'P3', name: 'Characters', tokens: 600, color: '#9b7ed4', cached: false, source: 'memory/2-character-state/ + runtime players' },
+    { id: 'P4', name: 'Threads', tokens: 300, color: '#7ba4c7', cached: false, source: 'memory/3-narrative-threads/' },
+    { id: 'P5', name: 'Thematic', tokens: 200, color: '#c4a35a', cached: false, source: 'memory/4-thematic-layer/' },
+    { id: 'P6', name: 'World', tokens: 200, color: '#8b9bb4', cached: false, source: 'memory/5-world-state/' },
+    { id: 'P7', name: 'History', tokens: 500, color: '#22d3ee', cached: false, source: 'Last 6 messages from conversation' },
+    { id: 'P8', name: 'Input', tokens: 200, color: '#d4a05a', cached: false, source: 'Current trigger (player action / MC query)' }
+  ];
+
+  var MODES = {
+    player_response:   { tiers: ['P2', 'P3', 'P4', 'P7', 'P8'], maxOutput: 768 },
+    mc_query:          { tiers: ['P2', 'P3', 'P7', 'P8'], maxOutput: 512 },
+    mc_generate:       { tiers: ['P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'], maxOutput: 1024 },
+    journal_write:     { tiers: ['P3', 'P7', 'P8'], maxOutput: 512 },
+    compression:       { tiers: ['P7', 'P8'], maxOutput: 512 },
+    thread_evaluation: { tiers: ['P4', 'P7', 'P8'], maxOutput: 256 }
+  };
+
+  var MEMORY_LEVELS = [
+    { name: '1-plot-state', label: 'Plot State', description: 'Current scene, location, expedition status',
+      files: ['current-scene.md', 'expedition-location.md', 'expedition-status.md', 'environment.md', 'vessel-specs.md', 'patrons.md', 'equipment.md', 'radio-status.md'] },
+    { name: '2-character-state', label: 'Character State', description: 'NPC state as JSON, updated per scene',
+      files: ['starkweather.json', 'moore.json', 'ship-captain.json', 'radio-operator.json', 'dog-handler.json'] },
+    { name: '3-narrative-threads', label: 'Narrative Threads', description: 'Threads: dormant \u2192 planted \u2192 growing \u2192 ripe \u2192 resolved',
+      files: ['dogs-behavior.json', 'wind-piping.json', 'equipment-anomalies.json', 'radio-degradation.json'] },
+    { name: '4-thematic-layer', label: 'Thematic Layer', description: 'Tone calibration, recurring symbols',
+      files: ['cosmological-register.md', 'recurring-symbols.md', 'session-tone.md'] },
+    { name: '5-world-state', label: 'World State', description: 'Antarctic conditions, offscreen events',
+      files: ['antarctic-conditions.md', 'expedition-status.md', 'offscreen-events.md'] }
+  ];
+
+  var SSE_EVENTS = [
+    { type: 'message', description: 'New message in any channel', filter: 'mc-keeper: MC only; keeper-private: MC + target player' },
+    { type: 'scene', description: 'Scene title/description/location updated', filter: 'All clients' },
+    { type: 'session', description: 'Session status, act, or number changed', filter: 'All clients' },
+    { type: 'player_joined', description: 'New player joined via invite', filter: 'All clients' },
+    { type: 'keeper_response', description: 'Keeper narrative response', filter: 'All clients (narrative only)' },
+    { type: 'memory_update', description: 'Memory level written', filter: 'MC only (for memory sidebar)' },
+    { type: 'character_update', description: 'Character status or fields changed', filter: 'All clients' }
+  ];
+
+  var LIFECYCLE_TRACES = [
+    { name: 'Player Join', steps: [
+      { from: 'player-browser', to: 'web-server', desc: 'POST /session with invite code' },
+      { from: 'web-server', to: 'state-store', desc: 'claimInvite + addPlayer' },
+      { from: 'state-store', to: 'sse-emitter', desc: 'emit player_joined' },
+      { from: 'sse-emitter', to: 'player-browser', desc: 'player_joined event' },
+      { from: 'sse-emitter', to: 'mc-browser', desc: 'player_joined event' }
+    ]},
+    { name: 'Player Message', steps: [
+      { from: 'player-browser', to: 'web-server', desc: 'POST /messages' },
+      { from: 'web-server', to: 'state-store', desc: 'addMessage' },
+      { from: 'state-store', to: 'memory-engine', desc: 'appendMessage to JSONL' },
+      { from: 'memory-engine', to: 'filesystem', desc: 'write message file' },
+      { from: 'web-server', to: 'keeper-service', desc: 'forward (if private channel)' },
+      { from: 'keeper-service', to: 'filesystem', desc: 'read memory levels' },
+      { from: 'keeper-service', to: 'claude-api', desc: 'assembled context' },
+      { from: 'claude-api', to: 'keeper-service', desc: 'structured response' },
+      { from: 'keeper-service', to: 'web-server', desc: 'narrative + stateUpdates' },
+      { from: 'web-server', to: 'state-store', desc: 'keeper message + memory writes' },
+      { from: 'state-store', to: 'sse-emitter', desc: 'emit message' },
+      { from: 'sse-emitter', to: 'player-browser', desc: 'message event' },
+      { from: 'sse-emitter', to: 'mc-browser', desc: 'message event' }
+    ]},
+    { name: 'MC Keeper Query', steps: [
+      { from: 'mc-browser', to: 'web-server', desc: 'POST /keeper' },
+      { from: 'web-server', to: 'keeper-service', desc: 'query with context' },
+      { from: 'keeper-service', to: 'filesystem', desc: 'read memory + config' },
+      { from: 'keeper-service', to: 'claude-api', desc: 'assembled context' },
+      { from: 'claude-api', to: 'keeper-service', desc: 'structured response' },
+      { from: 'keeper-service', to: 'web-server', desc: 'response' },
+      { from: 'web-server', to: 'state-store', desc: '2 messages + memory updates' },
+      { from: 'state-store', to: 'memory-engine', desc: 'persist' },
+      { from: 'memory-engine', to: 'filesystem', desc: 'write memory files' },
+      { from: 'state-store', to: 'sse-emitter', desc: 'emit' },
+      { from: 'sse-emitter', to: 'mc-browser', desc: 'response event' }
+    ]},
+    { name: 'Session Advance', steps: [
+      { from: 'mc-browser', to: 'web-server', desc: 'POST /session action=advance_act' },
+      { from: 'web-server', to: 'state-store', desc: 'advanceAct' },
+      { from: 'state-store', to: 'memory-engine', desc: 'persistSnapshot' },
+      { from: 'memory-engine', to: 'filesystem', desc: 'write snapshot' },
+      { from: 'state-store', to: 'sse-emitter', desc: 'emit session event' },
+      { from: 'sse-emitter', to: 'player-browser', desc: 'session event' },
+      { from: 'sse-emitter', to: 'mc-browser', desc: 'session event' }
+    ]},
+    { name: 'Character Flow', steps: [
+      { from: 'player-browser', to: 'web-server', desc: 'PATCH /session character update' },
+      { from: 'web-server', to: 'state-store', desc: 'updateCharacter' },
+      { from: 'state-store', to: 'sse-emitter', desc: 'emit character_update' },
+      { from: 'sse-emitter', to: 'mc-browser', desc: 'character_update for review' },
+      { from: 'mc-browser', to: 'web-server', desc: 'POST /session approve/revise' },
+      { from: 'web-server', to: 'state-store', desc: 'approveCharacter or reviseCharacter' },
+      { from: 'state-store', to: 'sse-emitter', desc: 'emit character_update' },
+      { from: 'sse-emitter', to: 'player-browser', desc: 'character_update result' }
+    ]}
+  ];
+
+  // ─── Build component lookup ───────────────────────────────────
+  var compMap = {};
+  COMPONENTS.forEach(function(c) { compMap[c.id] = c; });
+
+  // ─── Node dimensions ─────────────────────────────────────────
+  var NODE_W = 130;
+  var NODE_H = 48;
+
+  // ─── Layout ───────────────────────────────────────────────────
+
+  // Header
+  var header = el('header', null, [
+    el('h1', null, [
+      document.createTextNode('The Ceremony'),
+      el('span', { text: 'Runtime Architecture' })
+    ]),
+    el('div', { className: 'trace-buttons', id: 'trace-buttons' })
+  ]);
+  document.body.appendChild(header);
+
+  // Main layout
+  var layout = el('div', { id: 'layout' });
+  document.body.appendChild(layout);
+
+  // Context panel
+  var contextPanel = el('div', { id: 'context-panel' });
+  layout.appendChild(contextPanel);
+
+  // Graph container
+  var graphContainer = el('div', { id: 'graph-container' });
+  layout.appendChild(graphContainer);
+
+  // Sidebar
+  var sidebar = el('div', { id: 'sidebar' });
+  layout.appendChild(sidebar);
+
+  // Memory panel
+  var memoryPanel = el('div', { id: 'memory-panel' });
+  layout.appendChild(memoryPanel);
+
+  // ─── Trace Buttons ────────────────────────────────────────────
+  var traceButtonsEl = document.getElementById('trace-buttons');
+  var traceRunning = false;
+
+  LIFECYCLE_TRACES.forEach(function(trace, idx) {
+    var btn = el('button', {
+      className: 'trace-btn',
+      text: trace.name,
+      onclick: function() { runTrace(idx); }
+    });
+    trace.btnEl = btn;
+    traceButtonsEl.appendChild(btn);
+  });
+
+  // ─── Context Panel ────────────────────────────────────────────
+  var currentMode = 'player_response';
+
+  contextPanel.appendChild(el('h2', { text: 'Context Assembly' }));
+
+  var tiersContainer = el('div');
+  contextPanel.appendChild(tiersContainer);
+
+  var maxTokens = 1200;
+  var tierEls = {};
+
+  CONTEXT_TIERS.forEach(function(tier) {
+    var barWidth = Math.round((tier.tokens / maxTokens) * 100);
+    var row = el('div', { className: 'tier-row' }, [
+      el('span', { className: 'tier-label', text: tier.id }),
+      el('div', { className: 'tier-bar-wrap' }, [
+        el('div', {
+          className: 'tier-bar',
+          style: 'width: ' + barWidth + '%; background: ' + tier.color + ';'
+        }, [
+          el('span', { className: 'tier-name', text: tier.name }),
+          el('span', { className: 'tier-bar-text', text: tier.tokens + '' })
+        ])
+      ]),
+      tier.cached ? el('span', { className: 'cached-badge', text: 'cached' }) : null,
+      el('div', { className: 'tier-tooltip', text: tier.source })
+    ]);
+    tierEls[tier.id] = row;
+    tiersContainer.appendChild(row);
+  });
+
+  // Mode selector
+  var modeSection = el('div', { className: 'mode-selector' });
+  modeSection.appendChild(el('label', { text: 'Context Mode' }));
+
+  var modeSelect = el('select');
+  Object.keys(MODES).forEach(function(m) {
+    modeSelect.appendChild(el('option', { value: m, text: m.replace(/_/g, ' ') }));
+  });
+  modeSelect.value = currentMode;
+  modeSelect.addEventListener('change', function() {
+    currentMode = modeSelect.value;
+    updateModeDisplay();
+  });
+  modeSection.appendChild(modeSelect);
+
+  var modeTotalEl = el('div', { className: 'mode-total' });
+  modeSection.appendChild(modeTotalEl);
+  var modeOutputEl = el('div', { className: 'mode-output' });
+  modeSection.appendChild(modeOutputEl);
+  contextPanel.appendChild(modeSection);
+
+  function updateModeDisplay() {
+    var mode = MODES[currentMode];
+    var activeTiers = mode.tiers;
+    var totalTokens = 0;
+
+    CONTEXT_TIERS.forEach(function(tier) {
+      var row = tierEls[tier.id];
+      if (tier.cached || activeTiers.indexOf(tier.id) >= 0) {
+        row.className = 'tier-row';
+        totalTokens += tier.tokens;
+      } else {
+        row.className = 'tier-row dimmed';
+      }
+    });
+
+    clearEl(modeTotalEl);
+    modeTotalEl.appendChild(document.createTextNode('Input: '));
+    modeTotalEl.appendChild(el('strong', { text: totalTokens + ' tokens' }));
+
+    clearEl(modeOutputEl);
+    modeOutputEl.appendChild(document.createTextNode('Max output: ' + mode.maxOutput + ' tokens'));
+  }
+
+  updateModeDisplay();
+
+  // ─── Memory Panel ─────────────────────────────────────────────
+  var memoryColEls = {};
+  var memoryFileEls = {};
+
+  MEMORY_LEVELS.forEach(function(level) {
+    var fileChildren = level.files.map(function(f) {
+      var fileEl = el('div', { className: 'memory-file', text: f });
+      var key = level.name + '/' + f;
+      memoryFileEls[key] = fileEl;
+      return fileEl;
+    });
+
+    var col = el('div', { className: 'memory-col' }, [
+      el('div', { className: 'memory-col-title', text: level.label }),
+      el('div', { className: 'memory-col-desc', text: level.description })
+    ].concat(fileChildren));
+
+    memoryColEls[level.name] = col;
+    memoryPanel.appendChild(col);
+  });
+
+  // ─── Sidebar ──────────────────────────────────────────────────
+  function showSidebarEmpty() {
+    clearEl(sidebar);
+    sidebar.appendChild(el('h2', { text: 'Component Detail' }));
+    sidebar.appendChild(el('div', { className: 'sidebar-empty' }, [
+      'Click a component node',
+      el('br'),
+      'to inspect its details'
+    ]));
+  }
+
+  function showSidebarComponent(comp) {
+    clearEl(sidebar);
+
+    sidebar.appendChild(el('h2', { text: comp.name }));
+
+    // Type badge
+    var color = TYPE_COLORS[comp.type] || '#8b9bb4';
+    sidebar.appendChild(el('span', {
+      className: 'sidebar-type-badge',
+      text: comp.type,
+      style: 'background: ' + color + '22; color: ' + color + '; border: 1px solid ' + color + '44;'
+    }));
+
+    // Description
+    var descSection = el('div', { className: 'sidebar-section' });
+    descSection.appendChild(el('h3', { text: 'Description' }));
+    descSection.appendChild(el('p', { text: comp.description }));
+    sidebar.appendChild(descSection);
+
+    // Functions
+    var funcSection = el('div', { className: 'sidebar-section' });
+    funcSection.appendChild(el('h3', { text: 'Functions / Files' }));
+    var funcList = el('ul', { className: 'sidebar-list' });
+    comp.functions.forEach(function(f) {
+      funcList.appendChild(el('li', { text: f }));
+    });
+    funcSection.appendChild(funcList);
+    sidebar.appendChild(funcSection);
+
+    // State
+    var stateSection = el('div', { className: 'sidebar-section' });
+    stateSection.appendChild(el('h3', { text: 'State' }));
+    var stateList = el('ul', { className: 'sidebar-list' });
+    comp.state.forEach(function(s) {
+      stateList.appendChild(el('li', { text: s }));
+    });
+    stateSection.appendChild(stateList);
+    sidebar.appendChild(stateSection);
+
+    // Events
+    var eventSection = el('div', { className: 'sidebar-section' });
+    eventSection.appendChild(el('h3', { text: 'Events / Endpoints' }));
+    var eventList = el('ul', { className: 'sidebar-list' });
+    comp.events.forEach(function(e) {
+      eventList.appendChild(el('li', { text: e }));
+    });
+    eventSection.appendChild(eventList);
+    sidebar.appendChild(eventSection);
+
+    // Edges in/out
+    var inEdges = EDGES.filter(function(e) { return e.target === comp.id; });
+    var outEdges = EDGES.filter(function(e) { return e.source === comp.id; });
+
+    if (inEdges.length > 0 || outEdges.length > 0) {
+      var edgeSection = el('div', { className: 'sidebar-section' });
+      edgeSection.appendChild(el('h3', { text: 'Connections' }));
+
+      inEdges.forEach(function(e) {
+        var srcComp = compMap[e.source];
+        edgeSection.appendChild(el('div', { className: 'sidebar-edge-row' }, [
+          el('span', { className: 'sidebar-edge-dir', text: '\u2190' }),
+          document.createTextNode(srcComp ? srcComp.name : e.source),
+          el('span', { className: 'sidebar-edge-label', text: e.protocol })
+        ]));
+      });
+      outEdges.forEach(function(e) {
+        var tgtComp = compMap[e.target];
+        edgeSection.appendChild(el('div', { className: 'sidebar-edge-row' }, [
+          el('span', { className: 'sidebar-edge-dir', text: '\u2192' }),
+          document.createTextNode(tgtComp ? tgtComp.name : e.target),
+          el('span', { className: 'sidebar-edge-label', text: e.protocol })
+        ]));
+      });
+      sidebar.appendChild(edgeSection);
+    }
+
+    // SSE events table for sse-emitter
+    if (comp.id === 'sse-emitter') {
+      var sseSection = el('div', { className: 'sidebar-section' });
+      sseSection.appendChild(el('h3', { text: 'SSE Event Types' }));
+      var table = el('table', { className: 'sidebar-sse-table' });
+      var thead = el('tr', null, [
+        el('th', { text: 'Type' }),
+        el('th', { text: 'Description' }),
+        el('th', { text: 'Filter' })
+      ]);
+      table.appendChild(thead);
+      SSE_EVENTS.forEach(function(evt) {
+        table.appendChild(el('tr', null, [
+          el('td', null, [el('span', { className: 'sidebar-sse-type', text: evt.type })]),
+          el('td', { text: evt.description }),
+          el('td', { text: evt.filter })
+        ]));
+      });
+      sseSection.appendChild(table);
+      sidebar.appendChild(sseSection);
+    }
+  }
+
+  showSidebarEmpty();
+
+  // ─── SVG Graph ────────────────────────────────────────────────
+
+  var svg = d3.select('#graph-container')
+    .append('svg')
+    .attr('id', 'graph')
+    .attr('width', '100%')
+    .attr('height', '100%');
+
+  // Arrowhead marker
+  var defs = svg.append('defs');
+
+  defs.append('marker')
+    .attr('id', 'arrow')
+    .attr('viewBox', '0 0 10 6')
+    .attr('refX', 10)
+    .attr('refY', 3)
+    .attr('markerWidth', 8)
+    .attr('markerHeight', 6)
+    .attr('orient', 'auto')
+    .append('path')
+    .attr('d', 'M0,0 L10,3 L0,6 Z')
+    .attr('fill', '#4a5a6a');
+
+  defs.append('marker')
+    .attr('id', 'arrow-active')
+    .attr('viewBox', '0 0 10 6')
+    .attr('refX', 10)
+    .attr('refY', 3)
+    .attr('markerWidth', 8)
+    .attr('markerHeight', 6)
+    .attr('orient', 'auto')
+    .append('path')
+    .attr('d', 'M0,0 L10,3 L0,6 Z')
+    .attr('fill', '#c4a35a');
+
+  // Glow filter
+  var glowFilter = defs.append('filter')
+    .attr('id', 'glow')
+    .attr('x', '-50%')
+    .attr('y', '-50%')
+    .attr('width', '200%')
+    .attr('height', '200%');
+  glowFilter.append('feGaussianBlur')
+    .attr('stdDeviation', '3')
+    .attr('result', 'blur');
+  var glowMerge = glowFilter.append('feMerge');
+  glowMerge.append('feMergeNode').attr('in', 'blur');
+  glowMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+
+  // Zoom
+  var zoomG = svg.append('g').attr('class', 'zoom-root');
+
+  var zoom = d3.zoom()
+    .scaleExtent([0.3, 3])
+    .on('zoom', function(event) {
+      zoomG.attr('transform', event.transform);
+    });
+
+  svg.call(zoom);
+
+  // Fit the view on load
+  function fitView() {
+    var containerEl = document.getElementById('graph-container');
+    var w = containerEl.clientWidth;
+    var h = containerEl.clientHeight;
+    if (w === 0 || h === 0) return;
+
+    var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    COMPONENTS.forEach(function(c) {
+      if (c.x - NODE_W / 2 < minX) minX = c.x - NODE_W / 2;
+      if (c.x + NODE_W / 2 > maxX) maxX = c.x + NODE_W / 2;
+      if (c.y - NODE_H / 2 < minY) minY = c.y - NODE_H / 2;
+      if (c.y + NODE_H / 2 > maxY) maxY = c.y + NODE_H / 2;
+    });
+
+    var pad = 60;
+    minX -= pad; minY -= pad; maxX += pad; maxY += pad;
+    var graphW = maxX - minX;
+    var graphH = maxY - minY;
+    var scale = Math.min(w / graphW, h / graphH, 1.4);
+    var tx = (w - graphW * scale) / 2 - minX * scale;
+    var ty = (h - graphH * scale) / 2 - minY * scale;
+
+    svg.call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+  }
+
+  // ─── Edge path calculation ────────────────────────────────────
+  function edgePath(e) {
+    var src = compMap[e.source];
+    var tgt = compMap[e.target];
+    if (!src || !tgt) return 'M0,0';
+
+    var sx = src.x, sy = src.y;
+    var tx = tgt.x, ty = tgt.y;
+
+    // Compute connection points on the edge of rectangles
+    var dx = tx - sx;
+    var dy = ty - sy;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist === 0) return 'M' + sx + ',' + sy;
+
+    var ndx = dx / dist;
+    var ndy = dy / dist;
+
+    // Exit point from source rect
+    var exitX, exitY;
+    if (Math.abs(ndx) * (NODE_H / 2) > Math.abs(ndy) * (NODE_W / 2)) {
+      // Exit from left or right
+      var signX = ndx > 0 ? 1 : -1;
+      exitX = sx + signX * NODE_W / 2;
+      exitY = sy + ndy * (NODE_W / 2) / Math.abs(ndx);
+    } else {
+      // Exit from top or bottom
+      var signY = ndy > 0 ? 1 : -1;
+      exitX = sx + ndx * (NODE_H / 2) / Math.abs(ndy);
+      exitY = sy + signY * NODE_H / 2;
+    }
+
+    // Entry point to target rect
+    var entryX, entryY;
+    var rdx = -ndx, rdy = -ndy;
+    if (Math.abs(rdx) * (NODE_H / 2) > Math.abs(rdy) * (NODE_W / 2)) {
+      var sX = rdx > 0 ? 1 : -1;
+      entryX = tx + sX * NODE_W / 2;
+      entryY = ty + rdy * (NODE_W / 2) / Math.abs(rdx);
+    } else {
+      var sY = rdy > 0 ? 1 : -1;
+      entryX = tx + rdx * (NODE_H / 2) / Math.abs(rdy);
+      entryY = ty + sY * NODE_H / 2;
+    }
+
+    // Slight curve for visual appeal
+    var mx = (exitX + entryX) / 2;
+    var my = (exitY + entryY) / 2;
+    var perpX = -(entryY - exitY) * 0.08;
+    var perpY = (entryX - exitX) * 0.08;
+
+    return 'M' + exitX + ',' + exitY + ' Q' + (mx + perpX) + ',' + (my + perpY) + ' ' + entryX + ',' + entryY;
+  }
+
+  // ─── Render edges ─────────────────────────────────────────────
+  var edgesG = zoomG.append('g').attr('class', 'edges');
+  var edgePathEls = {};
+
+  EDGES.forEach(function(e) {
+    var key = e.source + '->' + e.target;
+    var path = edgesG.append('path')
+      .attr('class', 'edge-path')
+      .attr('d', edgePath(e))
+      .attr('marker-end', 'url(#arrow)')
+      .attr('data-key', key);
+
+    edgePathEls[key] = path;
+
+    // Edge label
+    var src = compMap[e.source];
+    var tgt = compMap[e.target];
+    if (src && tgt) {
+      var mx = (src.x + tgt.x) / 2;
+      var my = (src.y + tgt.y) / 2;
+      var dx = tgt.x - src.x;
+      var dy = tgt.y - src.y;
+      var perpX = -dy * 0.08;
+      var perpY = dx * 0.08;
+      // Offset label slightly from midpoint
+      var labelOffX = -(tgt.y - src.y) * 0.06;
+      var labelOffY = (tgt.x - src.x) * 0.06;
+      edgesG.append('text')
+        .attr('class', 'edge-label')
+        .attr('x', mx + perpX + labelOffX)
+        .attr('y', my + perpY + labelOffY - 4)
+        .attr('text-anchor', 'middle')
+        .text(e.protocol);
+    }
+  });
+
+  // ─── Render nodes ─────────────────────────────────────────────
+  var nodesG = zoomG.append('g').attr('class', 'nodes');
+  var nodeGroupEls = {};
+
+  COMPONENTS.forEach(function(comp) {
+    var color = TYPE_COLORS[comp.type] || '#8b9bb4';
+    var g = nodesG.append('g')
+      .attr('transform', 'translate(' + comp.x + ',' + comp.y + ')')
+      .attr('data-id', comp.id)
+      .style('cursor', 'pointer');
+
+    g.append('rect')
+      .attr('class', 'node-rect')
+      .attr('x', -NODE_W / 2)
+      .attr('y', -NODE_H / 2)
+      .attr('width', NODE_W)
+      .attr('height', NODE_H)
+      .attr('rx', 8)
+      .attr('ry', 8)
+      .attr('fill', color + '18')
+      .attr('stroke', color)
+      .attr('stroke-width', 1.5);
+
+    // Determine label lines
+    var nameParts = comp.name.split(' ');
+    var line1, line2;
+    if (nameParts.length <= 2) {
+      line1 = comp.name;
+      line2 = null;
+    } else {
+      // Split roughly in half
+      var mid = Math.ceil(nameParts.length / 2);
+      line1 = nameParts.slice(0, mid).join(' ');
+      line2 = nameParts.slice(mid).join(' ');
+    }
+
+    if (line2) {
+      g.append('text')
+        .attr('class', 'node-label')
+        .attr('y', -6)
+        .text(line1);
+      g.append('text')
+        .attr('class', 'node-sublabel')
+        .attr('y', 10)
+        .attr('fill', '#c8bca8')
+        .style('font-size', '10px')
+        .text(line2);
+    } else {
+      g.append('text')
+        .attr('class', 'node-label')
+        .attr('y', 1)
+        .text(line1);
+    }
+
+    // Click handler
+    g.on('click', function() {
+      // Deselect previous
+      nodesG.selectAll('rect.node-rect').attr('stroke-width', 1.5);
+      // Select this
+      g.select('rect.node-rect').attr('stroke-width', 3);
+      showSidebarComponent(comp);
+    });
+
+    nodeGroupEls[comp.id] = g;
+  });
+
+  // ─── Particle animation for traces ───────────────────────────
+
+  var particlesG = zoomG.append('g').attr('class', 'particles');
+  var stepLabelG = zoomG.append('g').attr('class', 'step-labels');
+
+  function findEdgePath(fromId, toId) {
+    var key = fromId + '->' + toId;
+    var pathEl = edgePathEls[key];
+    if (pathEl) return { path: pathEl, key: key, reversed: false };
+
+    // Check reverse
+    var rkey = toId + '->' + fromId;
+    pathEl = edgePathEls[rkey];
+    if (pathEl) return { path: pathEl, key: rkey, reversed: true };
+
+    return null;
+  }
+
+  function pulseNode(nodeId) {
+    var g = nodeGroupEls[nodeId];
+    if (!g) return;
+    g.select('rect.node-rect')
+      .transition().duration(150)
+      .attr('filter', 'url(#glow)')
+      .transition().duration(400)
+      .attr('filter', null);
+
+    g.transition().duration(150)
+      .attr('transform', function() {
+        var comp = compMap[nodeId];
+        return 'translate(' + comp.x + ',' + comp.y + ') scale(1.08)';
+      })
+      .transition().duration(400)
+      .attr('transform', function() {
+        var comp = compMap[nodeId];
+        return 'translate(' + comp.x + ',' + comp.y + ') scale(1)';
+      });
+  }
+
+  function showStepLabel(text, x, y) {
+    stepLabelG.selectAll('*').remove();
+
+    var padding = 8;
+    var tempText = stepLabelG.append('text')
+      .attr('class', 'step-label')
+      .attr('x', x)
+      .attr('y', y - 30)
+      .text(text);
+
+    var bbox = tempText.node().getBBox();
+    tempText.remove();
+
+    stepLabelG.append('rect')
+      .attr('class', 'step-label-bg')
+      .attr('x', bbox.x - padding)
+      .attr('y', bbox.y - padding / 2)
+      .attr('width', bbox.width + padding * 2)
+      .attr('height', bbox.height + padding);
+
+    stepLabelG.append('text')
+      .attr('class', 'step-label')
+      .attr('x', x)
+      .attr('y', y - 30)
+      .text(text);
+  }
+
+  function clearStepLabel() {
+    stepLabelG.selectAll('*').remove();
+  }
+
+  function highlightEdge(key, active) {
+    var pathEl = edgePathEls[key];
+    if (!pathEl) return;
+    if (active) {
+      pathEl.attr('stroke', '#c4a35a')
+        .attr('stroke-width', 2.5)
+        .attr('stroke-opacity', 1)
+        .attr('marker-end', 'url(#arrow-active)');
+    } else {
+      pathEl.attr('stroke', '#2a3a54')
+        .attr('stroke-width', 1.5)
+        .attr('stroke-opacity', 1)
+        .attr('marker-end', 'url(#arrow)');
+    }
+  }
+
+  function resetAllEdges() {
+    Object.keys(edgePathEls).forEach(function(key) {
+      highlightEdge(key, false);
+    });
+  }
+
+  function highlightMemoryForStep(step) {
+    // If the step involves filesystem, highlight relevant memory columns
+    if (step.to === 'filesystem' || step.from === 'filesystem') {
+      // Glow all memory columns briefly
+      Object.keys(memoryColEls).forEach(function(k) {
+        memoryColEls[k].classList.add('glow');
+      });
+    }
+    if (step.desc && step.desc.indexOf('memory') >= 0) {
+      Object.keys(memoryColEls).forEach(function(k) {
+        memoryColEls[k].classList.add('glow');
+      });
+    }
+  }
+
+  function clearMemoryHighlights() {
+    Object.keys(memoryColEls).forEach(function(k) {
+      memoryColEls[k].classList.remove('glow');
+    });
+    Object.keys(memoryFileEls).forEach(function(k) {
+      memoryFileEls[k].classList.remove('highlight');
+    });
+  }
+
+  function animateStep(step, stepNum, totalSteps, callback) {
+    var edgeInfo = findEdgePath(step.from, step.to);
+    if (!edgeInfo) {
+      // No edge found, just pulse and move on
+      pulseNode(step.to);
+      var midComp = compMap[step.to] || compMap[step.from];
+      if (midComp) {
+        showStepLabel('Step ' + stepNum + '/' + totalSteps + ': ' + step.desc, midComp.x, midComp.y);
+      }
+      d3.timeout(callback, 600);
+      return;
+    }
+
+    var pathNode = edgeInfo.path.node();
+    var pathLen = pathNode.getTotalLength();
+
+    // Highlight the edge
+    highlightEdge(edgeInfo.key, true);
+    highlightMemoryForStep(step);
+
+    // Show step label at midpoint
+    var midPt = pathNode.getPointAtLength(pathLen / 2);
+    showStepLabel('Step ' + stepNum + '/' + totalSteps + ': ' + step.desc, midPt.x, midPt.y);
+
+    // Create particle
+    var startPt = edgeInfo.reversed ? pathNode.getPointAtLength(pathLen) : pathNode.getPointAtLength(0);
+    var particle = particlesG.append('circle')
+      .attr('cx', startPt.x)
+      .attr('cy', startPt.y)
+      .attr('r', 5)
+      .attr('fill', '#c4a35a')
+      .attr('filter', 'url(#glow)');
+
+    var duration = Math.max(400, Math.min(800, pathLen * 1.5));
+
+    particle.transition()
+      .duration(duration)
+      .ease(d3.easeLinear)
+      .attrTween('cx', function() {
+        return function(t) {
+          var len = edgeInfo.reversed ? pathLen * (1 - t) : pathLen * t;
+          return pathNode.getPointAtLength(len).x;
+        };
+      })
+      .attrTween('cy', function() {
+        return function(t) {
+          var len = edgeInfo.reversed ? pathLen * (1 - t) : pathLen * t;
+          return pathNode.getPointAtLength(len).y;
+        };
+      })
+      .on('end', function() {
+        particle.remove();
+        pulseNode(step.to);
+
+        // Dim the edge after particle passes
+        d3.timeout(function() {
+          highlightEdge(edgeInfo.key, false);
+        }, 300);
+
+        d3.timeout(callback, 350);
+      });
+  }
+
+  function runTrace(traceIdx) {
+    if (traceRunning) return;
+    traceRunning = true;
+
+    var trace = LIFECYCLE_TRACES[traceIdx];
+
+    // Disable all buttons, highlight active
+    LIFECYCLE_TRACES.forEach(function(t) {
+      t.btnEl.disabled = true;
+      t.btnEl.classList.remove('active');
+    });
+    trace.btnEl.classList.add('active');
+
+    // Clear previous
+    resetAllEdges();
+    clearStepLabel();
+    clearMemoryHighlights();
+    particlesG.selectAll('*').remove();
+
+    var stepIndex = 0;
+    var totalSteps = trace.steps.length;
+
+    function nextStep() {
+      if (stepIndex >= totalSteps) {
+        // Done
+        d3.timeout(function() {
+          clearStepLabel();
+          clearMemoryHighlights();
+          traceRunning = false;
+          LIFECYCLE_TRACES.forEach(function(t) {
+            t.btnEl.disabled = false;
+            t.btnEl.classList.remove('active');
+          });
+        }, 800);
+        return;
+      }
+
+      var step = trace.steps[stepIndex];
+      stepIndex++;
+      animateStep(step, stepIndex, totalSteps, nextStep);
+    }
+
+    nextStep();
+  }
+
+  // ─── Initial fit ──────────────────────────────────────────────
+  // Use setTimeout to ensure layout is fully calculated
+  setTimeout(function() {
+    fitView();
+  }, 100);
+
+  // Refit on resize
+  window.addEventListener('resize', function() {
+    fitView();
+  });
+
+})();
+</script>
+</body>
+</html>

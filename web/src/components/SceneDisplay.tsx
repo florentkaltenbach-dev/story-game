@@ -24,13 +24,13 @@ export default function SceneDisplay({
 
   if (editing && editable) {
     return (
-      <div className="border-b border-border bg-surface px-6 py-4 space-y-2">
-        <div className="flex gap-2">
+      <div className="border-b border-border bg-surface px-3 sm:px-6 py-3 sm:py-4 space-y-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             value={draft.location}
             onChange={(e) => setDraft({ ...draft, location: e.target.value })}
             placeholder="Location"
-            className="bg-surface-light border border-border rounded px-2 py-1 text-xs text-foreground w-40 focus:outline-none focus:border-accent/50"
+            className="bg-surface-light border border-border rounded px-2 py-1 text-xs text-foreground w-full sm:w-40 focus:outline-none focus:border-accent/50"
           />
           <input
             value={draft.title}
@@ -64,26 +64,27 @@ export default function SceneDisplay({
   }
 
   return (
-    <div className="border-b border-border bg-surface px-6 py-4 group">
-      <div className="flex items-baseline gap-3">
-        <span className="text-xs tracking-widest uppercase text-muted">
+    <div className="border-b border-border bg-surface px-3 sm:px-6 py-3 sm:py-4 group">
+      <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
+        <span className="text-[10px] sm:text-xs tracking-widest uppercase text-muted">
           {scene.location}
         </span>
-        <span className="text-accent/40">|</span>
-        <h2 className="text-lg font-semibold text-accent">{scene.title}</h2>
+        <span className="text-accent/60">|</span>
+        <h2 className="narrative-text text-base sm:text-lg font-semibold text-accent">{scene.title}</h2>
         {editable && (
           <button
             onClick={() => {
               setDraft(scene);
               setEditing(true);
             }}
-            className="ml-auto text-xs text-muted/50 hover:text-accent opacity-0 group-hover:opacity-100 transition-opacity"
+            aria-label="Edit scene"
+            className="ml-auto text-xs text-muted/70 hover:text-accent touch-visible transition-opacity"
           >
             edit scene
           </button>
         )}
       </div>
-      <p className="narrative-text mt-2 text-sm text-foreground/80 leading-relaxed">
+      <p className="narrative-text mt-2 text-xs sm:text-sm text-foreground/90 leading-relaxed">
         {scene.description}
       </p>
     </div>

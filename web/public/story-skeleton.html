@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Ceremony — Narrative Architecture</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0e17;
+    color: #e8dcc8;
+    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  header {
+    background: #0d1220;
+    border-bottom: 1px solid #1e2d44;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    z-index: 10;
+    position: relative;
+  }
+
+  header h1 {
+    font-family: 'Crimson Text', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #c4a35a;
+    letter-spacing: 1px;
+  }
+
+  header h1 span {
+    color: #6a6a7a;
+    font-weight: 400;
+    font-size: 16px;
+    margin-left: 12px;
+  }
+
+  .overlay-toggles {
+    display: flex;
+    gap: 6px;
+  }
+
+  .overlay-btn {
+    background: #131a2b;
+    border: 1px solid #1e2d44;
+    border-radius: 6px;
+    padding: 6px 14px;
+    color: #6a7a8a;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+    position: relative;
+  }
+
+  .overlay-btn:hover {
+    color: #e8dcc8;
+    border-color: #3a4a5a;
+  }
+
+  .overlay-btn.active {
+    background: #1e2d44;
+    color: #c4a35a;
+    border-color: #c4a35a;
+  }
+
+  .overlay-btn .swatch {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  #main {
+    display: flex;
+    height: calc(100vh - 56px);
+    position: relative;
+  }
+
+  #viz-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #svg-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #main-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  #geo-track {
+    height: 64px;
+    background: #0d1220;
+    border-top: 1px solid #1e2d44;
+    flex-shrink: 0;
+  }
+
+  #geo-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  #sidebar {
+    width: 320px;
+    min-width: 320px;
+    background: #0d1220;
+    border-left: 1px solid #1e2d44;
+    overflow-y: auto;
+    padding: 20px;
+    z-index: 5;
+    transition: opacity 0.3s;
+  }
+
+  #sidebar::-webkit-scrollbar { width: 6px; }
+  #sidebar::-webkit-scrollbar-track { background: transparent; }
+  #sidebar::-webkit-scrollbar-thumb { background: #1e2d44; border-radius: 3px; }
+
+  .sidebar-empty {
+    color: #4a5568;
+    font-size: 12px;
+    font-style: italic;
+    text-align: center;
+    margin-top: 40px;
+    line-height: 1.8;
+  }
+
+  .sidebar-title {
+    font-family: 'Crimson Text', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: #c4a35a;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-subtitle {
+    font-size: 11px;
+    color: #6a7a8a;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #1e2d44;
+  }
+
+  .sidebar-section { margin-bottom: 16px; }
+
+  .sidebar-section-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #4a5568;
+    margin-bottom: 8px;
+  }
+
+  .sidebar-text {
+    font-size: 12px;
+    line-height: 1.7;
+    color: #b0a890;
+  }
+
+  .sidebar-beat {
+    font-size: 11px;
+    line-height: 1.6;
+    color: #8a9aa0;
+    padding: 4px 0 4px 12px;
+    border-left: 2px solid #1e2d44;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin: 2px 4px 2px 0;
+  }
+
+  .thread-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #131a2b;
+    border: 1px solid #1e2d44;
+    border-radius: 6px;
+    padding: 8px 0;
+    min-width: 260px;
+    z-index: 100;
+    display: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    margin-top: 4px;
+  }
+
+  .thread-dropdown.visible { display: block; }
+
+  .thread-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: 11px;
+    color: #8a9aa0;
+    transition: background 0.15s;
+  }
+
+  .thread-item:hover { background: #1e2d44; }
+  .thread-item.active { color: #e8dcc8; }
+
+  .thread-item .thread-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .thread-item.inactive .thread-swatch { opacity: 0.3; }
+
+  .sensory-popup {
+    position: absolute;
+    top: 60px;
+    right: 330px;
+    background: #131a2b;
+    border: 1px solid #1e2d44;
+    border-radius: 8px;
+    padding: 16px;
+    z-index: 90;
+    display: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    width: 520px;
+  }
+
+  .sensory-popup.visible { display: block; }
+
+  .sensory-grid {
+    display: grid;
+    grid-template-columns: 70px repeat(5, 1fr);
+    gap: 3px;
+    font-size: 10px;
+  }
+
+  .sensory-header {
+    text-align: center;
+    color: #6a7a8a;
+    padding: 4px;
+    font-size: 10px;
+  }
+
+  .sensory-label {
+    color: #8a9aa0;
+    padding: 6px 4px;
+    text-align: right;
+    font-size: 10px;
+  }
+
+  .sensory-cell {
+    border-radius: 3px;
+    padding: 4px 6px;
+    font-size: 9px;
+    line-height: 1.3;
+    color: #e8dcc8;
+    cursor: pointer;
+    transition: transform 0.15s;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .sensory-cell:hover {
+    transform: scale(1.05);
+    z-index: 2;
+    position: relative;
+  }
+
+  .sensory-popup-title {
+    font-family: 'Crimson Text', serif;
+    font-size: 16px;
+    color: #c4a35a;
+    margin-bottom: 12px;
+  }
+
+  .d3-tooltip {
+    position: absolute;
+    background: #131a2b;
+    border: 1px solid #1e2d44;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: #e8dcc8;
+    pointer-events: none;
+    z-index: 200;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    font-family: 'JetBrains Mono', monospace;
+  }
+</style>
+</head>
+<body>
+
+<script>
+/* ====================================================================
+   The Ceremony — Narrative Architecture Visualization
+   Self-contained D3 v7 interactive map
+   ==================================================================== */
+
+/* ── Helpers ── */
+function el(tag, attrs, children) {
+  var e = document.createElement(tag);
+  if (attrs) {
+    Object.entries(attrs).forEach(function(kv) {
+      var k = kv[0], v = kv[1];
+      if (k === 'text') e.textContent = v;
+      else if (k === 'className') e.className = v;
+      else if (k === 'style' && typeof v === 'object') {
+        Object.entries(v).forEach(function(sv) { e.style[sv[0]] = sv[1]; });
+      }
+      else if (k.startsWith('on') && typeof v === 'function') e.addEventListener(k.slice(2).toLowerCase(), v);
+      else e.setAttribute(k, v);
+    });
+  }
+  if (children) {
+    (Array.isArray(children) ? children : [children]).forEach(function(c) {
+      if (typeof c === 'string') e.appendChild(document.createTextNode(c));
+      else if (c) e.appendChild(c);
+    });
+  }
+  return e;
+}
+function clearEl(e) { while (e.firstChild) e.removeChild(e.firstChild); }
+
+/* ── Data ── */
+var SESSIONS = [
+  {
+    id: 0, name: 'The Circle', subtitle: 'Session 0 \u2014 Character Creation',
+    duration: 90, color: '#7ba4c7',
+    dramaticQuestion: 'Who are these people, and why would they go?',
+    cosmologicalRegister: 'Stratum I \u2014 The Rational Surface',
+    acts: [
+      { name: 'The World', duration: 20, purpose: 'Set the stage', beats: [
+        '1933. Antarctica. The public story of the first Miskatonic expedition',
+        'The era, the geography, the state of polar exploration',
+        'Players explore the universe \u2014 the Keeper answers from the published record'
+      ]},
+      { name: 'The Characters', duration: 40, purpose: 'Build identities through conversation', beats: [
+        'Who are you? Background, expertise, name',
+        'Why join a dangerous Antarctic expedition in 1933?',
+        'What are you afraid of? (Something human, not monsters)',
+        'Relationships \u2014 at least one connection per player',
+        'Journals written: qualities, relationships, motives, fears'
+      ]},
+      { name: 'The Briefing', duration: 20, purpose: "The patron's curated version", beats: [
+        'Edited Dyer excerpts, selected Lake bulletins, maps',
+        "The patron's spin: bad weather, bad luck, extraordinary fossils",
+        'Players discuss in character \u2014 cracks may or may not be noticed'
+      ]},
+      { name: 'The Departure', duration: 10, purpose: 'The ceremony of leaving', beats: [
+        'Each player states \u2014 in character \u2014 why they\'re going',
+        'The Keeper records departure statements (echoed in Session 4)',
+        'The ship pulls away from the dock'
+      ]}
+    ]
+  },
+  {
+    id: 1, name: 'The Ice', subtitle: 'Session 1 \u2014 Into Antarctica',
+    duration: 90, color: '#6b9e7a',
+    dramaticQuestion: 'What really happened at Lake\'s camp?',
+    cosmologicalRegister: 'Stratum I dominant, Stratum IV subtle',
+    acts: [
+      { name: 'The Crossing', duration: 30, purpose: 'The world shrinks', beats: [
+        'Mirages on the horizon \u2014 distant mountains float like enchanted cities',
+        'The dogs are uneasy \u2014 dismissed as weather sensitivity',
+        "Something wrong with the patron's cargo or orders",
+        'First sight of the Ross Ice Barrier \u2014 200ft vertical ice',
+        'Stratum IV subtle: wind sounds musical, mirage lingers, dream fragment'
+      ]},
+      { name: 'Base Camp', duration: 20, purpose: 'First anomalies', beats: [
+        "Triangular markings in strata that shouldn't contain them",
+        'Instruments behave strangely near certain locations',
+        'Dogs refuse food, refuse to face one direction',
+        "Night event: a sound the wind doesn't explain, equipment moved"
+      ]},
+      { name: "Lake's Camp", duration: 40, purpose: 'Evidence overwhelms', beats: [
+        'The destroyed advance camp \u2014 three years of ice over remains',
+        'Star-shaped mounds that look deliberate',
+        'Empty specimen containers, dissection tools laid out with care',
+        "Lake's private field journal with increasingly frantic entries",
+        "Gedney still missing. One specimen remains that shouldn't exist",
+        'The mountains visible \u2014 higher than anything. Are those cave mouths?'
+      ]}
+    ]
+  },
+  {
+    id: 2, name: 'The Mountains', subtitle: 'Session 2 \u2014 The Demiurge\'s City',
+    duration: 90, color: '#9b7ed4',
+    dramaticQuestion: 'What story do these walls tell, and who carved the last ones?',
+    cosmologicalRegister: 'Stratum II dominant \u2014 the Demiurge autobiography',
+    acts: [
+      { name: 'The Approach', duration: 20, purpose: 'The impossible range', beats: [
+        'Peaks exceeding 35,000 feet. Black, bare of snow',
+        'Mirage of a city beyond the peaks \u2014 persistent and detailed',
+        'Wind sounds like musical piping. Readings make no sense',
+        "Dyer's private journal page \u2014 describes exactly what they see",
+        'The decision: crossing means limited fuel for return'
+      ]},
+      { name: 'The City', duration: 50, purpose: "The Demiurge's autobiography", beats: [
+        'Cyclopean architecture older than complex life on Earth',
+        'Mural 1: Star-headed things descending from cosmic space',
+        'Mural 2: Building cities, creating life, the Shoggoths',
+        'Mural 3: Art, science, civilization spanning a billion years',
+        'Mural 4: The Cthulhu spawn wars, retreat, division',
+        'Mural 5: Mi-Go invasion, trapped on Earth, Antarctic retreat',
+        'Mural 6: Art of creation lost, Shoggoth rebellions, ice advances',
+        'Mural 7: Crude carvings overlaid \u2014 a different hand'
+      ]},
+      { name: 'The Threshold', duration: 20, purpose: 'Two linked revelations', beats: [
+        'Violet mountains on western horizon \u2014 the Elder Things feared them',
+        'Warmer air from below \u2014 temperature wrong in Antarctica',
+        'From far below \u2014 a sound that might be birds',
+        'The question shifts: what ended them?'
+      ]}
+    ]
+  },
+  {
+    id: 3, name: 'The Descent', subtitle: 'Session 3 \u2014 Into the Tunnels',
+    duration: 90, color: '#e06f6f',
+    dramaticQuestion: 'Are they still down there?',
+    cosmologicalRegister: 'Stratum III \u2014 the Ahrimanic force',
+    acts: [
+      { name: 'Down', duration: 25, purpose: 'The Promethean descent', beats: [
+        'Fifteen-foot carved passages descending into warmth',
+        'Carvings degrade then change \u2014 crude spirals over originals',
+        'Giant blind albino penguins \u2014 underground ecosystem',
+        'The nameless scent grows stronger',
+        'Elder Thing artifacts: soapstone, tools, evidence of recent passage'
+      ]},
+      { name: 'The Empathy Turn', duration: 25, purpose: 'They were men', beats: [
+        'Headless Elder Things. Dark-green slime. Recent \u2014 not millions of years',
+        "They woke up. Were found by Lake's team. Were dissected",
+        'They defended themselves. Killed Lake\'s men. Took supplies',
+        'Tried to go home \u2014 something in the tunnels killed them',
+        "'Whatever they had been, they were men'"
+      ]},
+      { name: 'Tekeli-li', duration: 20, purpose: 'The Shoggoth', beats: [
+        'The sound. Not birds',
+        'A vast column of fetid black iridescence filling the tunnel',
+        'Temporary eyes forming and unforming',
+        'Tekeli-li. Tekeli-li'
+      ]},
+      { name: 'Escape', duration: 20, purpose: 'Pure flight', beats: [
+        'Back through tunnels, city, to surface',
+        "Someone glimpses something they can't process",
+        'Fragments in journal \u2014 half-formed impressions',
+        'They made it out'
+      ]}
+    ]
+  },
+  {
+    id: 4, name: 'The Return', subtitle: 'Session 4 \u2014 The Moral Weight',
+    duration: 90, color: '#c4a35a',
+    dramaticQuestion: 'What do you do with knowledge that could change everything?',
+    cosmologicalRegister: 'All strata echo; Stratum I reasserts',
+    acts: [
+      { name: 'The Crossing', duration: 20, purpose: 'Back over the mountains', beats: [
+        'The plane. The mountain crossing. Everyone rattled',
+        'Someone looks back \u2014 the city extends endlessly',
+        "Instrument reading that can't be right",
+        'The pass at 24,000 feet. Engine sounds wrong'
+      ]},
+      { name: 'The Vision', duration: 15, purpose: 'Stratum IV contact', beats: [
+        'The clouds above the violet western mountains',
+        "Fragments from Danforth's list \u2014 not all, not in order",
+        "'The black pit. A rim, carved. Something with five dimensions'",
+        'The entry stops mid-sentence'
+      ]},
+      { name: 'The Return to Base', duration: 15, purpose: 'The world wants answers', beats: [
+        'McMurdo Sound. The ship. The radio. The world',
+        'The patron wants a report \u2014 findings, specimens, coordinates',
+        'The world wants an explanation'
+      ]},
+      { name: 'The Choice', duration: 40, purpose: 'The moral climax', beats: [
+        'Tell the truth \u2014 Dyer tried this, nobody believed',
+        'Tell the patron what they want \u2014 guarantees a third expedition',
+        'Lie \u2014 destroy evidence, burn photographs',
+        "Keep silent \u2014 delay but don't resolve",
+        'Something else \u2014 choices that emerge from the story',
+        'The Echo: departure statements read back'
+      ]}
+    ]
+  }
+];
+
+var THREADS = [
+  { id: 1, name: 'Dogs refuse food', plantSession: 1, plantAct: 1, paySession: 1, payAct: 2, color: '#e06f6f' },
+  { id: 2, name: "Dyer's journal page", plantSession: 2, plantAct: 0, paySession: 2, payAct: 1, color: '#c4a35a' },
+  { id: 3, name: 'Wind piping', plantSession: 1, plantAct: 0, paySession: 4, payAct: 0, color: '#9b7ed4',
+    waypoints: [{ session: 3, act: 2 }] },
+  { id: 4, name: 'Mirage of a city', plantSession: 1, plantAct: 0, paySession: 2, payAct: 0, color: '#7ba4c7' },
+  { id: 5, name: 'Equipment malfunctions', plantSession: 1, plantAct: 1, paySession: 2, payAct: 0, color: '#6b9e7a' },
+  { id: 6, name: 'Radio degradation', plantSession: 1, plantAct: 1, paySession: 3, payAct: 0, color: '#8b9bb4' },
+  { id: 7, name: 'Nameless scent', plantSession: 2, plantAct: 2, paySession: 3, payAct: 2, color: '#d4a05a',
+    waypoints: [{ session: 3, act: 1 }] },
+  { id: 8, name: 'Tekeli-li', plantSession: 3, plantAct: 0, paySession: 3, payAct: 2, color: '#e06f6f' },
+  { id: 9, name: 'Crude carvings', plantSession: 2, plantAct: 1, paySession: 3, payAct: 0, color: '#22d3ee' },
+  { id: 10, name: 'Violet mountains', plantSession: 2, plantAct: 2, paySession: 4, payAct: 1, color: '#bf7ed4' }
+];
+
+var STRATA = [
+  { name: 'Stratum I \u2014 Rational', color: '#7ba4c7', opacities: [1.0, 0.8, 0.3, 0.1, 0.2] },
+  { name: 'Stratum II \u2014 Demiurge', color: '#9b7ed4', opacities: [0.0, 0.3, 1.0, 0.6, 0.3] },
+  { name: 'Stratum III \u2014 Ahrimanic', color: '#e06f6f', opacities: [0.0, 0.0, 0.3, 0.8, 0.3] },
+  { name: 'Stratum IV \u2014 Azathothic', color: '#c4a35a', opacities: [0.0, 0.0, 0.1, 0.4, 0.2] }
+];
+
+var DECISIONS = [
+  { id: 1, session: 0, act: 3, name: 'Join the expedition', stakes: 'Personal risk',
+    fallback: "The ceremony doesn't begin",
+    description: 'Each player must commit their character to the expedition. This is the first and simplest choice, but it sets the tone: these characters chose to go.' },
+  { id: 2, session: 1, act: 2, name: 'Press inland toward mountains', stakes: 'Safety vs discovery',
+    fallback: 'Patron overrides',
+    description: 'After the horror of Lake\'s camp, the party must decide whether to investigate the mountains. The patron has their own agenda and will push regardless.' },
+  { id: 3, session: 2, act: 0, name: 'Cross the mountains', stakes: 'Point of no return (fuel)',
+    fallback: 'Someone forces crossing',
+    description: 'Crossing the mountains means insufficient fuel to return the same way. This is the mechanical point of no return. If nobody chooses it, circumstances force it.' },
+  { id: 4, session: 2, act: 1, name: 'Enter the city', stakes: 'Curiosity vs self-preservation',
+    fallback: 'Can stay at plane',
+    description: 'The alien city stretches before them. Players can choose to explore or remain at the relative safety of the landing site. Most will enter. The city calls.' },
+  { id: 5, session: 3, act: 0, name: 'Descend into tunnels', stakes: 'Deepest Promethean choice',
+    fallback: 'Can refuse',
+    description: 'The tunnels lead down into warmth and darkness. This is the Promethean descent \u2014 to seek knowledge at any cost. Players can genuinely refuse this one.' },
+  { id: 6, session: 4, act: 3, name: 'What to tell', stakes: 'Entire moral weight',
+    fallback: 'No wrong answer',
+    description: 'The final and most significant choice. What do you tell the world about what you found? Every option has consequences. There is no wrong answer, only difficult ones.' }
+];
+
+var LOCATIONS = [
+  { name: 'Arkham', session: 0, x: 0.05 },
+  { name: 'At Sea', session: 1, x: 0.15 },
+  { name: 'McMurdo Sound', session: 1, x: 0.25 },
+  { name: 'Ross Ice Barrier', session: 1, x: 0.33 },
+  { name: "Lake's Camp", session: 1, x: 0.42 },
+  { name: 'Mountain Approach', session: 2, x: 0.52 },
+  { name: 'The City', session: 2, x: 0.62 },
+  { name: 'The Tunnels', session: 3, x: 0.72 },
+  { name: 'Mountain Pass', session: 4, x: 0.82 },
+  { name: 'McMurdo Return', session: 4, x: 0.93 }
+];
+
+var SENSORY = {
+  sight: {
+    early: 'White snow, blue ice, red-gold light',
+    middle: 'Mirages, impossible scale, regular cave mouths',
+    late: 'The murals, the city, the thing in the tunnel'
+  },
+  sound: {
+    early: 'Wind, engines, dogs barking, radio static',
+    middle: 'Wind piping musically, silence where there should be sound',
+    late: 'Tekeli-li, sounds from underground, the absence of the radio'
+  },
+  touch: {
+    early: 'Cold air, rough rope, warm coffee',
+    middle: "Ice that feels wrong, stone that's too smooth",
+    late: "Surfaces with texture that shouldn't exist"
+  },
+  smell: {
+    early: 'Clean Antarctic air, fuel, wet dog',
+    middle: 'Something faintly acrid, pungent organic smell',
+    late: 'The thick dark-green fluid, the air in the tunnels'
+  },
+  taste: {
+    early: 'Tinned food, lime juice, frozen breath',
+    middle: 'Metallic taste in the air near anomalies',
+    late: 'Nothing \u2014 the body stops registering taste under extreme fear'
+  }
+};
+
+/* ── State ── */
+var state = {
+  overlays: { threads: false, strata: false, decisions: false, sensory: false },
+  activeThreads: {},
+  threadDropdownOpen: false
+};
+THREADS.forEach(function(t) { state.activeThreads[t.id] = true; });
+
+/* ── Layout Constants ── */
+var COL_PAD = 12;
+var SESSION_HEADER_H = 52;
+var ACT_HEADER_H = 28;
+var BEAT_LINE_H = 16;
+
+/* ── Build DOM ── */
+var headerEl = el('header', null, [
+  el('h1', null, [
+    document.createTextNode('The Ceremony'),
+    el('span', { text: 'Narrative Architecture' })
+  ]),
+  el('div', { className: 'overlay-toggles', id: 'overlay-toggles' })
+]);
+document.body.appendChild(headerEl);
+
+var main = el('div', { id: 'main' });
+document.body.appendChild(main);
+
+var vizContainer = el('div', { id: 'viz-container' });
+main.appendChild(vizContainer);
+
+var svgContainer = el('div', { id: 'svg-container' });
+vizContainer.appendChild(svgContainer);
+
+var geoTrack = el('div', { id: 'geo-track' });
+vizContainer.appendChild(geoTrack);
+
+var sidebar = el('div', { id: 'sidebar' });
+main.appendChild(sidebar);
+showSidebarEmpty();
+
+/* ── Overlay Toggle Buttons ── */
+var toggleContainer = document.getElementById('overlay-toggles');
+var overlayDefs = [
+  { key: 'threads', label: 'Threads', swatchColor: '#9b7ed4' },
+  { key: 'strata', label: 'Strata', swatchColor: '#e06f6f' },
+  { key: 'decisions', label: 'Decisions', swatchColor: '#c4a35a' },
+  { key: 'sensory', label: 'Sensory', swatchColor: '#6b9e7a' }
+];
+
+overlayDefs.forEach(function(def) {
+  var swatch = el('span', { className: 'swatch', style: { backgroundColor: def.swatchColor } });
+  var btn = el('button', {
+    className: 'overlay-btn',
+    id: 'toggle-' + def.key,
+    onClick: function(e) {
+      e.stopPropagation();
+      toggleOverlay(def.key);
+    }
+  }, [swatch, def.label]);
+
+  if (def.key === 'threads') {
+    btn.style.position = 'relative';
+    var dropdown = buildThreadDropdown();
+    btn.appendChild(dropdown);
+    btn.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      state.threadDropdownOpen = !state.threadDropdownOpen;
+      dropdown.className = 'thread-dropdown' + (state.threadDropdownOpen ? ' visible' : '');
+    });
+  }
+
+  toggleContainer.appendChild(btn);
+});
+
+function buildThreadDropdown() {
+  var dd = el('div', { className: 'thread-dropdown' });
+  THREADS.forEach(function(t) {
+    var swatch = el('span', { className: 'thread-swatch', style: { backgroundColor: t.color } });
+    var item = el('div', {
+      className: 'thread-item active',
+      onClick: function(e) {
+        e.stopPropagation();
+        state.activeThreads[t.id] = !state.activeThreads[t.id];
+        item.className = 'thread-item' + (state.activeThreads[t.id] ? ' active' : ' inactive');
+        swatch.style.opacity = state.activeThreads[t.id] ? '1' : '0.3';
+        renderThreads();
+      }
+    }, [swatch, t.name]);
+    dd.appendChild(item);
+  });
+  return dd;
+}
+
+/* Close dropdown on outside click */
+document.addEventListener('click', function(e) {
+  if (state.threadDropdownOpen) {
+    var btn = document.getElementById('toggle-threads');
+    if (!btn.contains(e.target)) {
+      state.threadDropdownOpen = false;
+      var dd = btn.querySelector('.thread-dropdown');
+      if (dd) dd.className = 'thread-dropdown';
+    }
+  }
+  var sp = document.querySelector('.sensory-popup');
+  if (sp && sp.classList.contains('visible')) {
+    var sensBtn = document.getElementById('toggle-sensory');
+    if (!sp.contains(e.target) && !sensBtn.contains(e.target)) {
+      sp.classList.remove('visible');
+      state.overlays.sensory = false;
+      sensBtn.className = 'overlay-btn';
+    }
+  }
+});
+
+function toggleOverlay(key) {
+  if (key === 'sensory') {
+    toggleSensoryPopup();
+    return;
+  }
+  state.overlays[key] = !state.overlays[key];
+  var btn = document.getElementById('toggle-' + key);
+  btn.className = 'overlay-btn' + (state.overlays[key] ? ' active' : '');
+  if (key === 'threads') renderThreads();
+  else if (key === 'strata') renderStrata();
+  else if (key === 'decisions') renderDecisions();
+}
+
+/* ── D3 Setup ── */
+var svgEl = d3.select('#svg-container').append('svg')
+  .attr('id', 'main-svg')
+  .attr('width', '100%')
+  .attr('height', '100%');
+
+var defs = svgEl.append('defs');
+
+/* Session column gradient definitions */
+SESSIONS.forEach(function(s) {
+  var grad = defs.append('linearGradient')
+    .attr('id', 'col-grad-' + s.id)
+    .attr('x1', '0%').attr('y1', '0%')
+    .attr('x2', '0%').attr('y2', '100%');
+  grad.append('stop').attr('offset', '0%').attr('stop-color', s.color).attr('stop-opacity', 0.08);
+  grad.append('stop').attr('offset', '100%').attr('stop-color', s.color).attr('stop-opacity', 0.02);
+});
+
+/* Drop shadow filter for cards */
+var filter = defs.append('filter').attr('id', 'card-shadow')
+  .attr('x', '-5%').attr('y', '-5%').attr('width', '110%').attr('height', '115%');
+filter.append('feDropShadow')
+  .attr('dx', 0).attr('dy', 1).attr('stdDeviation', 2)
+  .attr('flood-color', '#000').attr('flood-opacity', 0.3);
+
+/* Zoom group */
+var zoomG = svgEl.append('g').attr('class', 'zoom-group');
+
+/* Layer groups in correct z-order */
+var strataLayer = zoomG.append('g').attr('class', 'strata-layer');
+var columnLayer = zoomG.append('g').attr('class', 'column-layer');
+var threadLayer = zoomG.append('g').attr('class', 'thread-layer');
+var decisionLayer = zoomG.append('g').attr('class', 'decision-layer');
+
+/* Zoom behavior */
+var zoom = d3.zoom()
+  .scaleExtent([0.3, 4])
+  .on('zoom', function(event) {
+    zoomG.attr('transform', event.transform);
+  });
+svgEl.call(zoom);
+
+/* Tooltip */
+var tooltipEl = el('div', { className: 'd3-tooltip', style: { display: 'none' } });
+document.body.appendChild(tooltipEl);
+
+function showTooltip(event, text) {
+  tooltipEl.textContent = text;
+  tooltipEl.style.display = 'block';
+  tooltipEl.style.left = (event.pageX + 14) + 'px';
+  tooltipEl.style.top = (event.pageY - 10) + 'px';
+}
+function moveTooltip(event) {
+  tooltipEl.style.left = (event.pageX + 14) + 'px';
+  tooltipEl.style.top = (event.pageY - 10) + 'px';
+}
+function hideTooltip() {
+  tooltipEl.style.display = 'none';
+}
+
+/* ── Geo Track SVG ── */
+var geoSvg = d3.select('#geo-track').append('svg')
+  .attr('id', 'geo-svg')
+  .attr('width', '100%')
+  .attr('height', '100%');
+
+/* ── Compute Layout ── */
+var layout = {};
+
+function computeLayout() {
+  var container = document.getElementById('svg-container');
+  var W = container.clientWidth;
+  var H = container.clientHeight;
+
+  layout.W = W;
+  layout.H = H;
+
+  var totalPad = COL_PAD * 6;
+  var colW = (W - totalPad) / 5;
+  layout.colW = colW;
+
+  layout.sessions = SESSIONS.map(function(s, si) {
+    var x = COL_PAD + si * (colW + COL_PAD);
+    var totalDuration = s.acts.reduce(function(sum, a) { return sum + a.duration; }, 0);
+    var availH = H - SESSION_HEADER_H - 24;
+    var y = SESSION_HEADER_H;
+    var acts = s.acts.map(function(a, ai) {
+      var actH = (a.duration / totalDuration) * availH;
+      var result = { x: x, y: y, w: colW, h: actH, act: a, actIndex: ai, sessionIndex: si };
+      y += actH;
+      return result;
+    });
+    return { x: x, y: 0, w: colW, h: H, acts: acts, session: s };
+  });
+}
+
+/* ── Render Functions ── */
+function render() {
+  computeLayout();
+  renderColumns();
+  renderStrata();
+  renderThreads();
+  renderDecisions();
+  renderGeoTrack();
+}
+
+function renderColumns() {
+  columnLayer.selectAll('*').remove();
+
+  layout.sessions.forEach(function(sl) {
+    var s = sl.session;
+    var g = columnLayer.append('g')
+      .attr('class', 'session-col')
+      .attr('transform', 'translate(' + sl.x + ',0)');
+
+    /* Column background */
+    g.append('rect')
+      .attr('x', 0).attr('y', 0)
+      .attr('width', sl.w).attr('height', sl.h)
+      .attr('fill', 'url(#col-grad-' + s.id + ')')
+      .attr('rx', 4);
+
+    /* Session header background */
+    g.append('rect')
+      .attr('x', 0).attr('y', 0)
+      .attr('width', sl.w).attr('height', SESSION_HEADER_H)
+      .attr('fill', s.color)
+      .attr('fill-opacity', 0.1)
+      .attr('rx', 4);
+
+    /* Top color bar */
+    g.append('rect')
+      .attr('x', 0).attr('y', 0)
+      .attr('width', sl.w).attr('height', 3)
+      .attr('fill', s.color)
+      .attr('rx', 1);
+
+    /* Session label */
+    g.append('text')
+      .attr('x', 10).attr('y', 22)
+      .attr('fill', s.color)
+      .attr('font-family', "'Crimson Text', serif")
+      .attr('font-size', 15)
+      .attr('font-weight', 600)
+      .text('S' + s.id + ': ' + s.name);
+
+    /* Duration + act count */
+    g.append('text')
+      .attr('x', 10).attr('y', 40)
+      .attr('fill', '#6a7a8a')
+      .attr('font-family', "'JetBrains Mono', monospace")
+      .attr('font-size', 10)
+      .text(s.duration + ' min \u00b7 ' + s.acts.length + ' acts');
+
+    /* Session header click target */
+    g.append('rect')
+      .attr('x', 0).attr('y', 0)
+      .attr('width', sl.w).attr('height', SESSION_HEADER_H)
+      .attr('fill', 'transparent')
+      .attr('cursor', 'pointer')
+      .on('click', function() { showSessionSidebar(s); })
+      .on('mouseover', function(event) { showTooltip(event, s.dramaticQuestion); })
+      .on('mousemove', moveTooltip)
+      .on('mouseout', hideTooltip);
+
+    /* Acts */
+    sl.acts.forEach(function(al) {
+      var ag = g.append('g')
+        .attr('transform', 'translate(0,' + al.y + ')');
+
+      /* Act card background */
+      ag.append('rect')
+        .attr('x', 3).attr('y', 2)
+        .attr('width', sl.w - 6).attr('height', Math.max(al.h - 4, 6))
+        .attr('fill', '#0d1220')
+        .attr('stroke', s.color)
+        .attr('stroke-opacity', 0.2)
+        .attr('stroke-width', 0.5)
+        .attr('rx', 3)
+        .attr('filter', 'url(#card-shadow)');
+
+      /* Act header stripe */
+      ag.append('rect')
+        .attr('x', 3).attr('y', 2)
+        .attr('width', sl.w - 6).attr('height', Math.min(ACT_HEADER_H, al.h - 4))
+        .attr('fill', s.color)
+        .attr('fill-opacity', 0.06)
+        .attr('rx', 3);
+
+      /* Left accent line */
+      ag.append('rect')
+        .attr('x', 3).attr('y', 2)
+        .attr('width', 2).attr('height', Math.max(al.h - 4, 6))
+        .attr('fill', s.color)
+        .attr('fill-opacity', 0.4)
+        .attr('rx', 1);
+
+      /* Act name */
+      ag.append('text')
+        .attr('x', 12).attr('y', 17)
+        .attr('fill', '#e8dcc8')
+        .attr('font-family', "'Crimson Text', serif")
+        .attr('font-size', 12)
+        .attr('font-weight', 600)
+        .text(al.act.name);
+
+      /* Act duration */
+      ag.append('text')
+        .attr('x', sl.w - 14).attr('y', 17)
+        .attr('fill', '#4a5568')
+        .attr('font-family', "'JetBrains Mono', monospace")
+        .attr('font-size', 9)
+        .attr('text-anchor', 'end')
+        .text(al.act.duration + 'm');
+
+      /* Purpose */
+      if (al.h > ACT_HEADER_H + 14) {
+        ag.append('text')
+          .attr('x', 12).attr('y', ACT_HEADER_H - 2)
+          .attr('fill', '#6a7a8a')
+          .attr('font-size', 9)
+          .attr('font-style', 'italic')
+          .text(al.act.purpose);
+      }
+
+      /* Beat lines */
+      var beatY = ACT_HEADER_H + 10;
+      var maxBeats = Math.floor((al.h - ACT_HEADER_H - 12) / BEAT_LINE_H);
+      var maxChars = Math.floor((sl.w - 32) / 5.5);
+
+      al.act.beats.forEach(function(beat, bi) {
+        if (bi >= maxBeats || bi >= 8) return;
+        var truncated = beat;
+        if (truncated.length > maxChars) {
+          truncated = truncated.substring(0, maxChars - 1) + '\u2026';
+        }
+        ag.append('text')
+          .attr('x', 18).attr('y', beatY + bi * BEAT_LINE_H)
+          .attr('fill', '#6a7a8a')
+          .attr('font-family', "'JetBrains Mono', monospace")
+          .attr('font-size', 9)
+          .text('\u2022 ' + truncated);
+      });
+
+      /* Overflow indicator */
+      var shown = Math.min(maxBeats, 8);
+      if (al.act.beats.length > shown && shown > 0) {
+        ag.append('text')
+          .attr('x', 18).attr('y', beatY + shown * BEAT_LINE_H)
+          .attr('fill', '#3a4a5a')
+          .attr('font-size', 8)
+          .text('+ ' + (al.act.beats.length - shown) + ' more');
+      }
+
+      /* Click target for act */
+      ag.append('rect')
+        .attr('x', 3).attr('y', 2)
+        .attr('width', sl.w - 6).attr('height', Math.max(al.h - 4, 6))
+        .attr('fill', 'transparent')
+        .attr('cursor', 'pointer')
+        .on('click', function() { showActSidebar(s, al.act, al.actIndex); })
+        .on('mouseover', function(event) {
+          d3.select(this.parentNode).select('rect').transition().duration(150)
+            .attr('stroke-opacity', 0.5);
+          showTooltip(event, al.act.name + ' \u2014 ' + al.act.purpose);
+        })
+        .on('mousemove', moveTooltip)
+        .on('mouseout', function() {
+          d3.select(this.parentNode).select('rect').transition().duration(150)
+            .attr('stroke-opacity', 0.2);
+          hideTooltip();
+        });
+    });
+  });
+}
+
+function renderStrata() {
+  strataLayer.selectAll('*').remove();
+  if (!state.overlays.strata) return;
+
+  var bandH = layout.H / STRATA.length;
+
+  STRATA.forEach(function(stratum, si) {
+    var bandY = si * bandH;
+
+    /* Label on far left */
+    strataLayer.append('text')
+      .attr('x', 4).attr('y', bandY + 14)
+      .attr('fill', stratum.color)
+      .attr('fill-opacity', 0.5)
+      .attr('font-size', 8)
+      .attr('font-family', "'JetBrains Mono', monospace")
+      .text(stratum.name)
+      .style('pointer-events', 'none');
+
+    layout.sessions.forEach(function(sl, colIdx) {
+      var opacity = stratum.opacities[colIdx];
+      if (opacity <= 0.01) return;
+
+      strataLayer.append('rect')
+        .attr('x', sl.x)
+        .attr('y', bandY + 2)
+        .attr('width', sl.w)
+        .attr('height', bandH - 4)
+        .attr('fill', stratum.color)
+        .attr('fill-opacity', opacity * 0.1)
+        .attr('rx', 3)
+        .style('pointer-events', 'none');
+
+      /* Intensity bar top edge */
+      strataLayer.append('rect')
+        .attr('x', sl.x + 2)
+        .attr('y', bandY + 2)
+        .attr('width', sl.w - 4)
+        .attr('height', 2)
+        .attr('fill', stratum.color)
+        .attr('fill-opacity', opacity * 0.45)
+        .attr('rx', 1)
+        .style('pointer-events', 'none');
+
+      /* Opacity value label */
+      if (opacity >= 0.3) {
+        strataLayer.append('text')
+          .attr('x', sl.x + sl.w / 2)
+          .attr('y', bandY + bandH / 2 + 3)
+          .attr('text-anchor', 'middle')
+          .attr('fill', stratum.color)
+          .attr('fill-opacity', opacity * 0.4)
+          .attr('font-size', 10)
+          .attr('font-family', "'JetBrains Mono', monospace")
+          .text(Math.round(opacity * 100) + '%')
+          .style('pointer-events', 'none');
+      }
+    });
+  });
+}
+
+/* Get center point of an act for thread routing */
+function getActAnchor(sessionIdx, actIdx, side) {
+  var sl = layout.sessions[sessionIdx];
+  if (!sl) return { x: 0, y: 0 };
+  var al = sl.acts[Math.min(actIdx, sl.acts.length - 1)];
+  var cx = sl.x + sl.w / 2;
+  var cy = al.y + al.h / 2;
+  if (side === 'right') cx = sl.x + sl.w + 4;
+  else if (side === 'left') cx = sl.x - 4;
+  return { x: cx, y: cy };
+}
+
+function renderThreads() {
+  threadLayer.selectAll('*').remove();
+  if (!state.overlays.threads) return;
+
+  var line = d3.line()
+    .x(function(d) { return d.x; })
+    .y(function(d) { return d.y; })
+    .curve(d3.curveBasis);
+
+  THREADS.forEach(function(t) {
+    if (!state.activeThreads[t.id]) return;
+
+    var points = [];
+    var start = getActAnchor(t.plantSession, t.plantAct);
+
+    /* Build control points for smooth routing */
+    if (t.plantSession === t.paySession) {
+      /* Intra-session thread: arc to the right */
+      var end = getActAnchor(t.paySession, t.payAct);
+      var sl = layout.sessions[t.plantSession];
+      var bulge = sl.x + sl.w + 30;
+      points.push(start);
+      points.push({ x: bulge, y: start.y });
+      if (t.waypoints) {
+        t.waypoints.forEach(function(wp) {
+          var wpt = getActAnchor(wp.session, wp.act);
+          points.push({ x: bulge + 10, y: wpt.y });
+        });
+      }
+      points.push({ x: bulge, y: end.y });
+      points.push(end);
+    } else {
+      /* Inter-session thread: route through gaps between columns */
+      var startRight = getActAnchor(t.plantSession, t.plantAct, 'right');
+      var endLeft = getActAnchor(t.paySession, t.payAct, 'left');
+      points.push(start);
+      points.push(startRight);
+
+      if (t.waypoints) {
+        t.waypoints.forEach(function(wp) {
+          var wpt = getActAnchor(wp.session, wp.act);
+          points.push(wpt);
+        });
+      }
+
+      points.push(endLeft);
+      points.push(getActAnchor(t.paySession, t.payAct));
+    }
+
+    /* The arc path */
+    threadLayer.append('path')
+      .datum(points)
+      .attr('d', line)
+      .attr('fill', 'none')
+      .attr('stroke', t.color)
+      .attr('stroke-width', 2.5)
+      .attr('stroke-opacity', 0.55)
+      .attr('stroke-dasharray', '8,4')
+      .style('pointer-events', 'stroke')
+      .style('cursor', 'pointer')
+      .on('mouseover', function(event) {
+        d3.select(this).attr('stroke-opacity', 0.9).attr('stroke-width', 4);
+        showTooltip(event, t.name);
+      })
+      .on('mousemove', moveTooltip)
+      .on('mouseout', function() {
+        d3.select(this).attr('stroke-opacity', 0.55).attr('stroke-width', 2.5);
+        hideTooltip();
+      })
+      .on('click', function() { showThreadSidebar(t); });
+
+    /* Plant marker (filled circle) */
+    threadLayer.append('circle')
+      .attr('cx', start.x).attr('cy', start.y)
+      .attr('r', 5)
+      .attr('fill', t.color)
+      .attr('fill-opacity', 0.85)
+      .attr('stroke', '#0a0e17')
+      .attr('stroke-width', 2)
+      .style('cursor', 'pointer')
+      .on('mouseover', function(event) { showTooltip(event, t.name + ' (planted)'); })
+      .on('mousemove', moveTooltip)
+      .on('mouseout', hideTooltip)
+      .on('click', function() { showThreadSidebar(t); });
+
+    /* Payoff marker (diamond) */
+    var payPt = getActAnchor(t.paySession, t.payAct);
+    var d = 6;
+    threadLayer.append('path')
+      .attr('d', 'M' + payPt.x + ',' + (payPt.y - d) +
+        'L' + (payPt.x + d) + ',' + payPt.y +
+        'L' + payPt.x + ',' + (payPt.y + d) +
+        'L' + (payPt.x - d) + ',' + payPt.y + 'Z')
+      .attr('fill', t.color)
+      .attr('fill-opacity', 0.85)
+      .attr('stroke', '#0a0e17')
+      .attr('stroke-width', 2)
+      .style('cursor', 'pointer')
+      .on('mouseover', function(event) { showTooltip(event, t.name + ' (payoff)'); })
+      .on('mousemove', moveTooltip)
+      .on('mouseout', hideTooltip)
+      .on('click', function() { showThreadSidebar(t); });
+
+    /* Waypoint markers (small circles) */
+    if (t.waypoints) {
+      t.waypoints.forEach(function(wp) {
+        var wpt = getActAnchor(wp.session, wp.act);
+        threadLayer.append('circle')
+          .attr('cx', wpt.x).attr('cy', wpt.y)
+          .attr('r', 3)
+          .attr('fill', t.color)
+          .attr('fill-opacity', 0.5)
+          .attr('stroke', '#0a0e17')
+          .attr('stroke-width', 1)
+          .style('pointer-events', 'none');
+      });
+    }
+  });
+}
+
+function renderDecisions() {
+  decisionLayer.selectAll('*').remove();
+  if (!state.overlays.decisions) return;
+
+  DECISIONS.forEach(function(dec) {
+    var center = getActAnchor(dec.session, dec.act);
+    var x = center.x;
+    var y = center.y;
+    var sz = 11;
+
+    var dg = decisionLayer.append('g')
+      .attr('transform', 'translate(' + x + ',' + y + ')')
+      .style('cursor', 'pointer')
+      .on('mouseover', function(event) {
+        d3.select(this).select('.dec-diamond').transition().duration(100)
+          .attr('fill-opacity', 1);
+        d3.select(this).select('.dec-glow').transition().duration(100)
+          .attr('fill-opacity', 0.25);
+        showTooltip(event, dec.name + ' \u2014 ' + dec.stakes);
+      })
+      .on('mousemove', function(event) { moveTooltip(event); })
+      .on('mouseout', function() {
+        d3.select(this).select('.dec-diamond').transition().duration(200)
+          .attr('fill-opacity', 0.75);
+        d3.select(this).select('.dec-glow').transition().duration(200)
+          .attr('fill-opacity', 0.12);
+        hideTooltip();
+      })
+      .on('click', function() { showDecisionSidebar(dec); });
+
+    /* Outer glow */
+    dg.append('path')
+      .attr('d', diamond(0, 0, sz + 4))
+      .attr('fill', '#c4a35a')
+      .attr('fill-opacity', 0.12)
+      .attr('class', 'dec-glow');
+
+    /* Main diamond */
+    dg.append('path')
+      .attr('d', diamond(0, 0, sz))
+      .attr('fill', '#c4a35a')
+      .attr('fill-opacity', 0.75)
+      .attr('stroke', '#0a0e17')
+      .attr('stroke-width', 2)
+      .attr('class', 'dec-diamond');
+
+    /* Exclamation */
+    dg.append('text')
+      .attr('x', 0).attr('y', 4)
+      .attr('text-anchor', 'middle')
+      .attr('fill', '#0a0e17')
+      .attr('font-size', 12)
+      .attr('font-weight', 'bold')
+      .attr('font-family', "'Crimson Text', serif")
+      .text('!');
+
+    /* Label beneath */
+    var label = dec.name.length > 22 ? dec.name.substring(0, 20) + '\u2026' : dec.name;
+    dg.append('text')
+      .attr('x', 0).attr('y', sz + 14)
+      .attr('text-anchor', 'middle')
+      .attr('fill', '#c4a35a')
+      .attr('fill-opacity', 0.7)
+      .attr('font-size', 8)
+      .attr('font-family', "'JetBrains Mono', monospace")
+      .text(label);
+  });
+}
+
+function diamond(cx, cy, r) {
+  return 'M' + cx + ',' + (cy - r) +
+    'L' + (cx + r) + ',' + cy +
+    'L' + cx + ',' + (cy + r) +
+    'L' + (cx - r) + ',' + cy + 'Z';
+}
+
+function renderGeoTrack() {
+  geoSvg.selectAll('*').remove();
+
+  var container = document.getElementById('geo-track');
+  var W = container.clientWidth;
+  var H = container.clientHeight;
+  var padL = 60;
+  var padR = 40;
+  var midY = H / 2 - 4;
+  var usableW = W - padL - padR;
+
+  /* Left label */
+  geoSvg.append('text')
+    .attr('x', 10).attr('y', midY + 4)
+    .attr('fill', '#4a5568')
+    .attr('font-size', 10)
+    .attr('font-family', "'Crimson Text', serif")
+    .attr('font-style', 'italic')
+    .text('Journey');
+
+  /* Line segments colored by session */
+  for (var i = 0; i < LOCATIONS.length - 1; i++) {
+    var from = LOCATIONS[i];
+    var to = LOCATIONS[i + 1];
+    var x1 = padL + from.x * usableW;
+    var x2 = padL + to.x * usableW;
+    var color = SESSIONS[from.session].color;
+    /* If the next location is a different session, blend */
+    if (to.session !== from.session) {
+      /* Draw first half in from-color, second half in to-color */
+      var mx = (x1 + x2) / 2;
+      geoSvg.append('line')
+        .attr('x1', x1).attr('y1', midY)
+        .attr('x2', mx).attr('y2', midY)
+        .attr('stroke', color)
+        .attr('stroke-width', 2)
+        .attr('stroke-opacity', 0.45);
+      geoSvg.append('line')
+        .attr('x1', mx).attr('y1', midY)
+        .attr('x2', x2).attr('y2', midY)
+        .attr('stroke', SESSIONS[to.session].color)
+        .attr('stroke-width', 2)
+        .attr('stroke-opacity', 0.45);
+    } else {
+      geoSvg.append('line')
+        .attr('x1', x1).attr('y1', midY)
+        .attr('x2', x2).attr('y2', midY)
+        .attr('stroke', color)
+        .attr('stroke-width', 2)
+        .attr('stroke-opacity', 0.45);
+    }
+  }
+
+  /* Location markers */
+  LOCATIONS.forEach(function(loc) {
+    var x = padL + loc.x * usableW;
+    var color = SESSIONS[loc.session].color;
+
+    geoSvg.append('circle')
+      .attr('cx', x).attr('cy', midY)
+      .attr('r', 5)
+      .attr('fill', '#0d1220')
+      .attr('stroke', color)
+      .attr('stroke-width', 2)
+      .style('cursor', 'pointer')
+      .on('mouseover', function(event) {
+        d3.select(this).transition().duration(100).attr('r', 7).attr('fill', color);
+        showTooltip(event, loc.name + ' (S' + loc.session + ')');
+      })
+      .on('mousemove', moveTooltip)
+      .on('mouseout', function() {
+        d3.select(this).transition().duration(150).attr('r', 5).attr('fill', '#0d1220');
+        hideTooltip();
+      })
+      .on('click', function() { showLocationSidebar(loc); });
+
+    /* Label */
+    geoSvg.append('text')
+      .attr('x', x).attr('y', midY + 18)
+      .attr('text-anchor', 'middle')
+      .attr('fill', '#5a6a7a')
+      .attr('font-size', 8)
+      .attr('font-family', "'JetBrains Mono', monospace")
+      .text(loc.name);
+  });
+}
+
+/* ── Sensory Popup ── */
+var sensoryPopup = null;
+
+function toggleSensoryPopup() {
+  if (sensoryPopup && sensoryPopup.classList.contains('visible')) {
+    sensoryPopup.classList.remove('visible');
+    state.overlays.sensory = false;
+    document.getElementById('toggle-sensory').className = 'overlay-btn';
+    return;
+  }
+
+  state.overlays.sensory = true;
+  document.getElementById('toggle-sensory').className = 'overlay-btn active';
+
+  if (!sensoryPopup) {
+    sensoryPopup = buildSensoryPopup();
+    document.body.appendChild(sensoryPopup);
+  }
+  sensoryPopup.classList.add('visible');
+}
+
+function buildSensoryPopup() {
+  var popup = el('div', { className: 'sensory-popup' });
+
+  popup.appendChild(el('div', { className: 'sensory-popup-title', text: 'Sensory Palette' }));
+
+  var grid = el('div', { className: 'sensory-grid' });
+
+  /* Header row */
+  grid.appendChild(el('div', { className: 'sensory-header' }));
+  SESSIONS.forEach(function(s) {
+    grid.appendChild(el('div', {
+      className: 'sensory-header',
+      style: { color: s.color }
+    }, ['S' + s.id]));
+  });
+
+  var senses = ['sight', 'sound', 'touch', 'smell', 'taste'];
+  var senseColors = {
+    sight: '#7ba4c7', sound: '#9b7ed4', touch: '#6b9e7a',
+    smell: '#d4a05a', taste: '#e06f6f'
+  };
+  var sessionPhase = ['early', 'early', 'middle', 'middle', 'late'];
+  /* Refined intensity per session */
+  var phaseIntensity = [0.2, 0.35, 0.55, 0.65, 0.5];
+
+  senses.forEach(function(sense) {
+    grid.appendChild(el('div', {
+      className: 'sensory-label',
+      style: { color: senseColors[sense] }
+    }, [sense]));
+
+    SESSIONS.forEach(function(s, si) {
+      var phase = sessionPhase[si];
+      var text = SENSORY[sense][phase];
+      var short = text.length > 32 ? text.substring(0, 30) + '\u2026' : text;
+      var baseColor = senseColors[sense];
+      var cell = el('div', {
+        className: 'sensory-cell',
+        style: {
+          backgroundColor: baseColor,
+          opacity: String(0.35 + phaseIntensity[si] * 0.65)
+        },
+        title: text
+      }, [short]);
+      cell.addEventListener('click', function() {
+        showSensorySidebar(sense, phase, text, s);
+      });
+      grid.appendChild(cell);
+    });
+  });
+
+  popup.appendChild(grid);
+  return popup;
+}
+
+/* ── Sidebar ── */
+function showSidebarEmpty() {
+  clearEl(sidebar);
+  var lines = [
+    'Click any session header, act, or overlay element to see details.',
+    '',
+    'Toggle overlays in the header bar:',
+    'Threads \u00b7 Strata \u00b7 Decisions \u00b7 Sensory',
+    '',
+    'Right-click the Threads button for individual thread toggles.',
+    '',
+    'Pan and zoom the main view with the mouse or trackpad.',
+    '',
+    'Click locations on the geographic journey bar below.'
+  ];
+  var emptyDiv = el('div', { className: 'sidebar-empty' });
+  lines.forEach(function(line, i) {
+    if (i > 0) emptyDiv.appendChild(document.createElement('br'));
+    if (line) emptyDiv.appendChild(document.createTextNode(line));
+  });
+  sidebar.appendChild(emptyDiv);
+}
+
+function showSessionSidebar(s) {
+  clearEl(sidebar);
+
+  sidebar.appendChild(el('div', { className: 'sidebar-title', style: { color: s.color } },
+    ['S' + s.id + ': ' + s.name]));
+  sidebar.appendChild(el('div', { className: 'sidebar-subtitle' },
+    [s.subtitle + ' \u00b7 ' + s.duration + ' min']));
+
+  /* Dramatic question */
+  var sec1 = el('div', { className: 'sidebar-section' });
+  sec1.appendChild(el('div', { className: 'sidebar-section-title', text: 'Dramatic Question' }));
+  sec1.appendChild(el('div', { className: 'sidebar-text' }, [s.dramaticQuestion]));
+  sidebar.appendChild(sec1);
+
+  /* Cosmological register */
+  var sec2 = el('div', { className: 'sidebar-section' });
+  sec2.appendChild(el('div', { className: 'sidebar-section-title', text: 'Cosmological Register' }));
+  sec2.appendChild(el('div', { className: 'sidebar-text' }, [s.cosmologicalRegister]));
+  sidebar.appendChild(sec2);
+
+  /* Acts */
+  var sec3 = el('div', { className: 'sidebar-section' });
+  sec3.appendChild(el('div', { className: 'sidebar-section-title', text: 'Acts' }));
+  s.acts.forEach(function(a, ai) {
+    var actEl = el('div', { style: {
+      padding: '8px 10px', marginBottom: '6px', borderRadius: '4px',
+      background: 'rgba(255,255,255,0.02)', cursor: 'pointer',
+      borderLeft: '3px solid ' + s.color, transition: 'background 0.15s'
+    }});
+    actEl.appendChild(el('div', { style: { fontSize: '12px', color: '#e8dcc8', fontWeight: '500' } },
+      [a.name + ' (' + a.duration + 'm)']));
+    actEl.appendChild(el('div', { style: { fontSize: '10px', color: '#6a7a8a', fontStyle: 'italic', marginTop: '2px' } },
+      [a.purpose]));
+    actEl.appendChild(el('div', { style: { fontSize: '10px', color: '#4a5568', marginTop: '2px' } },
+      [a.beats.length + ' beats']));
+    actEl.addEventListener('click', function() { showActSidebar(s, a, ai); });
+    actEl.addEventListener('mouseover', function() { actEl.style.background = 'rgba(255,255,255,0.04)'; });
+    actEl.addEventListener('mouseout', function() { actEl.style.background = 'rgba(255,255,255,0.02)'; });
+    sec3.appendChild(actEl);
+  });
+  sidebar.appendChild(sec3);
+
+  /* Threads */
+  var connThreads = THREADS.filter(function(t) {
+    return t.plantSession === s.id || t.paySession === s.id ||
+      (t.waypoints && t.waypoints.some(function(wp) { return wp.session === s.id; }));
+  });
+  if (connThreads.length > 0) {
+    var sec4 = el('div', { className: 'sidebar-section' });
+    sec4.appendChild(el('div', { className: 'sidebar-section-title', text: 'Narrative Threads' }));
+    connThreads.forEach(function(t) {
+      var role = 'passes through';
+      if (t.plantSession === s.id) role = 'planted';
+      if (t.paySession === s.id) role = 'payoff';
+      var tag = el('div', { className: 'sidebar-tag', style: {
+        background: t.color + '22', color: t.color, border: '1px solid ' + t.color + '44',
+        cursor: 'pointer'
+      }}, [t.name + ' (' + role + ')']);
+      tag.addEventListener('click', function() { showThreadSidebar(t); });
+      sec4.appendChild(tag);
+    });
+    sidebar.appendChild(sec4);
+  }
+
+  /* Decisions */
+  var sessionDecs = DECISIONS.filter(function(d) { return d.session === s.id; });
+  if (sessionDecs.length > 0) {
+    var sec5 = el('div', { className: 'sidebar-section' });
+    sec5.appendChild(el('div', { className: 'sidebar-section-title', text: 'Decision Points' }));
+    sessionDecs.forEach(function(d) {
+      var decEl = el('div', { style: {
+        padding: '6px 10px', marginBottom: '4px', cursor: 'pointer',
+        borderLeft: '3px solid #c4a35a', fontSize: '11px', color: '#c4a35a',
+        transition: 'background 0.15s'
+      }}, [d.name]);
+      decEl.addEventListener('click', function() { showDecisionSidebar(d); });
+      decEl.addEventListener('mouseover', function() { decEl.style.background = '#c4a35a11'; });
+      decEl.addEventListener('mouseout', function() { decEl.style.background = 'transparent'; });
+      sec5.appendChild(decEl);
+    });
+    sidebar.appendChild(sec5);
+  }
+}
+
+function showActSidebar(s, a, actIndex) {
+  clearEl(sidebar);
+
+  sidebar.appendChild(el('div', { className: 'sidebar-title', style: { color: s.color } }, [a.name]));
+  sidebar.appendChild(el('div', { className: 'sidebar-subtitle' },
+    ['S' + s.id + ': ' + s.name + ' \u00b7 Act ' + (actIndex + 1) + ' \u00b7 ' + a.duration + ' min']));
+
+  /* Purpose */
+  var sec1 = el('div', { className: 'sidebar-section' });
+  sec1.appendChild(el('div', { className: 'sidebar-section-title', text: 'Purpose' }));
+  sec1.appendChild(el('div', { className: 'sidebar-text', style: { fontStyle: 'italic' } }, [a.purpose]));
+  sidebar.appendChild(sec1);
+
+  /* Duration bar */
+  var totalDuration = s.acts.reduce(function(sum, act) { return sum + act.duration; }, 0);
+  var pct = Math.round((a.duration / totalDuration) * 100);
+  var sec1b = el('div', { className: 'sidebar-section' });
+  sec1b.appendChild(el('div', { className: 'sidebar-section-title', text: 'Duration' }));
+  var barBg = el('div', { style: {
+    height: '6px', background: '#1e2d44', borderRadius: '3px', overflow: 'hidden', marginBottom: '4px'
+  }});
+  barBg.appendChild(el('div', { style: {
+    height: '100%', width: pct + '%', background: s.color, borderRadius: '3px',
+    transition: 'width 0.3s'
+  }}));
+  sec1b.appendChild(barBg);
+  sec1b.appendChild(el('div', { style: { fontSize: '10px', color: '#6a7a8a' } },
+    [a.duration + ' min (' + pct + '% of session)']));
+  sidebar.appendChild(sec1b);
+
+  /* Beats */
+  var sec2 = el('div', { className: 'sidebar-section' });
+  sec2.appendChild(el('div', { className: 'sidebar-section-title', text: 'Beats (' + a.beats.length + ')' }));
+  a.beats.forEach(function(b) {
+    sec2.appendChild(el('div', { className: 'sidebar-beat' }, [b]));
+  });
+  sidebar.appendChild(sec2);
+
+  /* Threads touching this act */
+  var touchThreads = THREADS.filter(function(t) {
+    if (t.plantSession === s.id && t.plantAct === actIndex) return true;
+    if (t.paySession === s.id && t.payAct === actIndex) return true;
+    if (t.waypoints) return t.waypoints.some(function(wp) {
+      return wp.session === s.id && wp.act === actIndex;
+    });
+    return false;
+  });
+  if (touchThreads.length > 0) {
+    var sec3 = el('div', { className: 'sidebar-section' });
+    sec3.appendChild(el('div', { className: 'sidebar-section-title', text: 'Connected Threads' }));
+    touchThreads.forEach(function(t) {
+      var role = 'passes through';
+      if (t.plantSession === s.id && t.plantAct === actIndex) role = 'planted here';
+      if (t.paySession === s.id && t.payAct === actIndex) role = 'pays off here';
+      var tag = el('div', { className: 'sidebar-tag', style: {
+        background: t.color + '22', color: t.color, border: '1px solid ' + t.color + '44',
+        cursor: 'pointer'
+      }}, [t.name + ' \u2014 ' + role]);
+      tag.addEventListener('click', function() { showThreadSidebar(t); });
+      sec3.appendChild(tag);
+    });
+    sidebar.appendChild(sec3);
+  }
+
+  /* Decision at this act */
+  var actDecs = DECISIONS.filter(function(d) { return d.session === s.id && d.act === actIndex; });
+  if (actDecs.length > 0) {
+    var sec4 = el('div', { className: 'sidebar-section' });
+    sec4.appendChild(el('div', { className: 'sidebar-section-title', text: 'Decision Point' }));
+    actDecs.forEach(function(d) {
+      var block = el('div', { style: {
+        padding: '10px', background: '#c4a35a0c', borderRadius: '4px',
+        borderLeft: '3px solid #c4a35a', cursor: 'pointer'
+      }});
+      block.appendChild(el('div', { style: { color: '#c4a35a', fontSize: '13px', fontWeight: '600',
+        fontFamily: "'Crimson Text', serif" } }, [d.name]));
+      block.appendChild(el('div', { style: { color: '#8a9aa0', fontSize: '10px', marginTop: '4px' } },
+        ['Stakes: ' + d.stakes]));
+      block.appendChild(el('div', { style: { color: '#6a7a8a', fontSize: '10px', marginTop: '2px' } },
+        ['Fallback: ' + d.fallback]));
+      block.addEventListener('click', function() { showDecisionSidebar(d); });
+      sec4.appendChild(block);
+    });
+    sidebar.appendChild(sec4);
+  }
+
+  /* Back to session link */
+  var backLink = el('div', { style: {
+    marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #1e2d44',
+    fontSize: '11px', color: s.color, cursor: 'pointer'
+  }}, ['\u2190 Back to S' + s.id + ': ' + s.name]);
+  backLink.addEventListener('click', function() { showSessionSidebar(s); });
+  sidebar.appendChild(backLink);
+}
+
+function showThreadSidebar(t) {
+  clearEl(sidebar);
+
+  sidebar.appendChild(el('div', { className: 'sidebar-title', style: { color: t.color } }, [t.name]));
+  sidebar.appendChild(el('div', { className: 'sidebar-subtitle' }, ['Narrative Thread #' + t.id]));
+
+  var plantS = SESSIONS[t.plantSession];
+  var payS = SESSIONS[t.paySession];
+  var plantA = plantS.acts[t.plantAct];
+  var payA = payS.acts[t.payAct];
+
+  /* Visual thread arc mini-diagram */
+  var arcSec = el('div', { className: 'sidebar-section' });
+  arcSec.appendChild(el('div', { className: 'sidebar-section-title', text: 'Thread Arc' }));
+  var arcRow = el('div', { style: {
+    display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0'
+  }});
+  arcRow.appendChild(el('div', { style: {
+    width: '10px', height: '10px', borderRadius: '50%', backgroundColor: t.color, flexShrink: '0'
+  }}));
+  arcRow.appendChild(el('div', { style: { fontSize: '10px', color: '#6a7a8a' } },
+    ['S' + plantS.id + ' ' + plantA.name]));
+  arcRow.appendChild(el('div', { style: {
+    flex: '1', height: '2px', background: t.color, opacity: '0.4',
+    borderTop: '2px dashed ' + t.color
+  }}));
+  if (t.waypoints) {
+    t.waypoints.forEach(function(wp) {
+      var wpS = SESSIONS[wp.session];
+      var wpA = wpS.acts[wp.act];
+      arcRow.appendChild(el('div', { style: {
+        width: '6px', height: '6px', borderRadius: '50%', backgroundColor: t.color,
+        opacity: '0.5', flexShrink: '0'
+      }}));
+      arcRow.appendChild(el('div', { style: {
+        flex: '1', height: '2px', borderTop: '2px dashed ' + t.color, opacity: '0.4'
+      }}));
+    });
+  }
+  arcRow.appendChild(el('div', { style: {
+    width: '10px', height: '10px', backgroundColor: t.color, flexShrink: '0',
+    transform: 'rotate(45deg)'
+  }}));
+  arcRow.appendChild(el('div', { style: { fontSize: '10px', color: '#6a7a8a' } },
+    ['S' + payS.id + ' ' + payA.name]));
+  arcSec.appendChild(arcRow);
+  sidebar.appendChild(arcSec);
+
+  /* Plant details */
+  var sec1 = el('div', { className: 'sidebar-section' });
+  sec1.appendChild(el('div', { className: 'sidebar-section-title', text: 'Planted' }));
+  var plantBlock = el('div', { style: {
+    padding: '8px 10px', borderLeft: '3px solid ' + plantS.color, borderRadius: '4px',
+    background: plantS.color + '08', cursor: 'pointer'
+  }});
+  plantBlock.appendChild(el('div', { style: { fontSize: '12px', color: plantS.color } },
+    ['S' + plantS.id + ': ' + plantS.name]));
+  plantBlock.appendChild(el('div', { style: { fontSize: '11px', color: '#8a9aa0', marginTop: '2px' } },
+    [plantA.name + ' \u2014 ' + plantA.purpose]));
+  plantBlock.addEventListener('click', function() {
+    showActSidebar(plantS, plantA, t.plantAct);
+  });
+  sec1.appendChild(plantBlock);
+  sidebar.appendChild(sec1);
+
+  /* Waypoints */
+  if (t.waypoints && t.waypoints.length > 0) {
+    var sec2 = el('div', { className: 'sidebar-section' });
+    sec2.appendChild(el('div', { className: 'sidebar-section-title', text: 'Passes Through' }));
+    t.waypoints.forEach(function(wp) {
+      var wpS = SESSIONS[wp.session];
+      var wpA = wpS.acts[wp.act];
+      sec2.appendChild(el('div', { className: 'sidebar-text' },
+        ['S' + wpS.id + ': ' + wpS.name + ' \u2014 ' + wpA.name]));
+    });
+    sidebar.appendChild(sec2);
+  }
+
+  /* Payoff details */
+  var sec3 = el('div', { className: 'sidebar-section' });
+  sec3.appendChild(el('div', { className: 'sidebar-section-title', text: 'Payoff' }));
+  var payBlock = el('div', { style: {
+    padding: '8px 10px', borderLeft: '3px solid ' + payS.color, borderRadius: '4px',
+    background: payS.color + '08', cursor: 'pointer'
+  }});
+  payBlock.appendChild(el('div', { style: { fontSize: '12px', color: payS.color } },
+    ['S' + payS.id + ': ' + payS.name]));
+  payBlock.appendChild(el('div', { style: { fontSize: '11px', color: '#8a9aa0', marginTop: '2px' } },
+    [payA.name + ' \u2014 ' + payA.purpose]));
+  payBlock.addEventListener('click', function() {
+    showActSidebar(payS, payA, t.payAct);
+  });
+  sec3.appendChild(payBlock);
+  sidebar.appendChild(sec3);
+
+  /* Color */
+  var sec4 = el('div', { className: 'sidebar-section' });
+  sec4.appendChild(el('div', { className: 'sidebar-section-title', text: 'Color' }));
+  var swatchRow = el('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } });
+  swatchRow.appendChild(el('div', { style: {
+    width: '20px', height: '20px', borderRadius: '3px', backgroundColor: t.color
+  }}));
+  swatchRow.appendChild(el('span', { style: { fontSize: '11px', color: '#6a7a8a' } }, [t.color]));
+  sec4.appendChild(swatchRow);
+  sidebar.appendChild(sec4);
+}
+
+function showDecisionSidebar(dec) {
+  clearEl(sidebar);
+
+  sidebar.appendChild(el('div', { className: 'sidebar-title', style: { color: '#c4a35a' } }, [dec.name]));
+
+  var s = SESSIONS[dec.session];
+  var a = s.acts[dec.act];
+  sidebar.appendChild(el('div', { className: 'sidebar-subtitle' },
+    ['Decision Point \u00b7 S' + s.id + ': ' + s.name + ' \u2014 ' + a.name]));
+
+  /* Stakes */
+  var sec1 = el('div', { className: 'sidebar-section' });
+  sec1.appendChild(el('div', { className: 'sidebar-section-title', text: 'Stakes' }));
+  sec1.appendChild(el('div', { className: 'sidebar-text', style: { color: '#e06f6f' } }, [dec.stakes]));
+  sidebar.appendChild(sec1);
+
+  /* If players refuse */
+  var sec2 = el('div', { className: 'sidebar-section' });
+  sec2.appendChild(el('div', { className: 'sidebar-section-title', text: 'If Players Refuse' }));
+  sec2.appendChild(el('div', { className: 'sidebar-text' }, [dec.fallback]));
+  sidebar.appendChild(sec2);
+
+  /* Description */
+  var sec3 = el('div', { className: 'sidebar-section' });
+  sec3.appendChild(el('div', { className: 'sidebar-section-title', text: 'Description' }));
+  sec3.appendChild(el('div', { className: 'sidebar-text' }, [dec.description]));
+  sidebar.appendChild(sec3);
+
+  /* Context: session and act */
+  var sec4 = el('div', { className: 'sidebar-section' });
+  sec4.appendChild(el('div', { className: 'sidebar-section-title', text: 'Context' }));
+  var ctxBlock = el('div', { style: {
+    padding: '8px 10px', borderLeft: '3px solid ' + s.color, borderRadius: '4px',
+    background: s.color + '08', cursor: 'pointer'
+  }});
+  ctxBlock.appendChild(el('div', { style: { fontSize: '12px', color: s.color } },
+    ['S' + s.id + ': ' + s.name]));
+  ctxBlock.appendChild(el('div', { style: { fontSize: '11px', color: '#8a9aa0', marginTop: '2px' } },
+    [a.name + ' (' + a.duration + 'm) \u2014 ' + a.purpose]));
+  ctxBlock.addEventListener('click', function() { showActSidebar(s, a, dec.act); });
+  sec4.appendChild(ctxBlock);
+  sidebar.appendChild(sec4);
+
+  /* Position in arc */
+  var sec5 = el('div', { className: 'sidebar-section' });
+  sec5.appendChild(el('div', { className: 'sidebar-section-title', text: 'Arc Position' }));
+  var decIdx = DECISIONS.indexOf(dec);
+  sec5.appendChild(el('div', { className: 'sidebar-text' },
+    ['Decision ' + (decIdx + 1) + ' of ' + DECISIONS.length]));
+  /* Show all decisions as a sequence */
+  DECISIONS.forEach(function(d, di) {
+    var isCurrent = d.id === dec.id;
+    var decLine = el('div', { style: {
+      fontSize: '10px', padding: '3px 0',
+      color: isCurrent ? '#c4a35a' : '#4a5568',
+      fontWeight: isCurrent ? '600' : '400',
+      cursor: isCurrent ? 'default' : 'pointer'
+    }}, [(isCurrent ? '\u25c6 ' : '  ') + (di + 1) + '. ' + d.name]);
+    if (!isCurrent) {
+      decLine.addEventListener('click', function() { showDecisionSidebar(d); });
+    }
+    sec5.appendChild(decLine);
+  });
+  sidebar.appendChild(sec5);
+}
+
+function showLocationSidebar(loc) {
+  clearEl(sidebar);
+
+  var s = SESSIONS[loc.session];
+  sidebar.appendChild(el('div', { className: 'sidebar-title', style: { color: s.color } }, [loc.name]));
+  sidebar.appendChild(el('div', { className: 'sidebar-subtitle' },
+    ['Geographic Location \u00b7 S' + s.id + ': ' + s.name]));
+
+  /* Session context */
+  var sec1 = el('div', { className: 'sidebar-section' });
+  sec1.appendChild(el('div', { className: 'sidebar-section-title', text: 'Session Context' }));
+  sec1.appendChild(el('div', { className: 'sidebar-text' }, [s.subtitle]));
+  sec1.appendChild(el('div', { className: 'sidebar-text', style: { marginTop: '6px', fontStyle: 'italic' } },
+    [s.dramaticQuestion]));
+  sidebar.appendChild(sec1);
+
+  /* Journey position */
+  var sec2 = el('div', { className: 'sidebar-section' });
+  sec2.appendChild(el('div', { className: 'sidebar-section-title', text: 'Journey Position' }));
+  var locIdx = LOCATIONS.indexOf(loc);
+  LOCATIONS.forEach(function(l, li) {
+    var isCurrent = l === loc;
+    var locLine = el('div', { style: {
+      fontSize: '10px', padding: '2px 0',
+      color: isCurrent ? SESSIONS[l.session].color : '#4a5568',
+      fontWeight: isCurrent ? '600' : '400',
+      cursor: isCurrent ? 'default' : 'pointer'
+    }}, [(isCurrent ? '\u25cf ' : '  ') + l.name + ' (S' + l.session + ')']);
+    if (!isCurrent) {
+      locLine.addEventListener('click', function() { showLocationSidebar(l); });
+    }
+    sec2.appendChild(locLine);
+  });
+  sidebar.appendChild(sec2);
+
+  /* Threads active */
+  var sessThreads = THREADS.filter(function(t) {
+    return t.plantSession === s.id || t.paySession === s.id ||
+      (t.waypoints && t.waypoints.some(function(wp) { return wp.session === s.id; }));
+  });
+  if (sessThreads.length > 0) {
+    var sec3 = el('div', { className: 'sidebar-section' });
+    sec3.appendChild(el('div', { className: 'sidebar-section-title', text: 'Active Threads' }));
+    sessThreads.forEach(function(t) {
+      var tag = el('div', { className: 'sidebar-tag', style: {
+        background: t.color + '22', color: t.color, border: '1px solid ' + t.color + '44',
+        cursor: 'pointer'
+      }}, [t.name]);
+      tag.addEventListener('click', function() { showThreadSidebar(t); });
+      sec3.appendChild(tag);
+    });
+    sidebar.appendChild(sec3);
+  }
+
+  /* Cosmological register */
+  var sec4 = el('div', { className: 'sidebar-section' });
+  sec4.appendChild(el('div', { className: 'sidebar-section-title', text: 'Cosmological Register' }));
+  sec4.appendChild(el('div', { className: 'sidebar-text' }, [s.cosmologicalRegister]));
+  sidebar.appendChild(sec4);
+
+  /* Link to session */
+  var link = el('div', { style: {
+    marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #1e2d44',
+    fontSize: '11px', color: s.color, cursor: 'pointer'
+  }}, ['View full session \u2192']);
+  link.addEventListener('click', function() { showSessionSidebar(s); });
+  sidebar.appendChild(link);
+}
+
+function showSensorySidebar(sense, phase, text, session) {
+  clearEl(sidebar);
+
+  var senseColors = {
+    sight: '#7ba4c7', sound: '#9b7ed4', touch: '#6b9e7a',
+    smell: '#d4a05a', taste: '#e06f6f'
+  };
+  var color = senseColors[sense];
+
+  sidebar.appendChild(el('div', { className: 'sidebar-title', style: { color: color } },
+    [sense.charAt(0).toUpperCase() + sense.slice(1)]));
+  sidebar.appendChild(el('div', { className: 'sidebar-subtitle' },
+    ['Sensory Phase: ' + phase + ' \u00b7 S' + session.id + ': ' + session.name]));
+
+  /* Current text */
+  var sec1 = el('div', { className: 'sidebar-section' });
+  sec1.appendChild(el('div', { className: 'sidebar-section-title', text: 'Description' }));
+  sec1.appendChild(el('div', { className: 'sidebar-text' }, [text]));
+  sidebar.appendChild(sec1);
+
+  /* Full progression */
+  var sec2 = el('div', { className: 'sidebar-section' });
+  sec2.appendChild(el('div', { className: 'sidebar-section-title', text: 'Full Progression' }));
+
+  ['early', 'middle', 'late'].forEach(function(p) {
+    var phaseEl = el('div', { style: {
+      padding: '8px 10px', marginBottom: '6px', borderRadius: '4px',
+      borderLeft: '3px solid ' + color,
+      background: p === phase ? color + '15' : 'transparent'
+    }});
+    phaseEl.appendChild(el('div', { style: {
+      fontSize: '10px', color: color, textTransform: 'uppercase',
+      letterSpacing: '1px', marginBottom: '3px'
+    }}, [p + (p === 'early' ? ' (S0\u2013S1)' : p === 'middle' ? ' (S2\u2013S3)' : ' (S4)')]));
+    phaseEl.appendChild(el('div', { style: { fontSize: '11px', color: '#8a9aa0', lineHeight: '1.6' } },
+      [SENSORY[sense][p]]));
+    sec2.appendChild(phaseEl);
+  });
+  sidebar.appendChild(sec2);
+
+  /* Other senses at this phase */
+  var sec3 = el('div', { className: 'sidebar-section' });
+  sec3.appendChild(el('div', { className: 'sidebar-section-title', text: 'Other Senses (' + phase + ')' }));
+  var senses = ['sight', 'sound', 'touch', 'smell', 'taste'];
+  senses.forEach(function(s) {
+    if (s === sense) return;
+    var otherEl = el('div', { style: {
+      fontSize: '10px', padding: '4px 0', color: senseColors[s], cursor: 'pointer'
+    }}, [s + ': ' + SENSORY[s][phase]]);
+    otherEl.addEventListener('click', function() {
+      showSensorySidebar(s, phase, SENSORY[s][phase], session);
+    });
+    sec3.appendChild(otherEl);
+  });
+  sidebar.appendChild(sec3);
+}
+
+/* ── Resize Handler ── */
+var resizeTimer;
+window.addEventListener('resize', function() {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(render, 100);
+});
+
+/* ── Initial Render ── */
+render();
+
+</script>
+</body>
+</html>

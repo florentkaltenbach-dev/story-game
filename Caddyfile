@@ -1,0 +1,9 @@
+# Development: use :80 (HTTP only)
+# Production: replace with your domain for automatic HTTPS
+:80 {
+    # Proxy to Next.js web app
+    reverse_proxy web:3004
+
+    # Compress responses
+    encode gzip
+}

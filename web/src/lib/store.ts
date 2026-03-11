@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import type { Message, Player, Session, SessionSnapshot, Invite } from "./types";
+import type { Message, Player, Session, SessionSnapshot, Invite, CharacterSheet, GameWidget, GroupChannel } from "./types";
 import { stateEmitter } from "./events";
 import { appendMessage, writeSessionSnapshot, readSessionSnapshot, readAllMessages, archiveSessionMessages } from "./memory";
 
@@ -29,6 +29,8 @@ export const session: Session = {
 };
 
 export const messages: Message[] = [];
+export const widgets: GameWidget[] = [];
+export const groupChannels: GroupChannel[] = [];
 
 // === Invite management ===
 
@@ -63,11 +65,16 @@ export function claimInvite(token: string, playerName: string): boolean {
 
 // === Initialize from filesystem (called on startup) ===
 
-let initialized = false;
+let initPromise: Promise<void> | null = null;
 
-export async function initializeStore(): Promise<void> {
-  if (initialized) return;
+export function initializeStore(): Promise<void> {
+  if (!initPromise) {
+    initPromise = doInitialize();
+  }
+  return initPromise;
+}
 
+async function doInitialize(): Promise<void> {
   const snapshot = await readSessionSnapshot();
   if (snapshot) {
     const s = snapshot as unknown as SessionSnapshot;
@@ -75,7 +82,18 @@ export async function initializeStore(): Promise<void> {
     session.name = s.name ?? session.name;
     session.preset = s.preset ?? session.preset;
     session.scene = s.scene ?? session.scene;
-    session.players = s.players ?? session.players;
+    session.players = (s.players ?? session.players).map((p) => ({
+      ...p,
+      character: p.character ?? {
+        status: "pending" as const,
+        archetype: "",
+        background: "",
+        motivation: "",
+        fear: "",
+        qualities: [],
+        relationships: [],
+      },
+    }));
     session.status = s.status ?? session.status;
     session.number = s.number ?? session.number;
     session.act = s.act ?? session.act;
@@ -90,6 +108,14 @@ export async function initializeStore(): Promise<void> {
     if (Array.isArray(raw.invites)) {
       invites.length = 0;
       invites.push(...(raw.invites as Invite[]));
+    }
+    if (Array.isArray(raw.widgets)) {
+      widgets.length = 0;
+      widgets.push(...(raw.widgets as GameWidget[]));
+    }
+    if (Array.isArray(raw.groupChannels)) {
+      groupChannels.length = 0;
+      groupChannels.push(...(raw.groupChannels as GroupChannel[]));
     }
   }
 
@@ -122,7 +148,6 @@ export async function initializeStore(): Promise<void> {
     );
   }
 
-  initialized = true;
 }
 
 // === Player management ===
@@ -138,6 +163,15 @@ export function addPlayer(name: string): Player {
     journal:
       "You received a letter three weeks ago. Typed on heavy cream paper, Miskatonic University crest embossed at the top. An expedition to the Antarctic \u2014 departure imminent \u2014 your particular skills required. The compensation is generous. The details are sparse. You said yes before you finished reading.",
     notes: "",
+    character: {
+      status: "pending",
+      archetype: "",
+      background: "",
+      motivation: "",
+      fear: "",
+      qualities: [],
+      relationships: [],
+    },
   };
   session.players.push(player);
 
@@ -179,8 +213,10 @@ async function persistSnapshot(): Promise<void> {
     lastMessageId: String(messageIdCounter),
     keeperAutoRespond: session.keeperAutoRespond,
     invites,
+    widgets,
+    groupChannels,
     timestamp: Date.now(),
-  } as SessionSnapshot & { invites: Invite[]; keeperAutoRespond: boolean };
+  } as SessionSnapshot & { invites: Invite[]; keeperAutoRespond: boolean; widgets: GameWidget[]; groupChannels: GroupChannel[] };
 
   try {
     await writeSessionSnapshot(snapshot as unknown as Record<string, unknown>);
@@ -243,11 +279,193 @@ export async function nextSession(): Promise<void> {
   await persistSnapshot();
 }
 
+export async function resetSession(): Promise<void> {
+  session.players = [];
+  session.status = "lobby";
+  session.keeperAutoRespond = false;
+  session.number = 0;
+  session.act = 1;
+  messages.length = 0;
+  invites.length = 0;
+  widgets.length = 0;
+  groupChannels.length = 0;
+  messageIdCounter = 100;
+
+  // Re-seed with welcome messages
+  messages.push(
+    {
+      id: "1",
+      channel: "all",
+      sender: { role: "system", name: "System" },
+      content: "The Ceremony is preparing. A new story begins.",
+      timestamp: Date.now() - 60000,
+    },
+    {
+      id: "2",
+      channel: "all",
+      sender: { role: "mc", name: "The Narrator" },
+      content:
+        "The harbour smells of salt and engine oil. Gulls wheel overhead, their cries sharpened by the wind coming off the Atlantic. You have each received a letter — typed on Miskatonic University stationery, signed by two names you do not recognise — inviting you to join an expedition of singular importance. The letter promised answers. It did not say to what questions.",
+      timestamp: Date.now() - 30000,
+    }
+  );
+
+  stateEmitter.emit("session", {
+    status: session.status,
+    number: session.number,
+    act: session.act,
+  });
+  await persistSnapshot();
+}
+
+export async function kickPlayer(playerId: string): Promise<boolean> {
+  const idx = session.players.findIndex((p) => p.id === playerId);
+  if (idx === -1) return false;
+
+  const [removed] = session.players.splice(idx, 1);
+  stateEmitter.emit("player_kicked", { playerId: removed.id, name: removed.name });
+  await persistSnapshot();
+  return true;
+}
+
 export async function toggleKeeperAutoRespond(): Promise<boolean> {
   session.keeperAutoRespond = !session.keeperAutoRespond;
   stateEmitter.emit("session", { status: session.status, keeperAutoRespond: session.keeperAutoRespond });
   await persistSnapshot();
   return session.keeperAutoRespond;
+}
+
+// === Character management ===
+
+export async function updateCharacter(
+  playerId: string,
+  fields: Partial<CharacterSheet>
+): Promise<Player | null> {
+  const player = session.players.find((p) => p.id === playerId);
+  if (!player) return null;
+
+  // Merge fields
+  if (fields.archetype !== undefined) player.character.archetype = fields.archetype;
+  if (fields.background !== undefined) player.character.background = fields.background;
+  if (fields.motivation !== undefined) player.character.motivation = fields.motivation;
+  if (fields.fear !== undefined) player.character.fear = fields.fear;
+  if (fields.qualities !== undefined) player.character.qualities = fields.qualities;
+  if (fields.relationships !== undefined) player.character.relationships = fields.relationships;
+
+  // Auto-promote pending → draft on first edit
+  if (player.character.status === "pending") {
+    player.character.status = "draft";
+  }
+
+  // Update characterName from archetype if set
+  if (fields.archetype) {
+    player.characterName = player.name;
+  }
+
+  stateEmitter.emit("character_update", {
+    playerId,
+    status: player.character.status,
+    character: player.character,
+  });
+  await persistSnapshot();
+  return player;
+}
+
+export async function submitCharacter(playerId: string): Promise<Player | null> {
+  const player = session.players.find((p) => p.id === playerId);
+  if (!player) return null;
+
+  player.character.status = "submitted";
+  player.character.revisionComment = undefined;
+  stateEmitter.emit("character_update", {
+    playerId,
+    status: player.character.status,
+    character: player.character,
+  });
+  await persistSnapshot();
+  return player;
+}
+
+export async function approveCharacter(playerId: string): Promise<Player | null> {
+  const player = session.players.find((p) => p.id === playerId);
+  if (!player) return null;
+
+  player.character.status = "approved";
+  player.character.revisionComment = undefined;
+  stateEmitter.emit("character_update", {
+    playerId,
+    status: player.character.status,
+    character: player.character,
+  });
+  await persistSnapshot();
+  return player;
+}
+
+export async function reviseCharacter(playerId: string, comment?: string): Promise<Player | null> {
+  const player = session.players.find((p) => p.id === playerId);
+  if (!player) return null;
+
+  player.character.status = "draft";
+  player.character.revisionComment = comment || undefined;
+  stateEmitter.emit("character_update", {
+    playerId,
+    status: player.character.status,
+    character: player.character,
+  });
+  await persistSnapshot();
+  return player;
+}
+
+// === Widget management ===
+
+export async function updateWidget(widget: GameWidget): Promise<void> {
+  const idx = widgets.findIndex((w) => w.id === widget.id);
+  if (idx >= 0) {
+    widgets[idx] = widget;
+  } else {
+    widgets.push(widget);
+  }
+  stateEmitter.emit("widget_update", widget);
+  await persistSnapshot();
+}
+
+export async function removeWidget(widgetId: string): Promise<boolean> {
+  const idx = widgets.findIndex((w) => w.id === widgetId);
+  if (idx === -1) return false;
+  widgets.splice(idx, 1);
+  stateEmitter.emit("widget_remove", { widgetId });
+  await persistSnapshot();
+  return true;
+}
+
+export function getWidgetsForPlayer(playerId: string): GameWidget[] {
+  return widgets.filter((w) => w.target === "all" || w.target === playerId);
+}
+
+// === Group channel management ===
+
+export async function createGroupChannel(name: string, creatorId: string, memberIds: string[]): Promise<GroupChannel> {
+  const id = `group-${randomUUID().slice(0, 8)}` as const;
+  // Ensure creator is in members
+  const members = Array.from(new Set([creatorId, ...memberIds]));
+  const channel: GroupChannel = { id, name, members, createdBy: creatorId, createdAt: Date.now() };
+  groupChannels.push(channel);
+  await persistSnapshot();
+  return channel;
+}
+
+export function getGroupChannel(channelId: string): GroupChannel | undefined {
+  return groupChannels.find((c) => c.id === channelId);
+}
+
+export function isGroupChannelMember(channelId: string, playerId: string): boolean {
+  const channel = groupChannels.find((c) => c.id === channelId);
+  if (!channel) return false;
+  return channel.members.includes(playerId);
+}
+
+export function getPlayerGroupChannels(playerId: string): GroupChannel[] {
+  return groupChannels.filter((c) => c.members.includes(playerId));
 }
 
 // === Test helpers ===
@@ -264,6 +482,8 @@ export function _resetForTesting(): void {
   session.act = 1;
   messages.length = 0;
   invites.length = 0;
+  widgets.length = 0;
+  groupChannels.length = 0;
   messageIdCounter = 100;
-  initialized = false;
+  initPromise = null;
 }

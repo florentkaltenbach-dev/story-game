@@ -11,7 +11,12 @@ interface UseEventStreamOptions {
   onScene?: EventHandler;
   onSession?: EventHandler;
   onPlayerJoined?: EventHandler;
+  onPlayerKicked?: EventHandler;
   onKeeperResponse?: EventHandler;
+  onKeeperTyping?: EventHandler;
+  onCharacterUpdate?: EventHandler;
+  onWidgetUpdate?: EventHandler;
+  onWidgetRemove?: EventHandler;
   enabled?: boolean;
 }
 
@@ -21,7 +26,12 @@ export function useEventStream({
   onScene,
   onSession,
   onPlayerJoined,
+  onPlayerKicked,
   onKeeperResponse,
+  onKeeperTyping,
+  onCharacterUpdate,
+  onWidgetUpdate,
+  onWidgetRemove,
   enabled = true,
 }: UseEventStreamOptions = {}) {
   const sourceRef = useRef<EventSource | null>(null);
@@ -30,7 +40,12 @@ export function useEventStream({
     onScene,
     onSession,
     onPlayerJoined,
+    onPlayerKicked,
     onKeeperResponse,
+    onKeeperTyping,
+    onCharacterUpdate,
+    onWidgetUpdate,
+    onWidgetRemove,
   });
 
   // Update handlers without reconnecting
@@ -39,7 +54,12 @@ export function useEventStream({
     onScene,
     onSession,
     onPlayerJoined,
+    onPlayerKicked,
     onKeeperResponse,
+    onKeeperTyping,
+    onCharacterUpdate,
+    onWidgetUpdate,
+    onWidgetRemove,
   };
 
   useEffect(() => {
@@ -69,6 +89,21 @@ export function useEventStream({
           case "keeper_response":
             handlers.onKeeperResponse?.(data);
             break;
+          case "keeper_typing":
+            handlers.onKeeperTyping?.(data);
+            break;
+          case "character_update":
+            handlers.onCharacterUpdate?.(data);
+            break;
+          case "player_kicked":
+            handlers.onPlayerKicked?.(data);
+            break;
+          case "widget_update":
+            handlers.onWidgetUpdate?.(data);
+            break;
+          case "widget_remove":
+            handlers.onWidgetRemove?.(data);
+            break;
         }
       } catch {
         // Ignore malformed events
@@ -79,7 +114,12 @@ export function useEventStream({
     source.addEventListener("scene", handle("scene"));
     source.addEventListener("session", handle("session"));
     source.addEventListener("player_joined", handle("player_joined"));
+    source.addEventListener("player_kicked", handle("player_kicked"));
     source.addEventListener("keeper_response", handle("keeper_response"));
+    source.addEventListener("keeper_typing", handle("keeper_typing"));
+    source.addEventListener("character_update", handle("character_update"));
+    source.addEventListener("widget_update", handle("widget_update"));
+    source.addEventListener("widget_remove", handle("widget_remove"));
 
     return () => {
       source.close();

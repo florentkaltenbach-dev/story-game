@@ -22,6 +22,18 @@ const crimson = Crimson_Text({
 export const metadata: Metadata = {
   title: "The Ceremony",
   description: "An interactive story experience",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    viewportFit: "cover",
+  },
+  themeColor: "#060a11",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "The Ceremony",
+  },
 };
 
 export default function RootLayout({

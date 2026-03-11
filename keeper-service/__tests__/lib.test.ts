@@ -3,6 +3,7 @@ import {
   estimateTokens,
   truncateToTokens,
   RateLimiter,
+  CostTracker,
   MODE_TIERS,
   MODE_MAX_TOKENS,
   TIER_BUDGETS,
@@ -79,6 +80,57 @@ describe("RateLimiter", () => {
     limiter.record();
     limiter.record();
     expect(limiter.usage).toEqual({ session: 2, limit: 100 });
+  });
+});
+
+describe("CostTracker", () => {
+  it("records and summarizes usage", () => {
+    const tracker = new CostTracker();
+    tracker.record("mc_query", "claude-haiku-4-5-20251001", {
+      input_tokens: 1000,
+      output_tokens: 200,
+      cache_read_input_tokens: 500,
+      cache_creation_input_tokens: 0,
+    });
+    tracker.record("player_response", "claude-haiku-4-5-20251001", {
+      input_tokens: 800,
+      output_tokens: 300,
+    });
+
+    const summary = tracker.summary("claude-haiku-4-5-20251001");
+    expect(summary.totalCalls).toBe(2);
+    expect(summary.totalInput).toBe(1800);
+    expect(summary.totalOutput).toBe(500);
+    expect(summary.totalCacheRead).toBe(500);
+    expect(summary.totalCostUsd).toBeGreaterThan(0);
+    expect(summary.modes.mc_query.calls).toBe(1);
+    expect(summary.modes.player_response.calls).toBe(1);
+  });
+
+  it("accumulates multiple calls for same mode", () => {
+    const tracker = new CostTracker();
+    tracker.record("mc_query", "claude-haiku-4-5-20251001", { input_tokens: 100, output_tokens: 50 });
+    tracker.record("mc_query", "claude-haiku-4-5-20251001", { input_tokens: 200, output_tokens: 75 });
+
+    const summary = tracker.summary("claude-haiku-4-5-20251001");
+    expect(summary.totalCalls).toBe(2);
+    expect(summary.modes.mc_query.calls).toBe(2);
+    expect(summary.modes.mc_query.tokens).toBe(425);
+  });
+
+  it("returns zero summary when empty", () => {
+    const tracker = new CostTracker();
+    const summary = tracker.summary();
+    expect(summary.totalCalls).toBe(0);
+    expect(summary.totalCostUsd).toBe(0);
+  });
+
+  it("handles missing usage fields gracefully", () => {
+    const tracker = new CostTracker();
+    tracker.record("compression", "claude-haiku-4-5-20251001", {});
+    const summary = tracker.summary();
+    expect(summary.totalCalls).toBe(1);
+    expect(summary.totalInput).toBe(0);
   });
 });
 

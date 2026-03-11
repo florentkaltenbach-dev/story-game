@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import {
   session,
+  messages,
+  widgets,
   addPlayer,
   initializeStore,
   updateSessionStatus,
@@ -11,23 +13,75 @@ import {
   advanceAct,
   endSession,
   nextSession,
+  resetSession,
+  kickPlayer,
+  updateCharacter,
+  submitCharacter,
+  approveCharacter,
+  reviseCharacter,
+  updateWidget,
+  removeWidget,
+  getWidgetsForPlayer,
 } from "@/lib/store";
+import { writeMemoryLevel } from "@/lib/memory";
+import { matchTriggers } from "@/lib/scripts/triggers";
+import { queryKeeper } from "@/lib/keeper";
+import { compressAct, buildRecap } from "@/lib/compression";
 import { authenticateRequest, requireRole, createToken } from "@/lib/auth";
 import type { AuthContext } from "@/lib/auth";
+import type { EventTrigger, TriggerState, Message } from "@/lib/types";
+import type { DetectedEvent } from "@/lib/scripts/types";
+import { readFile } from "fs/promises";
+import { join } from "path";
+import { nextMessageId, addMessage } from "@/lib/store";
 
-export async function GET() {
+// Session-scoped trigger state for scene transitions
+const sceneTriggerState: TriggerState = { lastFired: {} };
+
+let cachedTriggers: EventTrigger[] | null = null;
+async function loadTriggerConfig(): Promise<EventTrigger[]> {
+  if (cachedTriggers) return cachedTriggers;
+  try {
+    const raw = await readFile(join(process.cwd(), "..", "config", "triggers.json"), "utf-8");
+    const data = JSON.parse(raw);
+    cachedTriggers = data.triggers || [];
+    return cachedTriggers!;
+  } catch {
+    return [];
+  }
+}
+
+export async function GET(request: Request) {
   try {
     await initializeStore();
-    // Public but limited: return non-sensitive session info
+
+    // Try to authenticate to determine role-based widget filtering
+    const auth = authenticateRequest(request);
+    let filteredWidgets = widgets;
+    if (auth instanceof Response) {
+      // Unauthenticated — no widgets
+      filteredWidgets = [];
+    } else {
+      const ctx = auth as AuthContext;
+      if (ctx.role === "mc") {
+        filteredWidgets = widgets;
+      } else if (ctx.playerId) {
+        filteredWidgets = getWidgetsForPlayer(ctx.playerId);
+      } else {
+        filteredWidgets = [];
+      }
+    }
+
     return NextResponse.json({
       id: session.id,
       name: session.name,
       preset: session.preset,
       scene: session.scene,
-      players: session.players.map((p) => ({ id: p.id, name: p.name, characterName: p.characterName })),
+      players: session.players.map((p) => ({ id: p.id, name: p.name, characterName: p.characterName, character: p.character })),
       status: session.status,
       number: session.number,
       act: session.act,
+      widgets: filteredWidgets,
     });
   } catch (err) {
     console.error("[session/GET]", err);
@@ -71,7 +125,7 @@ export async function POST(request: Request) {
     }
 
     // MC-only actions
-    const mcActions = ["start", "pause", "toggle_keeper", "advance_act", "end_session", "next_session"];
+    const mcActions = ["start", "pause", "toggle_keeper", "advance_act", "end_session", "next_session", "reset", "kick"];
     if (mcActions.includes(action)) {
       const auth = authenticateRequest(request);
       if (auth instanceof Response) return auth;
@@ -92,16 +146,61 @@ export async function POST(request: Request) {
         return NextResponse.json(session);
       }
       if (action === "advance_act") {
+        // Compress current act's messages before advancing (fire-and-forget)
+        const currentAct = session.act;
+        const currentMessages = [...messages];
+        compressAct(currentMessages, session.number, currentAct).catch((err) =>
+          console.error("[session/advance_act] Compression error:", err)
+        );
+
         const act = await advanceAct();
         return NextResponse.json({ act });
       }
       if (action === "end_session") {
+        // Compress final act before ending
+        const currentAct = session.act;
+        const currentMessages = [...messages];
+        compressAct(currentMessages, session.number, currentAct).catch((err) =>
+          console.error("[session/end_session] Compression error:", err)
+        );
+
         await endSession();
         return NextResponse.json(session);
       }
       if (action === "next_session") {
+        // Build recap from previous session's compression summaries
+        const recap = await buildRecap(session.number + 1);
+
         await nextSession();
+
+        // Broadcast recap as system message
+        if (recap) {
+          const recapMsg: Message = {
+            id: nextMessageId(),
+            channel: "all",
+            sender: { role: "system", name: "The Ceremony" },
+            content: recap,
+            timestamp: Date.now(),
+          };
+          await addMessage(recapMsg);
+        }
+
         return NextResponse.json(session);
+      }
+      if (action === "reset") {
+        await resetSession();
+        return NextResponse.json(session);
+      }
+      if (action === "kick") {
+        const { playerId } = body;
+        if (!playerId) {
+          return NextResponse.json({ error: "playerId required" }, { status: 400 });
+        }
+        const success = await kickPlayer(playerId);
+        if (!success) {
+          return NextResponse.json({ error: "Player not found" }, { status: 404 });
+        }
+        return NextResponse.json({ ok: true });
       }
     }
 
@@ -125,7 +224,64 @@ export async function PATCH(request: Request) {
       if (!requireRole(auth as AuthContext, "mc")) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
+
+      const oldLocation = session.scene.location;
       await updateScene(body.scene);
+
+      // Write current scene to Level 1 memory
+      const sceneContent = [
+        `Location: ${session.scene.location}`,
+        `Scene: ${session.scene.title}`,
+        session.scene.description,
+      ].filter(Boolean).join("\n");
+      writeMemoryLevel(1, "current-scene", sceneContent).catch((err) =>
+        console.error("[session/PATCH] Failed to write scene to memory:", err)
+      );
+
+      // If location changed, fire location_change event through trigger system
+      const newLocation = body.scene.location ?? session.scene.location;
+      if (newLocation && newLocation.toLowerCase() !== oldLocation.toLowerCase()) {
+        const locationEvent: DetectedEvent = {
+          type: "location_change",
+          data: { from: oldLocation, to: newLocation },
+        };
+
+        const triggerConfig = await loadTriggerConfig();
+        const triggered = matchTriggers([locationEvent], triggerConfig, sceneTriggerState);
+
+        for (const action of triggered) {
+          sceneTriggerState.lastFired[action.triggerId] = Date.now();
+
+          // Fire-and-forget Keeper call for triggered actions
+          (async () => {
+            try {
+              const keeperResponse = await queryKeeper({
+                mode: action.mode,
+                trigger: {
+                  type: "session_event",
+                  channel: "all",
+                  content: `[Scene transition: ${oldLocation} → ${newLocation}] ${action.description || ""}`,
+                },
+                session: { number: session.number, act: session.act, status: session.status },
+                players: session.players.map((p) => ({
+                  name: p.name, characterName: p.characterName, journal: p.journal, notes: p.notes,
+                })),
+              });
+
+              const msg: Message = {
+                id: nextMessageId(),
+                channel: "all",
+                sender: { role: "keeper", name: "The Keeper" },
+                content: keeperResponse.narrative,
+                timestamp: Date.now(),
+              };
+              await addMessage(msg);
+            } catch (err) {
+              console.error("[session/PATCH] Scene trigger error:", err);
+            }
+          })();
+        }
+      }
     }
 
     // Notes: player can only update own notes (playerId from token)
@@ -134,6 +290,77 @@ export async function PATCH(request: Request) {
       if (playerId) {
         await updatePlayerNotes(playerId, body.notes);
       }
+    }
+
+    // Character updates (player saves their own fields)
+    if (body.character && typeof body.character === "object") {
+      const playerId = (auth as AuthContext).playerId;
+      if (!playerId) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      const updated = await updateCharacter(playerId, body.character);
+      if (!updated) {
+        return NextResponse.json({ error: "Player not found" }, { status: 404 });
+      }
+      return NextResponse.json(updated);
+    }
+
+    // Character actions: submit (player), approve/revise (MC)
+    if (body.characterAction) {
+      if (body.characterAction === "submit") {
+        const playerId = (auth as AuthContext).playerId;
+        if (!playerId) {
+          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+        const updated = await submitCharacter(playerId);
+        if (!updated) {
+          return NextResponse.json({ error: "Player not found" }, { status: 404 });
+        }
+        return NextResponse.json(updated);
+      }
+
+      if (body.characterAction === "approve" || body.characterAction === "revise") {
+        if (!requireRole(auth as AuthContext, "mc")) {
+          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+        if (!body.playerId) {
+          return NextResponse.json({ error: "playerId required" }, { status: 400 });
+        }
+        if (body.characterAction === "approve") {
+          const updated = await approveCharacter(body.playerId);
+          if (!updated) return NextResponse.json({ error: "Player not found" }, { status: 404 });
+          return NextResponse.json(updated);
+        }
+        const updated = await reviseCharacter(body.playerId, body.revisionComment);
+        if (!updated) return NextResponse.json({ error: "Player not found" }, { status: 404 });
+        return NextResponse.json(updated);
+      }
+    }
+
+    // Widget upsert (MC-only)
+    if (body.widget && typeof body.widget === "object") {
+      if (!requireRole(auth as AuthContext, "mc")) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      const w = body.widget;
+      if (!w.id || !w.kind || !w.label || !w.target || !w.data) {
+        return NextResponse.json({ error: "Widget requires id, kind, label, target, data" }, { status: 400 });
+      }
+      w.updatedAt = Date.now();
+      await updateWidget(w);
+      return NextResponse.json({ ok: true, widget: w });
+    }
+
+    // Widget remove (MC-only)
+    if (typeof body.removeWidget === "string") {
+      if (!requireRole(auth as AuthContext, "mc")) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      const removed = await removeWidget(body.removeWidget);
+      if (!removed) {
+        return NextResponse.json({ error: "Widget not found" }, { status: 404 });
+      }
+      return NextResponse.json({ ok: true });
     }
 
     return NextResponse.json(session);

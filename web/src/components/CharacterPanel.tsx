@@ -59,7 +59,7 @@ export default function CharacterPanel({ player }: { player: Player }) {
 
       <div className="flex-1 overflow-y-auto p-4">
         {tab === "journal" ? (
-          <p className="narrative-text text-sm text-foreground/80 leading-relaxed">
+          <p className="narrative-text text-sm text-foreground/90 leading-relaxed">
             {player.journal}
           </p>
         ) : (
@@ -67,7 +67,7 @@ export default function CharacterPanel({ player }: { player: Player }) {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Your suspicions, plans, theories..."
-            className="w-full h-full bg-transparent text-sm text-foreground/80 placeholder:text-muted/40 resize-none focus:outline-none"
+            className="w-full h-full bg-transparent text-sm text-foreground/90 placeholder:text-muted/60 resize-none focus:outline-none"
           />
         )}
       </div>

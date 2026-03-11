@@ -132,6 +132,68 @@ export async function archiveSessionMessages(sessionNumber: number): Promise<voi
   }
 }
 
+// === Story archive (full snapshot on ceremony end) ===
+
+export async function createStoryArchive(
+  sessionData: Record<string, unknown>
+): Promise<string> {
+  const archiveDir = join(SESSION_ROOT, "archive");
+  await mkdir(archiveDir, { recursive: true });
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const archiveId = `story-${timestamp}`;
+  const archivePath = join(archiveDir, `${archiveId}.json`);
+
+  // Collect all memory levels
+  const memory: Record<string, Record<string, string>> = {};
+  for (let i = 1; i <= 5; i++) {
+    memory[`level-${i}`] = await readMemoryLevel(i as MemoryLevelNumber);
+  }
+
+  const archive = {
+    id: archiveId,
+    createdAt: Date.now(),
+    session: sessionData,
+    memory,
+  };
+
+  await atomicWrite(archivePath, JSON.stringify(archive, null, 2));
+  return archiveId;
+}
+
+export async function listStoryArchives(): Promise<Array<{ id: string; createdAt: number; name: string }>> {
+  const archiveDir = join(SESSION_ROOT, "archive");
+  try {
+    const files = await readdir(archiveDir);
+    const archives: Array<{ id: string; createdAt: number; name: string }> = [];
+    for (const file of files) {
+      if (!file.startsWith("story-") || !file.endsWith(".json")) continue;
+      try {
+        const raw = await readFile(join(archiveDir, file), "utf-8");
+        const data = JSON.parse(raw);
+        archives.push({
+          id: data.id,
+          createdAt: data.createdAt,
+          name: (data.session as Record<string, string>)?.name || "Unknown",
+        });
+      } catch { /* skip corrupt files */ }
+    }
+    return archives.sort((a, b) => b.createdAt - a.createdAt);
+  } catch {
+    return [];
+  }
+}
+
+export async function readStoryArchive(archiveId: string): Promise<Record<string, unknown> | null> {
+  const archivePath = join(SESSION_ROOT, "archive", `${archiveId}.json`);
+  try {
+    const raw = await readFile(archivePath, "utf-8");
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 // === Session message persistence (JSONL) ===
 
 export async function appendMessage(

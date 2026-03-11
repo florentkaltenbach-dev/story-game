@@ -92,7 +92,14 @@ export function verifyToken(token: string): AuthContext | null {
 // === Request authentication ===
 
 export function authenticateRequest(request: Request): AuthContext | Response {
-  // Try Authorization header first
+  // Try custom header first (avoids gateway auth interception)
+  const customToken = request.headers.get("X-Ceremony-Token");
+  if (customToken) {
+    const ctx = verifyToken(customToken);
+    if (ctx) return ctx;
+  }
+
+  // Fallback: Authorization header
   const authHeader = request.headers.get("Authorization");
   if (authHeader?.startsWith("Bearer ")) {
     const token = authHeader.slice(7);

@@ -24,7 +24,6 @@ export class MockKeeper implements KeeperBackend {
 
     return {
       narrative,
-      stateUpdates: [],
       degraded: false,
     };
   }
@@ -51,6 +50,23 @@ export class MockKeeper implements KeeperBackend {
         ];
     }
   }
+}
+
+// === Shared types ===
+
+export interface CompressionResult {
+  summary: string;
+  keyEvents: string[];
+  threadUpdates?: Array<{ id: string; status: string; reason?: string }>;
+}
+
+export interface CostSummary {
+  totalCalls: number;
+  totalInput: number;
+  totalOutput: number;
+  totalCacheRead: number;
+  totalCostUsd: number;
+  modes: Record<string, { calls: number; tokens: number; cost: number }>;
 }
 
 // === RemoteKeeper — proxies to standalone keeper-service ===
@@ -83,6 +99,85 @@ export class RemoteKeeper implements KeeperBackend {
 
     return res.json();
   }
+
+  async compress(messages: Array<{ role: string; name: string; content: string }>, sessionNumber: number, act: number): Promise<CompressionResult> {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (this.sharedSecret) {
+      headers["X-Ceremony-Secret"] = this.sharedSecret;
+    }
+
+    const res = await fetch(`${this.url}/compress`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ messages, sessionNumber, act }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Compression failed: ${res.status}`);
+    }
+
+    return res.json();
+  }
+
+  async streamQuery(
+    input: KeeperInput,
+    onText: (text: string) => void
+  ): Promise<KeeperResponse> {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (this.sharedSecret) {
+      headers["X-Ceremony-Secret"] = this.sharedSecret;
+    }
+
+    const res = await fetch(`${this.url}/query/stream`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ input }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Keeper stream error ${res.status}`);
+    }
+
+    const reader = res.body?.getReader();
+    if (!reader) throw new Error("No response body");
+
+    const decoder = new TextDecoder();
+    let finalResponse: KeeperResponse | null = null;
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        try {
+          const event = JSON.parse(line.slice(6));
+          if (event.type === "text") {
+            onText(event.content);
+          } else if (event.type === "done") {
+            finalResponse = event.response;
+          }
+        } catch { /* skip malformed lines */ }
+      }
+    }
+
+    return finalResponse ?? { narrative: "", degraded: true };
+  }
+
+  async getCost(): Promise<CostSummary> {
+    const headers: Record<string, string> = {};
+    if (this.sharedSecret) {
+      headers["X-Ceremony-Secret"] = this.sharedSecret;
+    }
+    const res = await fetch(`${this.url}/cost`, { headers });
+    if (!res.ok) return { totalCalls: 0, totalInput: 0, totalOutput: 0, totalCacheRead: 0, totalCostUsd: 0, modes: {} };
+    return res.json();
+  }
 }
 
 // === Keeper factory — selected by environment variable ===
@@ -111,7 +206,6 @@ export async function queryKeeper(
     return {
       narrative:
         "[The Keeper is momentarily silent. The wind fills the pause.]",
-      stateUpdates: [],
       degraded: true,
     };
   }

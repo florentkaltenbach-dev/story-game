@@ -48,6 +48,7 @@ export const stateEmitter = new StateEmitter();
 export interface SSEFilterContext {
   role?: string;
   playerId?: string;
+  groupMembership?: Set<string>;  // group channel IDs this player belongs to
 }
 
 export function createSSEStream(
@@ -65,9 +66,22 @@ export function createSSEStream(
           if (filter && event.type === "message") {
             const msg = event.data as { channel?: string; playerId?: string };
             if (msg.channel === "mc-keeper" && filter.role !== "mc") return;
-            if (msg.channel === "keeper-private") {
+            if (msg.channel === "keeper-private" || msg.channel === "secret-action") {
               if (filter.role !== "mc" && filter.playerId !== msg.playerId) return;
             }
+            // Group channels: only members + MC see messages
+            if (msg.channel && msg.channel.startsWith("group-") && filter.role !== "mc") {
+              // Membership check deferred to filter.groupMembership
+              if (filter.groupMembership && !filter.groupMembership.has(msg.channel)) return;
+            }
+          }
+          // Widget targeting: MC sees all, players see "all" or their own
+          if (filter && event.type === "widget_update") {
+            const widget = event.data as { target?: string };
+            if (filter.role !== "mc" && widget.target !== "all" && widget.target !== filter.playerId) return;
+          }
+          if (filter && event.type === "widget_remove") {
+            // widget_remove goes to everyone — client removes if present
           }
           controller.enqueue(
             encoder.encode(

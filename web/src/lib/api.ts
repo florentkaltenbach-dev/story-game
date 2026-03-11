@@ -29,7 +29,7 @@ export function clearStoredToken(): void {
 export function authHeaders(): Record<string, string> {
   const token = getStoredToken();
   if (!token) return {};
-  return { Authorization: `Bearer ${token}` };
+  return { "X-Ceremony-Token": token };
 }
 
 export function authQueryParam(): string {

@@ -20,6 +20,17 @@ export default function MessageInput({
     inputRef.current?.focus();
   }, []);
 
+  // Scroll input into view when mobile keyboard appears
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    function onResize() {
+      inputRef.current?.scrollIntoView({ block: "nearest" });
+    }
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
+
   function handleSubmit() {
     const trimmed = value.trim();
     if (!trimmed) return;
@@ -35,7 +46,7 @@ export default function MessageInput({
   }
 
   return (
-    <div className="border-t border-border bg-surface p-3">
+    <div className="border-t border-border bg-surface p-3 input-safe-area">
       <div className="flex gap-2 items-end">
         <textarea
           ref={inputRef}
@@ -44,19 +55,19 @@ export default function MessageInput({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled}
-          rows={1}
-          className="flex-1 bg-surface-light border border-border rounded px-3 py-2 text-sm text-foreground placeholder:text-muted/60 resize-none focus:outline-none focus:border-accent/50 disabled:opacity-50"
-          style={{ minHeight: "38px", maxHeight: "120px" }}
+          rows={2}
+          className="flex-1 bg-surface-light border border-border rounded px-3 py-2 text-sm text-foreground placeholder:text-muted/80 resize-none focus:outline-none focus:border-accent/50 disabled:opacity-50"
+          style={{ minHeight: "56px", maxHeight: "200px" }}
           onInput={(e) => {
             const target = e.target as HTMLTextAreaElement;
-            target.style.height = "38px";
-            target.style.height = target.scrollHeight + "px";
+            target.style.height = "56px";
+            target.style.height = Math.max(56, target.scrollHeight) + "px";
           }}
         />
         <button
           onClick={handleSubmit}
           disabled={disabled || !value.trim()}
-          className="px-4 py-2 bg-accent/20 text-accent border border-accent/30 rounded text-sm hover:bg-accent/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="px-4 py-2 bg-accent/20 text-accent border border-accent/30 rounded text-sm hover:bg-accent/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Send
         </button>

@@ -2,14 +2,16 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Channel, Message, Player, Session, Scene } from "@/lib/types";
+import { Channel, Message, Player, Session, Scene, CharacterSheet, GameWidget, GroupChannel } from "@/lib/types";
 import { apiUrl, authHeaders, authQueryParam, getStoredToken, setStoredToken, clearStoredToken, authFetch } from "@/lib/api";
 import { useEventStream } from "@/lib/useEventStream";
+import { useBreakpoint } from "@/hooks/useBreakpoint";
 import SceneDisplay from "@/components/SceneDisplay";
 import StoryLog from "@/components/StoryLog";
 import MessageInput from "@/components/MessageInput";
 import ChannelTabs from "@/components/ChannelTabs";
-import CharacterPanel from "@/components/CharacterPanel";
+import PlayerPanelShelf from "@/components/PlayerPanelShelf";
+import OnboardingWizard from "@/components/OnboardingWizard";
 
 function JoinForm({
   onJoin,
@@ -27,7 +29,7 @@ function JoinForm({
       <div className="relative z-10 bg-surface border border-border rounded-lg p-8 max-w-md w-full mx-4">
         {session && (
           <div className="text-center mb-6">
-            <p className="text-[10px] tracking-[0.3em] uppercase text-muted/60 mb-1">
+            <p className="text-xs tracking-[0.3em] uppercase text-muted/80 mb-1">
               Now gathering
             </p>
             <h2 className="narrative-text text-xl text-accent">
@@ -44,10 +46,10 @@ function JoinForm({
 
         <div className="h-px bg-border mb-6" />
 
-        <h3 className="narrative-text text-lg text-foreground/80 text-center mb-1">
+        <h3 className="narrative-text text-lg text-foreground/90 text-center mb-1">
           Take your place
         </h3>
-        <p className="text-xs text-muted/60 text-center mb-5">
+        <p className="text-xs text-muted/80 text-center mb-5">
           Enter your name to join the ceremony
         </p>
 
@@ -63,12 +65,12 @@ function JoinForm({
             onChange={(e) => setName(e.target.value)}
             placeholder="Your name"
             autoFocus
-            className="w-full bg-surface-light border border-border rounded px-4 py-2.5 text-sm text-foreground placeholder:text-muted/40 focus:outline-none focus:border-accent/50 mb-4"
+            className="w-full bg-surface-light border border-border rounded px-4 py-2.5 text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent/50 mb-4"
           />
           <button
             type="submit"
             disabled={!name.trim()}
-            className="w-full py-2.5 bg-accent/20 text-accent border border-accent/30 rounded text-sm tracking-wide hover:bg-accent/30 transition-colors disabled:opacity-30"
+            className="w-full py-2.5 bg-accent/20 text-accent border border-accent/30 rounded text-sm tracking-wide hover:bg-accent/30 transition-colors disabled:opacity-50"
           >
             Enter
           </button>
@@ -104,10 +106,10 @@ function NoInvite() {
           The Ceremony
         </h2>
         <div className="h-px bg-border mb-4" />
-        <p className="text-sm text-foreground/70 mb-1">
+        <p className="text-sm text-foreground/85 mb-1">
           This gathering is by invitation only.
         </p>
-        <p className="text-xs text-muted/50">
+        <p className="text-xs text-muted/70">
           Ask your MC for a link to join.
         </p>
       </div>
@@ -115,9 +117,81 @@ function NoInvite() {
   );
 }
 
+function CreateGroupDialog({
+  players,
+  onCreate,
+  onCancel,
+}: {
+  players: Player[];
+  onCreate: (name: string, memberIds: string[]) => void;
+  onCancel: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  function toggle(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  return (
+    <>
+      <div className="fixed inset-0 z-40 bg-background/60 backdrop-blur-sm" onClick={onCancel} />
+      <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 bg-surface border border-border rounded-lg p-5 max-w-sm mx-auto">
+        <h3 className="text-sm text-foreground font-medium mb-3">Create Group Channel</h3>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Channel name"
+          autoFocus
+          className="w-full bg-surface-light border border-border rounded px-3 py-2 text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent/50 mb-3"
+        />
+        {players.length > 0 && (
+          <div className="mb-3">
+            <p className="text-xs text-muted/70 mb-1.5">Invite players:</p>
+            <div className="space-y-1">
+              {players.map((p) => (
+                <label key={p.id} className="flex items-center gap-2 text-xs text-foreground/80 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selected.has(p.id)}
+                    onChange={() => toggle(p.id)}
+                    className="rounded"
+                  />
+                  {p.name}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="flex gap-2">
+          <button
+            onClick={() => onCreate(name.trim(), Array.from(selected))}
+            disabled={!name.trim()}
+            className="flex-1 py-2 bg-accent/20 text-accent border border-accent/30 rounded text-xs hover:bg-accent/30 transition-colors disabled:opacity-50"
+          >
+            Create
+          </button>
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-xs text-muted hover:text-foreground transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function PlayPageInner() {
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get("invite");
+  const breakpoint = useBreakpoint();
 
   const [reconnecting, setReconnecting] = useState(true);
   const [inviteValid, setInviteValid] = useState<boolean | null>(null);
@@ -125,7 +199,10 @@ function PlayPageInner() {
   const [session, setSession] = useState<Session | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [channel, setChannel] = useState<Channel>("all");
-  const [showPanel, setShowPanel] = useState(true);
+  const [widgets, setWidgets] = useState<GameWidget[]>([]);
+  const [myGroupChannels, setMyGroupChannels] = useState<GroupChannel[]>([]);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [streamingText, setStreamingText] = useState<string | null>(null);
 
   // Reconnect from localStorage on mount
   useEffect(() => {
@@ -138,7 +215,7 @@ function PlayPageInner() {
         const { name, sessionId } = JSON.parse(saved);
         if (!name || !sessionId) return;
 
-        const sessionRes = await fetch(apiUrl("/api/session"));
+        const sessionRes = await authFetch("/api/session");
         const currentSession = await sessionRes.json();
         if (currentSession.id !== sessionId) {
           localStorage.removeItem("ceremony_player");
@@ -158,6 +235,9 @@ function PlayPageInner() {
           if (data.token) setStoredToken(data.token);
           setPlayer(data);
           setSession(currentSession);
+          if (Array.isArray(currentSession.widgets)) {
+            setWidgets(currentSession.widgets);
+          }
         } else {
           localStorage.removeItem("ceremony_player");
           clearStoredToken();
@@ -186,8 +266,12 @@ function PlayPageInner() {
   }, [inviteToken, reconnecting, player]);
 
   const fetchSession = useCallback(async () => {
-    const res = await fetch(apiUrl("/api/session"));
-    setSession(await res.json());
+    const res = await authFetch("/api/session");
+    const data = await res.json();
+    setSession(data);
+    if (Array.isArray(data.widgets)) {
+      setWidgets(data.widgets);
+    }
   }, []);
 
   const fetchMessages = useCallback(async () => {
@@ -221,6 +305,8 @@ function PlayPageInner() {
     enabled: !!player && !!sseTokenParam,
     onMessage: (data) => {
       const msg = data as Message;
+      // Clear streaming when keeper message arrives
+      if (msg.sender.role === "keeper") setStreamingText(null);
       if (channel !== "all" && msg.channel !== channel) return;
       setMessages((prev) =>
         prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
@@ -253,7 +339,69 @@ function PlayPageInner() {
         return { ...prev, players: [...prev.players, p] };
       });
     },
+    onCharacterUpdate: (data) => {
+      const { playerId, character: charData } = data as { playerId: string; status: string; character: Player["character"] };
+      // Update own player state
+      if (player && playerId === player.id) {
+        setPlayer((prev) => prev ? { ...prev, character: charData } : prev);
+      }
+      // Update session players list
+      setSession((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          players: prev.players.map((p) =>
+            p.id === playerId ? { ...p, character: charData } : p
+          ),
+        };
+      });
+    },
+    onWidgetUpdate: (data) => {
+      const widget = data as GameWidget;
+      setWidgets((prev) => {
+        const idx = prev.findIndex((w) => w.id === widget.id);
+        if (idx >= 0) {
+          const next = [...prev];
+          next[idx] = widget;
+          return next;
+        }
+        return [...prev, widget];
+      });
+    },
+    onWidgetRemove: (data) => {
+      const { widgetId } = data as { widgetId: string };
+      setWidgets((prev) => prev.filter((w) => w.id !== widgetId));
+    },
+    onKeeperTyping: (data) => {
+      const { text } = data as { text: string; playerId?: string };
+      setStreamingText((prev) => (prev ?? "") + text);
+    },
   });
+
+  const fetchGroupChannels = useCallback(async () => {
+    try {
+      const res = await authFetch("/api/channels");
+      if (res.ok) setMyGroupChannels(await res.json());
+    } catch { /* non-critical */ }
+  }, []);
+
+  // Fetch group channels after joining
+  useEffect(() => {
+    if (!player) return;
+    fetchGroupChannels();
+  }, [player, fetchGroupChannels]);
+
+  async function handleCreateGroupChannel(name: string, memberIds: string[]) {
+    const res = await authFetch("/api/channels", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ name, memberIds }),
+    });
+    if (res.ok) {
+      setShowCreateGroup(false);
+      fetchGroupChannels();
+    }
+  }
 
   async function handleJoin(name: string) {
     const res = await fetch(apiUrl("/api/session"), {
@@ -277,6 +425,32 @@ function PlayPageInner() {
     );
   }
 
+  async function handleCharacterUpdate(fields: Partial<CharacterSheet>) {
+    if (!player) return;
+    const res = await authFetch("/api/session", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ character: fields }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setPlayer((prev) => prev ? { ...prev, character: updated.character } : prev);
+    }
+  }
+
+  async function handleCharacterSubmit() {
+    if (!player) return;
+    const res = await authFetch("/api/session", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ characterAction: "submit" }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setPlayer((prev) => prev ? { ...prev, character: updated.character } : prev);
+    }
+  }
+
   async function handleSend(content: string) {
     if (!player) return;
     await authFetch("/api/messages", {
@@ -295,34 +469,51 @@ function PlayPageInner() {
   if (!inviteValid && !player) return <NoInvite />;
   if (!player) return <JoinForm onJoin={handleJoin} session={session} />;
 
+  // Onboarding: show wizard until character is approved
+  if (player.character.status !== "approved") {
+    return (
+      <OnboardingWizard
+        player={player}
+        session={session!}
+        onCharacterUpdate={handleCharacterUpdate}
+        onCharacterSubmit={handleCharacterSubmit}
+      />
+    );
+  }
+
+  const isNarrow = breakpoint === "narrow";
+  const isWide = breakpoint === "wide";
+
   return (
-    <div className="h-screen flex flex-col">
+    <div className={`h-screen flex flex-col ${isNarrow ? "pb-12" : ""}`}>
+      {/* Create group channel dialog */}
+      {showCreateGroup && (
+        <CreateGroupDialog
+          players={session?.players.filter((p) => p.id !== player.id) ?? []}
+          onCreate={handleCreateGroupChannel}
+          onCancel={() => setShowCreateGroup(false)}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-surface">
         <div className="flex items-center gap-3">
           <h1 className="narrative-text text-lg text-accent">The Ceremony</h1>
-          <span className="text-xs text-muted/50">|</span>
+          <span className="text-xs text-muted/70">|</span>
           {session && (
             <span className="text-xs text-muted">{session.name}</span>
           )}
         </div>
         <div className="flex items-center gap-4">
-          {/* Players online */}
           {session && session.players.length > 0 && (
             <div className="flex items-center gap-2">
               <StatusDot status={session.status} />
-              <span className="text-[10px] text-muted/60">
+              <span className="text-xs text-muted/80">
                 {session.players.map((p) => p.name).join(", ")}
               </span>
             </div>
           )}
           <span className="text-xs text-ice font-medium">{player.name}</span>
-          <button
-            onClick={() => setShowPanel(!showPanel)}
-            className="text-xs text-muted hover:text-foreground transition-colors px-2 py-1 border border-border rounded"
-          >
-            {showPanel ? "Hide" : "Show"} Journal
-          </button>
         </div>
       </div>
 
@@ -331,16 +522,18 @@ function PlayPageInner() {
 
       {/* Channel tabs */}
       <ChannelTabs
-        channels={["all", "keeper-private"]}
+        channels={["all", "keeper-private", ...myGroupChannels.map((g) => g.id as Channel)]}
         active={channel}
         onChange={setChannel}
+        groupChannels={myGroupChannels}
+        onCreateGroup={() => setShowCreateGroup(true)}
       />
 
       {/* Main area */}
       <div className="flex-1 flex overflow-hidden">
         {/* Story log + input */}
         <div className="flex-1 flex flex-col min-w-0">
-          <StoryLog messages={messages} />
+          <StoryLog messages={messages} streamingText={streamingText} />
           <MessageInput
             onSend={handleSend}
             placeholder={
@@ -349,15 +542,44 @@ function PlayPageInner() {
                 : "What do you do?"
             }
           />
+
+          {/* Drawer mode: panels below input */}
+          {breakpoint === "medium" && (
+            <PlayerPanelShelf
+              mode={breakpoint}
+              player={player}
+              session={session!}
+              widgets={widgets}
+              onCharacterUpdate={handleCharacterUpdate}
+              onCharacterSubmit={handleCharacterSubmit}
+            />
+          )}
         </div>
 
-        {/* Character panel */}
-        {showPanel && (
-          <div className="w-72 flex-shrink-0 hidden md:flex">
-            <CharacterPanel player={player} />
-          </div>
+        {/* Wide: sidebar panels */}
+        {isWide && (
+          <PlayerPanelShelf
+            mode={breakpoint}
+            player={player}
+            session={session!}
+            widgets={widgets}
+            onCharacterUpdate={handleCharacterUpdate}
+            onCharacterSubmit={handleCharacterSubmit}
+          />
         )}
       </div>
+
+      {/* Narrow: fixed bottom toolbar */}
+      {isNarrow && (
+        <PlayerPanelShelf
+          mode={breakpoint}
+          player={player}
+          session={session!}
+          widgets={widgets}
+          onCharacterUpdate={handleCharacterUpdate}
+          onCharacterSubmit={handleCharacterSubmit}
+        />
+      )}
     </div>
   );
 }

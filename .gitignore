@@ -1,0 +1,12 @@
+node_modules/
+.next/
+.env
+.env.local
+.env.*.local
+*.log
+
+# Session data (contains player tokens and game state)
+session/current.json
+session/current.json.bak
+session/messages/
+session/archive/

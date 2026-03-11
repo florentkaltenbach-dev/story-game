@@ -6,10 +6,12 @@ import { join, extname } from "path";
 import {
   MODE_TIERS,
   MODE_MAX_TOKENS,
+  MODE_MODELS,
   TIER_BUDGETS,
   estimateTokens,
   truncateToTokens,
   RateLimiter,
+  CostTracker,
 } from "./lib";
 
 // === Types (duplicated from web — minimal subset) ===
@@ -42,18 +44,12 @@ interface KeeperInput {
   };
   recentHistory?: Array<{ role: string; name: string; content: string }>;
   players?: Array<{ name: string; characterName: string; journal: string; notes: string }>;
+  playerKnowledge?: string[];
 }
 
 interface KeeperResponse {
   narrative: string;
   journalUpdate?: string;
-  stateUpdates: Array<{
-    level: MemoryLevelNumber;
-    key: string;
-    value: string;
-    threadId?: string;
-    status?: string;
-  }>;
   internalNotes?: string;
   degraded?: boolean;
 }
@@ -172,11 +168,46 @@ ${t.keeperBehaviorRules.map((r: string) => `- ${r}`).join("\n")}`;
 // === System prompt builder (P0 + P1, cached) ===
 
 let cachedSystemPrompt: string | null = null;
+let cachedStableContent: string | null = null;
+
+async function buildStableContent(): Promise<string> {
+  if (cachedStableContent) return cachedStableContent;
+
+  const parts: string[] = [];
+
+  // P5: Thematic register (changes per-session, not per-turn)
+  const thematic = await readMemoryLevel(4);
+  const themeContent = Object.entries(thematic)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join("\n");
+  if (themeContent) {
+    parts.push(`[THEMATIC REGISTER]\n${truncateToTokens(themeContent, TIER_BUDGETS.P5_theme)}`);
+  }
+
+  // P6: World state (changes per-session, not per-turn)
+  const worldState = await readMemoryLevel(5);
+  const worldContent = Object.entries(worldState)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join("\n");
+  if (worldContent) {
+    parts.push(`[WORLD STATE]\n${truncateToTokens(worldContent, TIER_BUDGETS.P6_world)}`);
+  }
+
+  cachedStableContent = parts.length > 0 ? "\n\n" + parts.join("\n\n") : "";
+  return cachedStableContent;
+}
+
+/** Invalidate caches when act/session changes */
+export function invalidatePromptCache(): void {
+  cachedSystemPrompt = null;
+  cachedStableContent = null;
+}
 
 async function buildSystemPrompt(): Promise<string> {
   if (cachedSystemPrompt) return cachedSystemPrompt;
 
   const presetDNA = await loadPresetDNA();
+  const stableContent = await buildStableContent();
 
   cachedSystemPrompt = `You are the Keeper. You are the backstage crew, the confessional, and the memory of the ceremony. You see everything. You remember everything. You serve the story.
 
@@ -188,7 +219,7 @@ IDENTITY:
 - You honor player agency — if they want to turn back, the story accommodates
 - No jumpscares. Lovecraftian horror is the slow realization that reality is wrong.
 - The journal is the player's truth. Write it carefully.
-${presetDNA}
+${presetDNA}${stableContent}
 
 Your responses are structured. The "narrative" field is what players see. Use "journalUpdate" for moments worth recording. Use "internalNotes" for what you observe but don't say aloud.`;
 
@@ -206,6 +237,25 @@ async function assembleContext(input: KeeperInput): Promise<{
   let usedTokens = 0;
   const tiers = MODE_TIERS[input.mode];
 
+  // Dynamic tier budgets: calculate unused budget from skipped tiers
+  const skippedBudget = Object.entries(TIER_BUDGETS)
+    .filter(([key]) => {
+      const tierKey = key.split("_")[0]; // "P2_scene" → "P2"
+      return !tiers.has(tierKey);
+    })
+    .reduce((sum, [, budget]) => sum + budget, 0);
+
+  // Redistribute skipped budget proportionally to P3 (characters) and P7 (history)
+  const p3Bonus = tiers.has("P3") ? Math.floor(skippedBudget * 0.6) : 0;
+  const p7Bonus = tiers.has("P7") ? Math.floor(skippedBudget * 0.4) : 0;
+
+  function tierBudget(key: string): number {
+    const base = TIER_BUDGETS[key] ?? 0;
+    if (key === "P3_characters") return base + p3Bonus;
+    if (key === "P7_history") return base + p7Bonus;
+    return base;
+  }
+
   // P2: Current scene
   if (tiers.has("P2")) {
     const plotState = await readMemoryLevel(1);
@@ -213,21 +263,35 @@ async function assembleContext(input: KeeperInput): Promise<{
       .map(([k, v]) => `${k}: ${v}`)
       .join("\n");
     if (sceneContent) {
-      const truncated = truncateToTokens(sceneContent, TIER_BUDGETS.P2_scene);
+      const truncated = truncateToTokens(sceneContent, tierBudget("P2_scene"));
       parts.push(`[CURRENT SCENE]\n${truncated}`);
-      usedTokens += Math.min(estimateTokens(sceneContent), TIER_BUDGETS.P2_scene);
+      usedTokens += Math.min(estimateTokens(sceneContent), tierBudget("P2_scene"));
     }
   }
 
   // P3: Characters present (NPCs from filesystem + players from runtime)
   if (tiers.has("P3")) {
     const characters = await readMemoryLevel(2);
+
+    // Knowledge fog: filter NPCs based on player knowledge when in player_response mode
+    const knownNpcs = input.playerKnowledge
+      ? new Set(input.playerKnowledge.filter(k => k.startsWith("npc-met:")).map(k => k.split(":")[1]))
+      : null;
+
     let charContent = Object.entries(characters)
-      .map(([, v]) => {
+      .filter(([key]) => !key.startsWith("knowledge-") && !key.startsWith("journal-"))
+      .map(([key, v]) => {
         try {
           const npc = JSON.parse(v);
+
+          // Knowledge fog: skip NPCs the player hasn't met (player_response mode only)
+          if (knownNpcs && input.mode === "player_response") {
+            const npcSlug = (npc.name || key).toLowerCase().replace(/\s+/g, "-");
+            if (!knownNpcs.has(npcSlug)) return "";
+          }
+
           return [
-            `NPC: ${npc.name} (${npc.role})`,
+            `NPC: ${npc.name} (${npc.role})${npc.voicedBy === "mc" ? " [MC-voiced]" : ""}`,
             `Location: ${npc.location}`,
             `Motive: ${npc.motive}`,
             `Personality: ${npc.personality}`,
@@ -238,6 +302,7 @@ async function assembleContext(input: KeeperInput): Promise<{
           return v;  // non-JSON files pass through unchanged
         }
       })
+      .filter(Boolean)
       .join("\n\n");
 
     if (input.players && input.players.length > 0) {
@@ -248,9 +313,9 @@ async function assembleContext(input: KeeperInput): Promise<{
     }
 
     if (charContent) {
-      const truncated = truncateToTokens(charContent, TIER_BUDGETS.P3_characters);
+      const truncated = truncateToTokens(charContent, tierBudget("P3_characters"));
       parts.push(`[CHARACTERS PRESENT]\n${truncated}`);
-      usedTokens += Math.min(estimateTokens(charContent), TIER_BUDGETS.P3_characters);
+      usedTokens += Math.min(estimateTokens(charContent), tierBudget("P3_characters"));
     }
   }
 
@@ -264,37 +329,14 @@ async function assembleContext(input: KeeperInput): Promise<{
       const threadContent = activeThreads
         .map((t) => `[${t.status.toUpperCase()}] ${t.name}: ${t.content}`)
         .join("\n");
-      const truncated = truncateToTokens(threadContent, TIER_BUDGETS.P4_threads);
+      const truncated = truncateToTokens(threadContent, tierBudget("P4_threads"));
       parts.push(`[ACTIVE THREADS]\n${truncated}`);
-      usedTokens += Math.min(estimateTokens(threadContent), TIER_BUDGETS.P4_threads);
+      usedTokens += Math.min(estimateTokens(threadContent), tierBudget("P4_threads"));
     }
   }
 
-  // P5: Thematic register
-  if (tiers.has("P5")) {
-    const thematic = await readMemoryLevel(4);
-    const themeContent = Object.entries(thematic)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join("\n");
-    if (themeContent) {
-      const truncated = truncateToTokens(themeContent, TIER_BUDGETS.P5_theme);
-      parts.push(`[THEMATIC REGISTER]\n${truncated}`);
-      usedTokens += Math.min(estimateTokens(themeContent), TIER_BUDGETS.P5_theme);
-    }
-  }
-
-  // P6: World state
-  if (tiers.has("P6")) {
-    const worldState = await readMemoryLevel(5);
-    const worldContent = Object.entries(worldState)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join("\n");
-    if (worldContent) {
-      const truncated = truncateToTokens(worldContent, TIER_BUDGETS.P6_world);
-      parts.push(`[WORLD STATE]\n${truncated}`);
-      usedTokens += Math.min(estimateTokens(worldContent), TIER_BUDGETS.P6_world);
-    }
-  }
+  // P5/P6: Skip in dynamic context — already promoted to cached system prompt
+  // (thematic register and world state change per-session, not per-turn)
 
   // P7: Recent history (conversation context)
   if (tiers.has("P7") && input.recentHistory && input.recentHistory.length > 0) {
@@ -302,9 +344,9 @@ async function assembleContext(input: KeeperInput): Promise<{
       (h) => `${h.name} (${h.role}): ${h.content}`
     );
     const historyContent = historyLines.join("\n");
-    const truncated = truncateToTokens(historyContent, TIER_BUDGETS.P7_history);
+    const truncated = truncateToTokens(historyContent, tierBudget("P7_history"));
     parts.push(`[RECENT CONVERSATION]\n${truncated}`);
-    usedTokens += Math.min(estimateTokens(historyContent), TIER_BUDGETS.P7_history);
+    usedTokens += Math.min(estimateTokens(historyContent), tierBudget("P7_history"));
   }
 
   // P8: The input (always included)
@@ -324,6 +366,54 @@ async function assembleContext(input: KeeperInput): Promise<{
   };
 }
 
+// === Compression output schema ===
+
+const COMPRESSION_OUTPUT_SCHEMA = {
+  type: "object" as const,
+  properties: {
+    summary: { type: "string" as const, description: "Compressed narrative summary of what happened" },
+    keyEvents: { type: "array" as const, items: { type: "string" as const }, description: "List of key events" },
+    threadUpdates: {
+      type: "array" as const,
+      items: {
+        type: "object" as const,
+        properties: {
+          id: { type: "string" as const },
+          status: { type: "string" as const },
+          reason: { type: "string" as const },
+        },
+        required: ["id", "status"] as const,
+      },
+      description: "Narrative thread status changes",
+    },
+  },
+  required: ["summary", "keyEvents"] as const,
+  additionalProperties: false,
+};
+
+// === Thread evaluation output schema ===
+
+const THREAD_EVAL_OUTPUT_SCHEMA = {
+  type: "object" as const,
+  properties: {
+    threadUpdates: {
+      type: "array" as const,
+      items: {
+        type: "object" as const,
+        properties: {
+          id: { type: "string" as const, description: "Thread ID" },
+          newStatus: { type: "string" as const, description: "New status: dormant, planted, growing, ripe, resolved" },
+          reason: { type: "string" as const, description: "Brief reason for status change" },
+        },
+        required: ["id", "newStatus", "reason"] as const,
+      },
+      description: "Thread status changes",
+    },
+  },
+  required: ["threadUpdates"] as const,
+  additionalProperties: false,
+};
+
 // === Keeper output schema ===
 
 const KEEPER_OUTPUT_SCHEMA = {
@@ -331,22 +421,9 @@ const KEEPER_OUTPUT_SCHEMA = {
   properties: {
     narrative: { type: "string" as const, description: "Response to the player/MC — this is what they see" },
     journalUpdate: { type: ["string", "null"] as const, description: "If this moment should be recorded in the player's journal" },
-    stateUpdates: {
-      type: "array" as const,
-      items: {
-        type: "object" as const,
-        properties: {
-          level: { type: "integer" as const, description: "Memory level 1-5" },
-          key: { type: "string" as const },
-          value: { type: "string" as const },
-        },
-        required: ["level", "key", "value"] as const,
-        additionalProperties: false,
-      },
-    },
     internalNotes: { type: ["string", "null"] as const, description: "What the Keeper notices but doesn't say — for future context" },
   },
-  required: ["narrative", "stateUpdates"] as const,
+  required: ["narrative"] as const,
   additionalProperties: false,
 };
 
@@ -374,9 +451,11 @@ class ClaudeKeeper {
     ];
 
     const maxTokens = mode ? (MODE_MAX_TOKENS[mode] ?? this.maxTokens) : this.maxTokens;
+    // Model routing: use mode-specific model, fallback to default
+    const model = mode ? (MODE_MODELS[mode] ?? this.model) : this.model;
 
     const response = await this.client.messages.create({
-      model: this.model,
+      model,
       max_tokens: maxTokens,
       system: [{
         type: "text",
@@ -397,13 +476,11 @@ class ClaudeKeeper {
       .map((block) => block.text)
       .join("");
 
-    // Log cache performance
-    const usage = response.usage as unknown as Record<string, number>;
-    if (usage.cache_read_input_tokens || usage.cache_creation_input_tokens) {
-      console.log(`[Keeper] Cache: ${usage.cache_read_input_tokens ?? 0} read, ${usage.cache_creation_input_tokens ?? 0} created`);
-    }
-
-    return this.parseResponse(text);
+    // Return response with raw usage for cost tracking
+    const parsed = this.parseResponse(text);
+    (parsed as KeeperResponse & { _usage?: unknown; _model?: string })._usage = response.usage;
+    (parsed as KeeperResponse & { _model?: string })._model = model;
+    return parsed;
   }
 
   private parseResponse(text: string): KeeperResponse {
@@ -416,14 +493,12 @@ class ClaudeKeeper {
       return {
         narrative: parsed.narrative,
         journalUpdate: parsed.journalUpdate ?? undefined,
-        stateUpdates: parsed.stateUpdates,
         internalNotes: parsed.internalNotes ?? undefined,
         degraded: false,
       };
     } catch {
       return {
         narrative: text,
-        stateUpdates: [],
         degraded: false,
       };
     }
@@ -455,6 +530,7 @@ const limiter = new RateLimiter(
   parseInt(process.env.KEEPER_MAX_REQUESTS_PER_SESSION ?? "100"),
 );
 let keeper: ClaudeKeeper | null = null;
+const costTracker = new CostTracker();
 
 if (process.env.ANTHROPIC_API_KEY) {
   keeper = new ClaudeKeeper();
@@ -467,7 +543,6 @@ app.post("/query", async (req, res) => {
   if (!keeper) {
     res.status(503).json({
       narrative: "[The Keeper has no voice. Set ANTHROPIC_API_KEY.]",
-      stateUpdates: [],
       degraded: true,
     });
     return;
@@ -484,7 +559,6 @@ app.post("/query", async (req, res) => {
   if (!check.allowed) {
     res.json({
       narrative: check.reason!,
-      stateUpdates: [],
       degraded: true,
     });
     return;
@@ -496,15 +570,286 @@ app.post("/query", async (req, res) => {
     const response = await keeper.query(context.systemPrompt, context.contextBlock, input.mode);
     const { session: usage, limit } = limiter.usage;
     console.log(`[Keeper] Request ${usage}/${limit} | ~${context.totalTokenEstimate} input tokens`);
+
+    // Track cost
+    const rawResponse = response as KeeperResponse & { _usage?: Record<string, number>; _model?: string };
+    if (rawResponse._usage) {
+      costTracker.record(input.mode, rawResponse._model ?? "claude-haiku-4-5-20251001", rawResponse._usage);
+      delete rawResponse._usage;
+      delete rawResponse._model;
+    }
+
     res.json(response);
   } catch (err) {
     console.error("[Keeper] Error:", err);
     res.json({
       narrative: "[The Keeper is momentarily silent. The wind fills the pause.]",
-      stateUpdates: [],
       degraded: true,
     });
   }
+});
+
+// Streaming endpoint for player_response mode
+// Uses prompt-based JSON instruction instead of output_config.format.json_schema
+// (json_schema forces non-streaming)
+app.post("/query/stream", async (req, res) => {
+  if (!keeper) {
+    res.status(503).json({
+      narrative: "[The Keeper has no voice. Set ANTHROPIC_API_KEY.]",
+      degraded: true,
+    });
+    return;
+  }
+
+  const { input } = req.body as { input: KeeperInput };
+  if (!input) {
+    res.status(400).json({ error: "Missing 'input' in request body" });
+    return;
+  }
+
+  const check = limiter.check();
+  if (!check.allowed) {
+    res.json({ narrative: check.reason!, degraded: true });
+    return;
+  }
+
+  try {
+    const context = await assembleContext(input);
+    limiter.record();
+
+    // Augment system prompt with JSON format instruction
+    const streamSystemPrompt = context.systemPrompt +
+      "\n\nIMPORTANT: You MUST respond in valid JSON with this exact structure: " +
+      '{"narrative": "your response text", "journalUpdate": "optional journal entry or null", "internalNotes": "optional internal notes or null"}' +
+      "\nDo NOT include markdown code fences. Output raw JSON only.";
+
+    const model = MODE_MODELS[input.mode] ?? keeper["model"];
+    const maxTokens = MODE_MAX_TOKENS[input.mode] ?? 1024;
+
+    // Set up SSE response
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders();
+
+    const stream = keeper["client"].messages.stream({
+      model,
+      max_tokens: maxTokens,
+      system: [{ type: "text", text: streamSystemPrompt, cache_control: { type: "ephemeral" } }],
+      messages: [{ role: "user", content: context.contextBlock }],
+    });
+
+    let fullText = "";
+    // Track whether we're inside the narrative value for partial streaming
+    let narrativeStarted = false;
+
+    stream.on("text", (text) => {
+      fullText += text;
+
+      // Simple heuristic: stream text once we're past the opening {"narrative":"
+      if (!narrativeStarted) {
+        const narrativeMatch = fullText.match(/"narrative"\s*:\s*"/);
+        if (narrativeMatch) {
+          narrativeStarted = true;
+          // Send everything after the opening quote
+          const start = narrativeMatch.index! + narrativeMatch[0].length;
+          const partial = fullText.slice(start);
+          if (partial) {
+            res.write(`data: ${JSON.stringify({ type: "text", content: partial })}\n\n`);
+          }
+        }
+      } else {
+        // Send new text chunks as they arrive
+        res.write(`data: ${JSON.stringify({ type: "text", content: text })}\n\n`);
+      }
+    });
+
+    const finalMessage = await stream.finalMessage();
+
+    // Track cost
+    const usage = finalMessage.usage as unknown as Record<string, number>;
+    costTracker.record(input.mode, model, usage);
+
+    // Parse the full response
+    let parsed: KeeperResponse;
+    try {
+      let clean = fullText.trim();
+      if (clean.startsWith("```")) {
+        clean = clean.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
+      }
+      const json = JSON.parse(clean);
+      parsed = {
+        narrative: json.narrative,
+        journalUpdate: json.journalUpdate ?? undefined,
+        internalNotes: json.internalNotes ?? undefined,
+        degraded: false,
+      };
+    } catch {
+      parsed = { narrative: fullText, degraded: false };
+    }
+
+    const { session: sUsage, limit } = limiter.usage;
+    console.log(`[Keeper] Stream ${sUsage}/${limit} | ~${context.totalTokenEstimate} input tokens`);
+
+    // Send final parsed response
+    res.write(`data: ${JSON.stringify({ type: "done", response: parsed })}\n\n`);
+    res.end();
+  } catch (err) {
+    console.error("[Keeper] Stream error:", err);
+    res.write(`data: ${JSON.stringify({ type: "error", message: "The Keeper is momentarily silent." })}\n\n`);
+    res.end();
+  }
+});
+
+app.post("/evaluate-threads", async (req, res) => {
+  if (!keeper) {
+    res.status(503).json({ error: "Keeper not available" });
+    return;
+  }
+
+  const { threads, recentMessages } = req.body as {
+    threads: Array<{ id: string; name: string; status: string; content: string }>;
+    recentMessages: Array<{ role: string; name: string; content: string }>;
+  };
+
+  if (!threads || !recentMessages) {
+    res.status(400).json({ error: "threads and recentMessages required" });
+    return;
+  }
+
+  try {
+    const systemPrompt = await buildSystemPrompt();
+    const threadBlock = threads
+      .map((t) => `[${t.status.toUpperCase()}] ${t.name} (${t.id}): ${t.content}`)
+      .join("\n");
+    const historyBlock = recentMessages
+      .map((m) => `${m.name} (${m.role}): ${m.content}`)
+      .join("\n");
+
+    const contextBlock = `[THREAD EVALUATION]
+Review these narrative threads against recent events. Report any status changes.
+
+[CURRENT THREADS]
+${threadBlock}
+
+[RECENT MESSAGES]
+${historyBlock}`;
+
+    const model = MODE_MODELS["thread_evaluation"] ?? keeper["model"];
+    const maxTokens = MODE_MAX_TOKENS["thread_evaluation"] ?? 256;
+
+    const response = await keeper["client"].messages.create({
+      model,
+      max_tokens: maxTokens,
+      system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
+      messages: [{ role: "user", content: contextBlock }],
+      output_config: { format: { type: "json_schema", schema: THREAD_EVAL_OUTPUT_SCHEMA } },
+    });
+
+    const text = response.content
+      .filter((block): block is Anthropic.TextBlock => block.type === "text")
+      .map((block) => block.text)
+      .join("");
+
+    const usage = response.usage as unknown as Record<string, number>;
+    costTracker.record("thread_evaluation", model, usage);
+    limiter.record();
+
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = { threadUpdates: [] };
+    }
+
+    console.log(`[Keeper] Thread evaluation: ${parsed.threadUpdates?.length ?? 0} updates`);
+    res.json(parsed);
+  } catch (err) {
+    console.error("[Keeper] Thread evaluation error:", err);
+    res.status(500).json({ error: "Thread evaluation failed" });
+  }
+});
+
+app.post("/compress", async (req, res) => {
+  if (!keeper) {
+    res.status(503).json({ error: "Keeper not available" });
+    return;
+  }
+
+  const { messages: rawMessages, sessionNumber, act } = req.body as {
+    messages: Array<{ role: string; name: string; content: string }>;
+    sessionNumber: number;
+    act: number;
+  };
+
+  if (!rawMessages || !Array.isArray(rawMessages)) {
+    res.status(400).json({ error: "messages array required" });
+    return;
+  }
+
+  try {
+    const systemPrompt = await buildSystemPrompt();
+    const historyBlock = rawMessages
+      .map((m) => `${m.name} (${m.role}): ${m.content}`)
+      .join("\n\n");
+
+    const contextBlock = `[COMPRESSION REQUEST]
+Session ${sessionNumber}, Act ${act}
+
+Compress the following exchange into a concise narrative summary. Capture key events, decisions, and character moments. This summary will replace the raw messages in future context.
+
+[MESSAGES TO COMPRESS]
+${historyBlock}`;
+
+    const model = MODE_MODELS["compression"] ?? keeper["model"];
+    const maxTokens = MODE_MAX_TOKENS["compression"] ?? 1024;
+
+    const response = await keeper["client"].messages.create({
+      model,
+      max_tokens: maxTokens,
+      system: [{
+        type: "text",
+        text: systemPrompt,
+        cache_control: { type: "ephemeral" },
+      }],
+      messages: [{ role: "user", content: contextBlock }],
+      output_config: {
+        format: {
+          type: "json_schema",
+          schema: COMPRESSION_OUTPUT_SCHEMA,
+        },
+      },
+    });
+
+    const text = response.content
+      .filter((block): block is Anthropic.TextBlock => block.type === "text")
+      .map((block) => block.text)
+      .join("");
+
+    // Track cost
+    const usage = response.usage as unknown as Record<string, number>;
+    costTracker.record("compression", model, usage);
+
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = { summary: text, keyEvents: [] };
+    }
+
+    limiter.record();
+    console.log(`[Keeper] Compression complete | ~${estimateTokens(contextBlock)} input tokens`);
+
+    res.json(parsed);
+  } catch (err) {
+    console.error("[Keeper] Compression error:", err);
+    res.status(500).json({ error: "Compression failed" });
+  }
+});
+
+app.get("/cost", (_req, res) => {
+  const model = process.env.KEEPER_MODEL ?? "claude-haiku-4-5-20251001";
+  res.json(costTracker.summary(model));
 });
 
 app.get("/health", (_req, res) => {

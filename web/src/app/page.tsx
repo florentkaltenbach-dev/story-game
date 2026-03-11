@@ -17,14 +17,14 @@ export default function LandingPage() {
             The Ceremony
           </h1>
           <div className="mt-4 flex items-center justify-center gap-4">
-            <span className="h-px w-16 bg-accent/40" />
+            <span className="h-px w-16 bg-accent/60" />
             <span className="text-accent text-xs tracking-widest">&#9670;</span>
-            <span className="h-px w-16 bg-accent/40" />
+            <span className="h-px w-16 bg-accent/60" />
           </div>
         </div>
 
         {/* Description */}
-        <p className="narrative-text text-foreground/60 text-lg leading-relaxed mb-16">
+        <p className="narrative-text text-foreground/80 text-lg leading-relaxed mb-16">
           Campfire meets theater. An AI-powered story told live, where every
           choice ripples through the dark. The Keeper remembers everything. The
           question is what you&apos;ll wish you could forget.
@@ -47,7 +47,7 @@ export default function LandingPage() {
         </div>
 
         {/* Current session */}
-        <div className="mt-16 text-xs text-muted/50">
+        <div className="mt-16 text-xs text-muted/70">
           <p>Current preset: At the Mountains of Madness</p>
         </div>
       </main>

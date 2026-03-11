@@ -8,6 +8,7 @@ module.exports = {
       env: {
         PORT: 3004,
         KEEPER_URL: "http://localhost:3005",
+        KEEPER_BACKEND: process.env.KEEPER_BACKEND || "mock",
         CEREMONY_TOKEN_SECRET: process.env.CEREMONY_TOKEN_SECRET || "",
         MC_SECRET: process.env.MC_SECRET || "",
         KEEPER_SHARED_SECRET: process.env.KEEPER_SHARED_SECRET || "",
@@ -21,6 +22,7 @@ module.exports = {
       env: {
         KEEPER_PORT: 3005,
         KEEPER_SHARED_SECRET: process.env.KEEPER_SHARED_SECRET || "",
+        KEEPER_QUALITY_MODEL: process.env.KEEPER_QUALITY_MODEL || "",
       },
     },
     {

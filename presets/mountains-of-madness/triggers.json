@@ -1,0 +1,26 @@
+{
+  "triggers": [
+    {
+      "id": "location-arrival",
+      "event": "location_change",
+      "mode": "mc_generate",
+      "cooldownMinutes": 5,
+      "description": "Generate atmosphere when players arrive at new location"
+    },
+    {
+      "id": "npc-encounter",
+      "event": "npc_mention",
+      "mode": "player_response",
+      "cooldownMinutes": 10,
+      "conditions": { "firstMention": true },
+      "description": "Keeper acknowledges NPC when first mentioned in session"
+    },
+    {
+      "id": "environment-shift",
+      "event": "environment_change",
+      "mode": "mc_generate",
+      "cooldownMinutes": 15,
+      "description": "Atmospheric response when environment conditions change significantly"
+    }
+  ]
+}

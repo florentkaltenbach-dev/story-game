@@ -3,6 +3,8 @@
 // Standalone Node.js server, zero dependencies
 
 const http = require("http");
+const fs = require("fs");
+const path = require("path");
 const { execFileSync } = require("child_process");
 
 const PORT = parseInt(process.env.RIGGING_PORT || "3006");
@@ -786,6 +788,42 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(400, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ ok: false, error: err.message }));
     }
+    return;
+  }
+
+  // Serve static viz files from web/public/ and working/
+  const VIZ_FILES = {
+    "/viz/codebase-map": path.resolve(__dirname, "../web/public/codebase-map.html"),
+    "/viz/engine-skeleton": path.resolve(__dirname, "../web/public/engine-skeleton.html"),
+    "/viz/story-skeleton": path.resolve(__dirname, "../web/public/story-skeleton.html"),
+  };
+
+  const vizPath = req.url.replace(/\.html$/, "").replace(/\/$/, "");
+  if (VIZ_FILES[vizPath]) {
+    try {
+      const html = fs.readFileSync(VIZ_FILES[vizPath], "utf-8");
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end(html);
+    } catch (err) {
+      res.writeHead(404, { "Content-Type": "text/plain" });
+      res.end("Viz file not found: " + err.message);
+    }
+    return;
+  }
+
+  // Viz index
+  if (req.url === "/viz" || req.url === "/viz/") {
+    res.writeHead(200, { "Content-Type": "text/html" });
+    res.end(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Visualizations</title>
+<style>body{background:#0a0e17;color:#e8dcc8;font-family:'SF Mono',monospace;padding:40px}
+a{color:#c4a35a;text-decoration:none}a:hover{text-decoration:underline}
+h1{font-size:16px;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:24px}
+li{margin:8px 0;font-size:14px}</style></head><body>
+<h1>The Ceremony — Visualizations</h1><ul>
+<li><a href="/viz/codebase-map">Codebase Map</a> — D3 force-graph of all files and connections</li>
+<li><a href="/viz/engine-skeleton">Runtime Architecture</a> — two-process data flow</li>
+<li><a href="/viz/story-skeleton">Narrative Architecture</a> — 5-session story structure</li>
+</ul></body></html>`);
     return;
   }
 

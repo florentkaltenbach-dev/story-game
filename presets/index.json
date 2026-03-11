@@ -1,0 +1,12 @@
+{
+  "presets": [
+    {
+      "id": "mountains-of-madness",
+      "name": "At the Mountains of Madness",
+      "description": "A Lovecraft-inspired Antarctic expedition. 1933. Something waits in the ice.",
+      "sessionCount": 5,
+      "playerCount": "2-5"
+    }
+  ],
+  "default": "mountains-of-madness"
+}

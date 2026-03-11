@@ -1,0 +1,17 @@
+{
+  "name": "The Ceremony",
+  "description": "AI-powered interactive story platform",
+  "color": "#c4a35a",
+  "port": 3004,
+  "basePath": "/the-ceremony",
+  "services": [
+    { "name": "rigging", "route": "/sandbox/rigging", "port": 3006, "stripPrefix": true }
+  ],
+  "interfaces": [
+    { "name": "Play", "path": "/the-ceremony/play", "type": "app", "description": "Player text companion" },
+    { "name": "MC Dashboard", "path": "/the-ceremony/mc", "type": "app", "description": "Storyteller controls" },
+    { "name": "Codebase Map", "path": "/the-ceremony/codebase-map.html", "type": "visualization", "description": "D3 force graph of all files and connections" },
+    { "name": "Runtime Architecture", "path": "/the-ceremony/engine-skeleton.html", "type": "visualization", "description": "Two-process data flow with context assembly tiers" },
+    { "name": "Narrative Architecture", "path": "/the-ceremony/story-skeleton.html", "type": "visualization", "description": "5-session story structure with acts and journey" }
+  ]
+}

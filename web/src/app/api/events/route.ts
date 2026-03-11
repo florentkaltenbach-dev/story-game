@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { createSSEStream } from "@/lib/events";
 import { authenticateRequest } from "@/lib/auth";
 import type { AuthContext } from "@/lib/auth";
+import { getPlayerGroupChannels } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +12,15 @@ export async function GET(request: NextRequest) {
   if (auth instanceof Response) return auth;
   const ctx = auth as AuthContext;
 
+  // Build group membership set for SSE filtering
+  const groupMembership = ctx.playerId
+    ? new Set(getPlayerGroupChannels(ctx.playerId).map((c) => c.id))
+    : undefined;
+
   const stream = createSSEStream("all", request.signal, {
     role: ctx.role,
     playerId: ctx.playerId,
+    groupMembership,
   });
 
   return new Response(stream, {

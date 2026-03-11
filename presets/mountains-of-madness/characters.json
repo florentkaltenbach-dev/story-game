@@ -1,0 +1,140 @@
+{
+  "archetypes": [
+    {
+      "name": "The Scientist",
+      "motivation": "To prove or disprove. Knowledge is everything.",
+      "skills": "Expertise, analysis, careful observation",
+      "vulnerability": "Curiosity overrides self-preservation"
+    },
+    {
+      "name": "The Veteran",
+      "motivation": "Seen war, survived. Hired for protection.",
+      "skills": "Calm under pressure, practical skills",
+      "vulnerability": "What they've seen before doesn't prepare them for this"
+    },
+    {
+      "name": "The Journalist",
+      "motivation": "The story. Byline of a lifetime.",
+      "skills": "Asks questions others don't, records everything",
+      "vulnerability": "Will risk others for the scoop"
+    },
+    {
+      "name": "The Mechanic",
+      "motivation": "Keeps the planes flying, the radios working, the drills drilling.",
+      "skills": "Essential practical skills",
+      "vulnerability": "Rational mind that breaks when rationality fails"
+    },
+    {
+      "name": "The Patron's Agent",
+      "motivation": "Represents whoever's funding this. Has a hidden agenda.",
+      "skills": "Resources, authority, connections",
+      "vulnerability": "Loyalty divided between the group and the patron"
+    },
+    {
+      "name": "The Local Expert",
+      "motivation": "Whaler, sailor, guide. Knows the ice.",
+      "skills": "Survival skills, navigation, weather sense",
+      "vulnerability": "Superstitious, or maybe just experienced enough to be afraid"
+    },
+    {
+      "name": "The Believer",
+      "motivation": "Actually read Dyer. Believes every word. Maybe obsessively.",
+      "skills": "Preparation, foreknowledge",
+      "vulnerability": "Already partially broken by what they believe is coming"
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Dr. Harold Starkweather",
+      "role": "Co-patron (True Believer). Aboard the expedition.",
+      "description": "A former colleague of Dyer's who read the private account, not just the published one. Believes every word. Where Dyer concluded 'stay away,' Starkweather concluded 'go back prepared.' May be slightly unhinged by what he read.",
+      "agenda": "Vindication — for Dyer, for science, for the truth. Included material in the briefing that Moore wanted cut. Has too much faith. Pushes the expedition forward when players hesitate."
+    },
+    {
+      "name": "Professor James Moore",
+      "role": "Co-patron (Skeptic). Remains in the US, communicates by radio.",
+      "description": "A hard-nosed empiricist brought on to keep the expedition credible. Thinks Dyer had a breakdown and that there's a rational explanation for everything. Added caveats to the briefing that Starkweather resents.",
+      "agenda": "Debunking — or, if the evidence proves real, claiming the discovery for rigorous science. Keeps the expedition grounded via radio. His voice becomes increasingly distant, then silent as radio degrades."
+    },
+    {
+      "name": "The Ship Captain",
+      "role": "Veteran Antarctic whaler",
+      "description": "Practical, skeptical, loyal to crew over mission.",
+      "agenda": "Crew safety above all. Will resist orders that endanger the ship or its people."
+    },
+    {
+      "name": "The Radio Operator",
+      "role": "The voice of the outside world",
+      "description": "Maintains communication with the ship and Moore. When this voice goes silent, everything changes.",
+      "agenda": "Keeping the link to civilization. Increasingly anxious as contact degrades."
+    },
+    {
+      "name": "The Dog Handler",
+      "role": "Early warning system interpreter",
+      "description": "The dogs are the early warning system. This person interprets their behavior — initially as weather sensitivity, later with growing unease.",
+      "agenda": "Caring for the animals. The dogs know first; this person translates."
+    },
+    {
+      "name": "The Patron's Second Agent",
+      "role": "Hidden operative",
+      "description": "There may be more than one person with a hidden agenda among the expedition members.",
+      "agenda": "Secondary objectives unknown to the players. Reports to Moore or has independent instructions."
+    },
+    {
+      "name": "Echoes of the First Expedition",
+      "role": "Absent presence",
+      "description": "Not a living NPC. Journals, equipment, bodies, star-shaped graves. Dyer's team is present through what they left behind. Lake's private field journal with increasingly frantic entries.",
+      "agenda": "The warning that went unheeded. Evidence that accumulates to destroy the 'camp disaster' story."
+    }
+  ],
+  "npcArchetypes": [
+    {
+      "name": "The Driven Leader",
+      "source": "Aeneas Mackintosh, Ross Sea party",
+      "template": "One-eyed Merchant Navy officer who pushed forward recklessly, prioritized urgency over safety. His commitment to the mission became indistinguishable from self-destruction. Walked onto thin ice against all advice and died.",
+      "useFor": "NPC leaders whose duty overrides judgment. The dog handler pushing deeper. A mechanic insisting one more repair. Starkweather himself echoes this pattern."
+    },
+    {
+      "name": "The Pragmatist",
+      "source": "Ernest Joyce, Ross Sea party",
+      "template": "Antarctic veteran, 'a strange mixture of fraud, flamboyance and ability.' Clashed with the leader over methods — he was right, but lacked authority. Effectively took command when things collapsed.",
+      "useFor": "The experienced subordinate who sees disaster coming and can't stop it. The ship captain, a mechanic, anyone whose competence is overruled by rank."
+    },
+    {
+      "name": "The Witness",
+      "source": "Dick Richards, Ross Sea party",
+      "template": "Youngest scientific member. Held the party together during the worst. Lived to 91. Left an inscription on the wall. Said the struggle was not futile — 'it was something the human spirit had accomplished.'",
+      "useFor": "The one who survives and decides what it meant. A player character archetype, but also for NPCs who carry the story forward. The counterpoint to Lovecraftian nihilism."
+    },
+    {
+      "name": "The Volunteer Who Broke",
+      "source": "Arnold Spencer-Smith, Ross Sea party",
+      "template": "Scottish priest, last-minute replacement. Had no idea what he was signing up for. Collapsed from exhaustion and scurvy on the return march. Died being carried on a sledge.",
+      "useFor": "NPCs or player characters who are out of their depth. The civilian academic, the patron's secretary, anyone who joined for adventure and found something else."
+    },
+    {
+      "name": "The Adventurer",
+      "source": "Victor Hayward, Ross Sea party",
+      "template": "London finance clerk 'with a taste for adventure.' Recruited because he'd worked on a ranch. Survived the march, then walked out onto thin ice with Mackintosh and vanished.",
+      "useFor": "Civilians who came for excitement. Their arc is the gap between what they expected and what they got."
+    },
+    {
+      "name": "The Steady Hand",
+      "source": "Ernest Wild, Ross Sea party",
+      "template": "Royal Navy petty officer. Did his duty everywhere. Concocted the tobacco substitute. Died of typhoid in Malta after the war — not the Antarctic, not the extraordinary, just the mundane.",
+      "useFor": "The reliable NPC who keeps things running. The cook, the mechanic, the one who doesn't panic. Their death, if it comes, is the most affecting because they were the most dependable."
+    },
+    {
+      "name": "The Competent Man Without Credit",
+      "source": "Joseph Stenhouse, Ross Sea party",
+      "template": "Kept the Aurora together through nine months of ice drift. Brought it to New Zealand. Was dismissed and replaced by a more senior officer for the rescue mission.",
+      "useFor": "NPCs whose competence is unrewarded. The radio operator who keeps the link alive. The mechanic who saves the plane and gets no mention in the report."
+    },
+    {
+      "name": "The Kid",
+      "source": "Lionel Hooke, Ross Sea party (age 18)",
+      "template": "Recruited as a last-minute wireless operator. Survived. Went on to become a knight and industry chairman. Proof that surviving the extreme can forge a person.",
+      "useFor": "Young NPCs or player characters. The graduate student, the assistant, anyone whose entire career begins with this expedition."
+    }
+  ]
+}

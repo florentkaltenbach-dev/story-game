@@ -1,0 +1,58 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      - KEEPER_URL=http://keeper:3005
+      - KEEPER_BACKEND=remote
+      - CEREMONY_TOKEN_SECRET=${CEREMONY_TOKEN_SECRET}
+      - MC_SECRET=${MC_SECRET}
+      - KEEPER_SHARED_SECRET=${KEEPER_SHARED_SECRET}
+    volumes:
+      - ./session:/app/session
+      - ./memory:/app/memory
+      - ./config:/app/config
+    depends_on:
+      - keeper
+    restart: unless-stopped
+
+  keeper:
+    build:
+      context: .
+      dockerfile: Dockerfile.keeper
+    ports:
+      - "3005:3005"
+    environment:
+      - KEEPER_PORT=3005
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - KEEPER_MODEL=${KEEPER_MODEL:-claude-haiku-4-5-20251001}
+      - KEEPER_SHARED_SECRET=${KEEPER_SHARED_SECRET}
+      - KEEPER_QUALITY_MODEL=${KEEPER_QUALITY_MODEL:-}
+      - KEEPER_MAX_TOKENS_PER_RESPONSE=${KEEPER_MAX_TOKENS_PER_RESPONSE:-1024}
+      - KEEPER_MAX_REQUESTS_PER_MINUTE=${KEEPER_MAX_REQUESTS_PER_MINUTE:-10}
+      - KEEPER_MAX_REQUESTS_PER_SESSION=${KEEPER_MAX_REQUESTS_PER_SESSION:-100}
+    volumes:
+      - ./memory:/app/memory
+      - ./config:/app/config
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

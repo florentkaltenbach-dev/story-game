@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { nextMessageId, addMessage, initializeStore, messages, session } from "@/lib/store";
 import { queryKeeper } from "@/lib/keeper";
-import { writeMemoryLevel } from "@/lib/memory";
 import { authenticateRequest, requireRole } from "@/lib/auth";
 import type { AuthContext } from "@/lib/auth";
-import type { Message, MemoryLevelNumber } from "@/lib/types";
+import type { Message } from "@/lib/types";
 
 const MAX_HISTORY = 6;
 
@@ -26,10 +25,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { query } = await request.json();
+    const body = await request.json();
+    const { query, mode: modeOverride } = body as { query: string; mode?: string; npcName?: string };
+
+    // Validate mode override — only allow mc_query and mc_generate
+    const allowedModes = ["mc_query", "mc_generate"];
+    const mode = (modeOverride && allowedModes.includes(modeOverride)) ? modeOverride : "mc_query";
 
     const keeperResponse = await queryKeeper({
-      mode: "mc_query",
+      mode: mode as "mc_query" | "mc_generate",
       trigger: {
         type: "mc_query",
         channel: "mc-keeper",
@@ -59,15 +63,10 @@ export async function POST(request: Request) {
     await addMessage(mcMsg);
     await addMessage(keeperMsg);
 
-    for (const update of keeperResponse.stateUpdates) {
-      await writeMemoryLevel(update.level as MemoryLevelNumber, update.key, update.value);
-    }
-
     return NextResponse.json({
       narrative: keeperResponse.narrative,
       journalUpdate: keeperResponse.journalUpdate ?? null,
       internalNotes: keeperResponse.internalNotes ?? null,
-      stateUpdates: keeperResponse.stateUpdates,
       degraded: keeperResponse.degraded ?? false,
     });
   } catch (err) {

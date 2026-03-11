@@ -17,7 +17,7 @@ function MessageBubble({ message }: { message: Message }) {
     return (
       <div className="py-3 flex items-center gap-3 px-4">
         <span className="h-px flex-1 bg-border" />
-        <span className="text-xs text-muted/60 italic whitespace-nowrap">
+        <span className="text-xs text-muted/80 italic whitespace-nowrap">
           {content}
         </span>
         <span className="h-px flex-1 bg-border" />
@@ -29,14 +29,14 @@ function MessageBubble({ message }: { message: Message }) {
     return (
       <div className="py-4 px-6 my-1 border-l-2 border-accent/50 bg-accent/[0.03]">
         <div className="flex items-baseline gap-2 mb-2">
-          <span className="text-[10px] tracking-widest uppercase text-accent/70">
+          <span className="text-xs tracking-widest uppercase text-accent/85">
             {sender.name}
           </span>
-          <span className="text-[10px] text-muted/40">
+          <span className="text-xs text-muted/70">
             {formatTime(timestamp)}
           </span>
         </div>
-        <p className="narrative-text text-[15px] text-foreground/90 leading-[1.9]">
+        <p className="narrative-text text-[15px] text-foreground leading-[1.9]">
           {content}
         </p>
       </div>
@@ -47,14 +47,14 @@ function MessageBubble({ message }: { message: Message }) {
     return (
       <div className="py-3 px-6 my-1 border-l-2 border-keeper/40 bg-keeper/[0.04] rounded-r">
         <div className="flex items-baseline gap-2 mb-1.5">
-          <span className="text-[10px] tracking-widest uppercase text-keeper/80">
+          <span className="text-xs tracking-widest uppercase text-keeper/90">
             {sender.name}
           </span>
-          <span className="text-[10px] text-muted/40">
+          <span className="text-xs text-muted/70">
             {formatTime(timestamp)}
           </span>
         </div>
-        <p className="narrative-text text-sm text-foreground/80 italic leading-relaxed">
+        <p className="narrative-text text-sm text-foreground/90 italic leading-relaxed">
           {content}
         </p>
       </div>
@@ -66,16 +66,21 @@ function MessageBubble({ message }: { message: Message }) {
     <div className="py-2.5 px-6">
       <div className="flex items-baseline gap-2 mb-1">
         <span className="text-xs font-medium text-ice">{sender.name}</span>
-        <span className="text-[10px] text-muted/40">
+        <span className="text-xs text-muted/70">
           {formatTime(timestamp)}
         </span>
       </div>
-      <p className="text-sm text-foreground/75 leading-relaxed">{content}</p>
+      <p className="text-sm text-foreground/90 leading-relaxed">{content}</p>
     </div>
   );
 }
 
-export default function StoryLog({ messages }: { messages: Message[] }) {
+interface StoryLogProps {
+  messages: Message[];
+  streamingText?: string | null;
+}
+
+export default function StoryLog({ messages, streamingText }: StoryLogProps) {
   const endRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -90,7 +95,7 @@ export default function StoryLog({ messages }: { messages: Message[] }) {
     >
       {messages.length === 0 && (
         <div className="flex items-center justify-center h-full">
-          <p className="text-muted/50 text-sm italic narrative-text">
+          <p className="text-muted/70 text-sm italic narrative-text">
             The story has not yet begun...
           </p>
         </div>
@@ -98,6 +103,19 @@ export default function StoryLog({ messages }: { messages: Message[] }) {
       {messages.map((msg) => (
         <MessageBubble key={msg.id} message={msg} />
       ))}
+      {streamingText && (
+        <div aria-live="polite" className="py-3 px-6 my-1 border-l-2 border-keeper/40 bg-keeper/[0.04] rounded-r animate-pulse">
+          <div className="flex items-baseline gap-2 mb-1.5">
+            <span className="text-xs tracking-widest uppercase text-keeper/90">
+              The Keeper
+            </span>
+            <span className="text-[10px] text-keeper/50">typing...</span>
+          </div>
+          <p className="narrative-text text-sm text-foreground/90 italic leading-relaxed">
+            {streamingText}
+          </p>
+        </div>
+      )}
       <div ref={endRef} />
     </div>
   );
