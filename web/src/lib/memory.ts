@@ -1,4 +1,4 @@
-import { readFile, writeFile, rename, readdir, mkdir } from "fs/promises";
+import { readFile, writeFile, rename, readdir, mkdir, unlink, rm } from "fs/promises";
 import { join, extname } from "path";
 import type {
   MemoryLevelNumber,
@@ -306,4 +306,96 @@ export async function readAllMessages(): Promise<Message[]> {
   // Sort by timestamp
   deduped.sort((a, b) => a.timestamp - b.timestamp);
   return deduped;
+}
+
+// === Preset loading utilities ===
+
+const PRESETS_ROOT = join(PROJECT_ROOT, "presets");
+const CONFIG_ROOT = join(PROJECT_ROOT, "config");
+
+const MEMORY_LEVEL_SUBDIRS = [
+  "1-plot-state",
+  "2-character-state",
+  "3-narrative-threads",
+  "4-thematic-layer",
+  "5-world-state",
+];
+
+/** Remove all files from all 5 memory level directories */
+export async function clearMemory(): Promise<void> {
+  for (const sub of MEMORY_LEVEL_SUBDIRS) {
+    const dir = join(MEMORY_ROOT, sub);
+    try {
+      const files = await readdir(dir);
+      for (const file of files) {
+        if (file.startsWith(".")) continue;
+        await unlink(join(dir, file));
+      }
+    } catch {
+      // Directory may not exist
+    }
+  }
+}
+
+/** Copy memory-seed from a preset into the live memory directory */
+export async function seedMemoryFromPreset(presetId: string): Promise<number> {
+  const seedRoot = join(PRESETS_ROOT, presetId, "memory-seed");
+  let count = 0;
+
+  for (const sub of MEMORY_LEVEL_SUBDIRS) {
+    const srcDir = join(seedRoot, sub);
+    const dstDir = join(MEMORY_ROOT, sub);
+    await mkdir(dstDir, { recursive: true });
+
+    try {
+      const files = await readdir(srcDir);
+      for (const file of files) {
+        if (file.startsWith(".")) continue;
+        const content = await readFile(join(srcDir, file), "utf-8");
+        await writeFile(join(dstDir, file), content, "utf-8");
+        count++;
+      }
+    } catch {
+      // Seed directory for this level may not exist
+    }
+  }
+
+  return count;
+}
+
+/** Copy config JSON files from a preset into the active config directory */
+export async function copyPresetConfig(presetId: string): Promise<number> {
+  const srcDir = join(PRESETS_ROOT, presetId);
+  await mkdir(CONFIG_ROOT, { recursive: true });
+  let count = 0;
+
+  try {
+    const files = await readdir(srcDir);
+    for (const file of files) {
+      if (!file.endsWith(".json")) continue;
+      const content = await readFile(join(srcDir, file), "utf-8");
+      await writeFile(join(CONFIG_ROOT, file), content, "utf-8");
+      count++;
+    }
+  } catch {
+    // Preset directory may not exist
+  }
+
+  return count;
+}
+
+/** Clear session messages and snapshot for a fresh start */
+export async function clearSessionFiles(): Promise<void> {
+  // Remove messages directory
+  const messagesDir = join(SESSION_ROOT, "messages");
+  await rm(messagesDir, { recursive: true, force: true });
+
+  // Remove session snapshot
+  for (const file of ["current.json", "current.json.bak"]) {
+    try {
+      await unlink(join(SESSION_ROOT, file));
+    } catch {
+      // File may not exist
+    }
+  }
 }

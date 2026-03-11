@@ -1,0 +1,1 @@
+Steel-hulled research ship, 187 feet, coal-fired with diesel auxiliary. Holds 12 expedition members, seaplane, drilling apparatus, sledge dogs, provisions for 6+ months Antarctic operations.

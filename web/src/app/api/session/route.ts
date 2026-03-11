@@ -39,6 +39,10 @@ import { nextMessageId, addMessage } from "@/lib/store";
 const sceneTriggerState: TriggerState = { lastFired: {} };
 
 let cachedTriggers: EventTrigger[] | null = null;
+
+export function invalidateSessionTriggerCache(): void {
+  cachedTriggers = null;
+}
 async function loadTriggerConfig(): Promise<EventTrigger[]> {
   if (cachedTriggers) return cachedTriggers;
   try {

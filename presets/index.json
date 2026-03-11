@@ -5,7 +5,22 @@
       "name": "At the Mountains of Madness",
       "description": "A Lovecraft-inspired Antarctic expedition. 1933. Something waits in the ice.",
       "sessionCount": 5,
-      "playerCount": "2-5"
+      "playerCount": "2-5",
+      "scene": {
+        "title": "The Arkham Wharf",
+        "description": "September 2nd, 1931. The cargo steamer Doris Wilkinson sits low in the harbour, her hold already heavy with crates of geological equipment and provisions for eighteen months. A cold drizzle falls on the Arkham wharf. The expedition party has been summoned for final briefing before departure at dawn.",
+        "location": "Arkham, Massachusetts"
+      },
+      "welcomeMessages": [
+        {
+          "sender": { "role": "system", "name": "System" },
+          "content": "The Ceremony is preparing. A new story begins."
+        },
+        {
+          "sender": { "role": "mc", "name": "The Narrator" },
+          "content": "The harbour smells of salt and engine oil. Gulls wheel overhead, their cries sharpened by the wind coming off the Atlantic. You have each received a letter \u2014 typed on Miskatonic University stationery, signed by two names you do not recognise \u2014 inviting you to join an expedition of singular importance. The letter promised answers. It did not say to what questions."
+        }
+      ]
     }
   ],
   "default": "mountains-of-madness"

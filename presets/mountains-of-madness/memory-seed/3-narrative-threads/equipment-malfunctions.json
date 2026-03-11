@@ -1,0 +1,15 @@
+{
+  "id": "equipment-malfunctions",
+  "name": "Equipment Malfunctions Near Certain Locations",
+  "status": "dormant",
+  "triggerConditions": [
+    { "type": "session", "value": 1, "comparator": "gte" },
+    { "type": "location", "value": "base camp", "comparator": "contains" }
+  ],
+  "plantedInSession": null,
+  "payoffInSession": null,
+  "plantWindow": "Session 1 Act II (base camp)",
+  "payoffWindow": "Session 2 (pattern visible near five-pointed structures)",
+  "content": "Instruments and equipment behave strangely near certain locations: compasses drift, radio reception distorts, photographic plates fog unexpectedly, engines stutter. Each malfunction is individually explainable — magnetic anomalies, atmospheric interference, equipment fatigue. Together they form a pattern that becomes visible in Session 2: the malfunctions cluster around five-pointed structures and Elder Thing artifacts. This is Stratum II bleeding into Stratum I — the residual energy or technology of the Elder Things still active after millions of years, interfering with human instruments.",
+  "notes": "Stratum II bleeding into I. Elder Thing technology still active. Electrical/magnetic interference near five-pointed formations. Each anomaly individually explainable — together they form an impossible pattern."
+}

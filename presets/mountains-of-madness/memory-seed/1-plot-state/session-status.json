@@ -1,0 +1,14 @@
+{
+  "sessionNumber": 0,
+  "sessionName": "The Circle",
+  "act": 0,
+  "phase": "lobby",
+  "lovecraftCurvePhase": "preparation",
+  "activeStrata": ["I"],
+  "phenomenaLevel": "none",
+  "dominantPattern": "PROPHET-PARADOX",
+  "keeperRegister": "Clinical. Rational. Warm.",
+  "dramaticQuestion": null,
+  "startedAt": null,
+  "lastUpdated": null
+}

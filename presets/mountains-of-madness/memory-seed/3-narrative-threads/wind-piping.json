@@ -1,0 +1,14 @@
+{
+  "id": "wind-piping",
+  "name": "Wind Piping Musically",
+  "status": "dormant",
+  "triggerConditions": [
+    { "type": "session", "value": 1, "comparator": "gte" }
+  ],
+  "plantedInSession": null,
+  "payoffInSession": null,
+  "plantWindow": "Session 1 Act I (background detail on the ship)",
+  "payoffWindow": "Session 3 Act III (they realize it's not wind) then Session 4 Act I (last crossing)",
+  "content": "The wind carries sounds that are almost musical — cadences that suggest a half-sentient piping. First heard faintly through the ship's rigging, dismissed as acoustic effect. Recurs at increasing intensity through each session. By Session 3, in the tunnels, the piping is recognized as something other than wind. By Session 4, crossing back over the mountains, it is unmistakable. This is Azathoth resonance — Stratum IV bleeding into the material world through the simplest possible medium: moving air.",
+  "notes": "Crescendo thread across all sessions. Azathoth resonance. Stratum IV phenomena. 'Cadences sometimes held vague suggestions of a wild and half-sentient musical piping.' The wind is where the deepest layer of reality speaks."
+}

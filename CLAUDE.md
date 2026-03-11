@@ -4,32 +4,119 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-"The Ceremony" — an AI-powered interactive adventure story platform where live sessions (ceremonies) are run with voice + text companion. Think tabletop RPG meets theater, with an AI agent ("The Keeper") managing game state.
+"The Ceremony" — an AI-powered interactive adventure story platform. Live sessions (ceremonies) are run with voice + text companion. Three roles: MC (human narrator), Keeper (Claude API agent managing game state), and up to 5 Players (text companion). Think tabletop RPG meets theater.
 
-**Current status:** Design phase. No code written yet. Two design documents define the architecture.
+First preset: "At the Mountains of Madness" (Lovecraft, 1933 second expedition).
 
-## Key Documents
+**Status:** All code complete. Remaining work is narrative design (preset content, lore gaps).
 
-- `ceremony_state.md` — Master project state document covering architecture, roles, memory system, interfaces, session flow, and remaining design tasks
-- `mountains_of_madness_preset_v0.md` — First story preset: a Lovecraft-inspired campaign config demonstrating the ingestion pipeline output format
+## Architecture
 
-## Architecture (Planned)
+Two-process system communicating over HTTP:
 
-**Three roles:**
-- **MC (human storyteller)** — narrates via voice, sees structured data, queries the Keeper
-- **The Keeper (AI agent, Claude API)** — manages all game state, responds to players and MC, only entity with full picture
-- **Players (up to 5)** — interact via text companion app
+- **`web/`** — Next.js 16 (React 19, Tailwind 4) text companion app on port 3004. Handles auth, SSE events, session state, the script pipeline, and all player/MC UI. Base path: `/the-ceremony`.
+- **`keeper-service/`** — Express 5 + Claude API on port 3005. Receives structured `KeeperInput`, assembles context from memory filesystem, calls Claude, returns `KeeperResponse`. Handles model routing, token budgets, compression, and thread evaluation.
+- **`rigging/`** — Zero-dependency Node.js infrastructure dashboard on port 3006.
 
-**Tech stack:** Next.js (text companion), Jitsi Meet (voice), Claude API (AI brain), Node.js file system (memory engine), Hetzner/Docker/Caddy (infrastructure)
+Communication: web → HTTP POST → keeper-service → Claude API. Auth between services via `KEEPER_SHARED_SECRET`.
 
-**Memory system — 5 levels:** Plot State, Character State, Narrative Threads, Thematic Layer, World State. Each level has permission layers (MC sees most, players see their own slice, Keeper sees everything).
+### Memory System (Filesystem)
 
-**Token economy target:** ~1,500 tokens per Keeper turn via smart context assembly and compression.
+The `memory/` directory is the game's persistent brain — 5 numbered levels:
+1. `1-plot-state/` — current scene, act summaries, session progress
+2. `2-character-state/` — player journals, knowledge ledgers, character data
+3. `3-narrative-threads/` — thread JSON files (dormant→planted→growing→ripe→resolved)
+4. `4-thematic-layer/` — atmosphere, motifs, tone guidance
+5. `5-world-state/` — geography, NPCs, environment
 
-## Design Tasks Remaining
+The Keeper reads these levels for context assembly. Scripts write to them deterministically (no LLM state writes).
 
-Items 11-20 in `ceremony_state.md` are unresolved: Keeper prompt architecture, MC-Keeper interaction patterns, PvP mechanics, NPC system, onboarding, story archive, embeddings integration, deployment, first preset build, API cost modeling.
+### Script Pipeline
 
-## Deployment Context
+`web/src/lib/scripts/` contains deterministic extractors that run on every message:
+- `pipeline.ts` — orchestrator, runs all extractors in sequence
+- `journal.ts`, `npc-extractor.ts`, `location.ts`, `environment.ts` — data extractors
+- `knowledge.ts` — per-player knowledge fog ledger
+- `triggers.ts` — event trigger matching against preset config
+- `widget-deriver.ts` — derives UI widgets from memory state
 
-This project lives on a Hetzner VPS (ubuntu-8gb-hel1-1). See the root `~/CLAUDE.md` for server details, PM2 setup, and Caddy configuration. When code is written, it will likely run as a PM2-managed SvelteKit or Next.js app behind Caddy.
+### Key Modules
+
+- `web/src/lib/types.ts` — all shared TypeScript types (also partially duplicated in `keeper-service/types.ts`)
+- `web/src/lib/store.ts` — in-memory session state, persistence, invites, group channels
+- `web/src/lib/events.ts` — SSE emitter with per-player/widget/channel filtering
+- `web/src/lib/auth.ts` — HMAC token authentication (24h expiry)
+- `web/src/lib/keeper.ts` — `RemoteKeeper` (HTTP to keeper-service) + `MockKeeper` (filesystem-backed)
+- `web/src/lib/compression.ts` — act compression + recap building
+- `web/src/lib/mc-commands.ts` — MC backstage command parser (`/generate`, `/reveal`, `/hint`, `/npc`)
+- `keeper-service/lib.ts` — pure functions: token estimation, tier budgets, model routing, rate limiting, cost tracking
+- `keeper-service/server.ts` — `ClaudeKeeper` class, context assembly from all 5 memory levels, streaming
+
+### Preset System
+
+`presets/` holds story configurations. `config/` holds the active preset's runtime config (story.json, world.json, characters.json, mechanics.json, techniques.json, triggers.json). Presets define archetypes, NPCs, trigger conditions, and narrative techniques.
+
+## Commands
+
+### Development
+
+```bash
+# Web app (Next.js)
+cd web && npm run dev          # Dev server on :3004
+cd web && npm run build        # Production build
+cd web && npm run lint         # ESLint
+cd web && npm run typecheck    # tsc --noEmit
+
+# Keeper service
+cd keeper-service && npm run dev    # Dev with tsx watch on :3005
+cd keeper-service && npm run typecheck
+
+# Both together (production)
+pm2 start ecosystem.config.cjs     # Starts ceremony, keeper, rigging
+pm2 restart ceremony keeper         # Restart after changes
+```
+
+### Tests
+
+```bash
+cd web && npm test                          # Run all web tests (vitest)
+cd web && npx vitest run src/lib/__tests__/auth.test.ts   # Single test file
+cd web && npm run test:watch                # Watch mode
+
+cd keeper-service && npm test               # Run keeper tests
+cd keeper-service && npx vitest run __tests__/lib.test.ts  # Single test
+```
+
+109 tests across 9 files. Test locations:
+- `web/src/lib/__tests__/` — auth, events, mc-commands, store
+- `web/src/lib/scripts/__tests__/` — pipeline, roundtrip, triggers, widget-deriver
+- `keeper-service/__tests__/` — lib (token estimation, rate limiter, cost tracker)
+
+### Docker
+
+```bash
+docker compose up --build       # Full stack (web + keeper + caddy)
+```
+
+## Environment
+
+Copy `.env.example` to `.env`. Required vars:
+- `CEREMONY_TOKEN_SECRET` — HMAC signing key (32 bytes hex)
+- `MC_SECRET` — MC login password (16 bytes hex)
+- `KEEPER_SHARED_SECRET` — inter-service auth (32 bytes hex)
+- `KEEPER_BACKEND` — `mock` (default, no API calls) or `remote` (real Claude API)
+
+`setup.sh` generates secrets and installs dependencies.
+
+## Deployment
+
+Hetzner VPS (Helsinki, ARM64, 8GB RAM). PM2 manages processes. Caddy reverse-proxies `/the-ceremony/*` to :3004. Public URL: `https://www.kaltenbach.dev/the-ceremony/`.
+
+## Key Design Decisions
+
+- **No dice** — quality-based mechanics, journal format
+- **Keeper = storytelling voice** (LLM). **Scripts = bookkeeping** (deterministic). No LLM state writes.
+- **Token economy** — mode-aware tiers (MODE_TIERS), ~1,500 tokens/turn, Haiku for speed, quality model configurable
+- **Memory writes** — full script pipeline extracts state; the Keeper never writes to memory directly
+- **Session structure** — Session 0 is co-creation (MC has filesystem RW), Sessions 1-4 are play (MC has RO)
+- **Knowledge fog** — players only see NPCs/locations they've encountered (per-player ledger in Level 2)

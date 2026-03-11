@@ -110,6 +110,7 @@ export default function MCDashboard() {
   const [expandedCharacter, setExpandedCharacter] = useState<string | null>(null);
   const [mcWidgets, setMcWidgets] = useState<GameWidget[]>([]);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmLoadPreset, setConfirmLoadPreset] = useState(false);
   const [kickTarget, setKickTarget] = useState<{ id: string; name: string } | null>(null);
   const [memoryFileContents, setMemoryFileContents] = useState<Record<number, Record<string, string>>>({});
   const [cost, setCost] = useState<{ totalCalls: number; totalInput: number; totalOutput: number; totalCacheRead: number; totalCostUsd: number } | null>(null);
@@ -413,6 +414,26 @@ export default function MCDashboard() {
     fetchInvites();
   }
 
+  async function handleLoadPreset() {
+    const res = await authFetch("/api/presets");
+    if (!res.ok) return;
+    const data = await res.json();
+    const defaultPreset = data.default ?? data.presets?.[0]?.id;
+    if (!defaultPreset) return;
+
+    await authFetch("/api/presets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ presetId: defaultPreset }),
+    });
+    setConfirmLoadPreset(false);
+    setMessages([]);
+    fetchSession();
+    fetchMessages();
+    fetchInvites();
+    fetchMemory();
+  }
+
   async function handleKick(playerId: string) {
     await authFetch("/api/session", {
       method: "POST",
@@ -513,6 +534,22 @@ export default function MCDashboard() {
         />
       )}
 
+      {confirmLoadPreset && (
+        <ConfirmModal
+          title="Load Preset"
+          message={
+            <p>
+              This will reload all config, memory, and session data from the preset.
+              All current players, messages, and game state will be cleared.
+            </p>
+          }
+          confirmLabel="Load Preset"
+          onConfirm={handleLoadPreset}
+          onCancel={() => setConfirmLoadPreset(false)}
+          danger
+        />
+      )}
+
       {kickTarget && (
         <ConfirmModal
           title="Remove Player"
@@ -535,6 +572,7 @@ export default function MCDashboard() {
         breakpoint={breakpoint}
         onSessionAction={handleSessionAction}
         onReset={() => setConfirmReset(true)}
+        onLoadPreset={() => setConfirmLoadPreset(true)}
         onLogout={handleLogout}
       />
 

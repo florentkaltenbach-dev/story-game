@@ -23,13 +23,14 @@
   ],
   "timeline": "Radio is the only communication. Transportation: dog sledges and Dornier seaplanes (no helicopters). Navigation: compass, sextant, theodolite — maps are incomplete or wrong. Photography: glass plates and early film — evidence is hard to capture and easy to doubt. The expedition is funded, university-backed, but small and not widely publicized.",
   "technology": [
-    "Radio communication — fragile, weather-dependent, with lag",
-    "Dog sledges for ground transportation",
-    "Dornier seaplanes for aerial survey and mountain crossing",
-    "Compass, sextant, and theodolite for navigation",
-    "Glass plate and early film photography",
-    "Geological boring and drilling equipment",
-    "Limited fuel supply — crossing the mountains is a point of no return"
+    "Radio — shortwave voice and CW (Morse). Byrd broadcast live from Antarctica in 1928; by 1933 the tech is real but unreliable. Ionospheric disruption near magnetic pole, cold cracks components, blizzards destroy antennas, regular blackout windows. Relay chain to Arkham via wire services. Players can hear civilization — until they can't. That's worse than never having it.",
+    "Dog sledges — primary surface transport. Dogs are alive, have personalities, react to danger before humans do. Instinct = early warning system. Not equipment — living NPCs.",
+    "Dornier seaplanes — open/minimally enclosed cockpit, propeller-driven, ski-mounted. No radar, no blind-flying instruments, no pressurized cabin. Every flight is a gamble. Whiteout = death. Not a taxi.",
+    "Navigation — magnetic compass (unreliable near pole), sun compass (useless in overcast), sextant (needs visible horizon), theodolite. Maps are sketch-based, often wrong. Getting lost is the default state.",
+    "Photography — hand cameras, individual negatives, deliberate shots. Development happens later. Photos can be blurry, cold-damaged, unconvincing. Evidence is fragile and doubted.",
+    "Pabodie's drill — steel head, jointed rods, gasoline motor, collapsible wooden derrick, dynamite for hard strata. Slow, loud, violent. No ground sensors. You don't know what's underneath until you break through.",
+    "Fuel — gasoline and kerosene for everything (planes, drill, Primus stoves, heating). Finite and heavy. Every flight, every night in camp burns fuel. Running out = freezing to death.",
+    "Medical — no antibiotics (penicillin not until 1940s). Laudanum, morphine, bandages, basic surgery. Frostbite treatment crude. Infected wounds potentially fatal. No medevac."
   ],
   "historicSites": {
     "Cape Evans Hut": {
@@ -86,6 +87,11 @@
     "rossSea Party": "The Ross Sea party (1914–17) laid depots across the Ice Barrier for Shackleton's transcontinental crossing. The crossing never happened — the Endurance was crushed. Three men died completing a mission that was for nothing. Their ship, the Aurora, was torn from its moorings and drifted for nine months. After the rescue, the Aurora vanished on a coal run — never seen again.",
     "expeditionLayers": "By the 1930s, McMurdo Sound sites carry remains from four expeditions: Discovery (1901–04), Nimrod (1907–09), Terra Nova (1910–13), and the Ross Sea party (1914–17). Every hut, cache, and inscription is a layer in this palimpsest.",
     "thematicResonance": "The Ross Sea party's story mirrors the game's core themes: missions pursued past the point of reason, institutional betrayal, cosmic futility, and whether human endurance means anything. Richards said yes — 'it was something the human spirit had accomplished.' Lovecraft's cosmos says no. The players decide.",
-    "theAurora": "The SY Aurora was torn from its moorings at Cape Evans in May 1915, drifted for nine months, was repaired, rescued the survivors, then vanished forever on a coal run in 1917. A ship that survived Antarctica only to be swallowed by the ordinary ocean. The Keeper can deploy this as atmosphere — radio ghosts, cautionary tales, the precedent that ships don't always come back."
+    "theAurora": "The SY Aurora was torn from its moorings at Cape Evans in May 1915, drifted for nine months, was repaired, rescued the survivors, then vanished forever on a coal run in 1917. A ship that survived Antarctica only to be swallowed by the ordinary ocean. The Keeper can deploy this as atmosphere — radio ghosts, cautionary tales, the precedent that ships don't always come back.",
+    "heroicAgeLegacy": "Scott died 1912 (20 years ago). Shackleton died 1922 (11 years ago). Amundsen disappeared 1928 (5 years ago). These are recent legends, not distant history. The Antarctic community is small and haunted by its losses. Going to Antarctica is known to kill people.",
+    "whalingIndustry": "Antarctic whaling at its peak. Factory ships in the Ross Sea. Whalers are the most experienced Antarctic navigators — they know ice, weather, coastlines. Also a source of rumors, superstitions, and observations scientists dismiss.",
+    "roerichConnection": "Nicholas Roerich — Russian painter famous for luminous, mystical Himalayan landscapes. Also a genuine mystic who led a 1920s expedition searching for Shambhala. Lovecraft compares the Antarctic mountains to Roerich's paintings. The implication: someone thinks there's something hidden in those mountains.",
+    "poeConnection": "Poe's 1838 Narrative of Arthur Gordon Pym ends in Antarctica — milky white curtain, the cry 'Tekeli-li.' Lovecraft's Shoggoths echo this. Within the story's logic, Poe wasn't writing fiction but recording garbled real encounters. A well-read character recognizes this with horror.",
+    "rareBooksAndNecronomicon": "Rare texts circulate through university libraries and private collectors. No internet — physical travel to the holding library required. Danforth has read the Necronomicon at Miskatonic's library, one of very few copies. This is dangerous, unusual, and marks him."
   }
 }

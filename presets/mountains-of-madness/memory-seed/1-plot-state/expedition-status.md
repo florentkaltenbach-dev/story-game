@@ -1,0 +1,1 @@
+Pre-departure. Final provisioning complete. Departure scheduled for dawn, November 19th, 1933.

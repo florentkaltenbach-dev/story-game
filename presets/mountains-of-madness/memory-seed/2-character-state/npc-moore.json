@@ -1,0 +1,35 @@
+{
+  "id": "npc-moore",
+  "name": "Professor James Moore",
+  "role": "patron",
+  "type": "npc",
+  "status": "active",
+  "location": "remains in the United States — contact by radio only",
+  "patronOption": "B",
+  "background": "A hard-nosed empiricist recruited to keep the expedition credible. He thinks Dyer had a psychological breakdown and that there is a rational explanation for everything the first expedition encountered. His presence on the expedition letterhead gives it institutional legitimacy.",
+  "motive": "Debunking — or, if the evidence proves genuine, claiming the discovery for rigorous science. Moore wants publishable, peer-reviewed results. He is the skeptic who keeps the expedition grounded. Until the evidence overwhelms him.",
+  "personality": "Measured, precise, professionally skeptical. Speaks in qualifications and caveats. He added warnings and contextual notes to the briefing that Starkweather resents. Not unkind — but not romantic about exploration. He treats the expedition as a research project, not an adventure.",
+  "relationship": {
+    "starkweather": "Co-patron. Respects Starkweather's knowledge but distrusts his judgment. Thinks Starkweather's belief in Dyer's account is a liability. Their disagreement is visible in the curated briefing document.",
+    "dyer": "Professional distance. Moore considers Dyer's published account to be the product of trauma and possibly early dementia. He has not read the private account.",
+    "players": "Selected for competence and reliability. Moore's criteria for recruitment were practical: skills, physical fitness, psychological stability. He vetted candidates Starkweather was too eager to accept."
+  },
+  "shipPresence": "absent — radio contact only",
+  "radioSchedule": "Daily check-ins via shortwave, weather permitting. Moore receives reports and sends instructions. As the expedition moves inland, radio contact will degrade.",
+  "hiddenKnowledge": [
+    "Has not read Dyer's private account — only the published version",
+    "His skepticism is genuine, not performed",
+    "He may have secondary institutional objectives that Starkweather doesn't know about"
+  ],
+  "vulnerabilities": [
+    "His rational framework is his strength and his blindspot — he will resist evidence that doesn't fit",
+    "As radio contact degrades, his influence over the expedition diminishes",
+    "If the evidence proves Dyer right, Moore's entire scientific worldview fractures"
+  ],
+  "qualities": {
+    "academic expertise": "strong — biology, comparative anatomy",
+    "institutional authority": "strong — his name gives the expedition credibility",
+    "composure under pressure": "strong — but untested against the genuinely inexplicable",
+    "trustworthiness": "high — what he tells you, he believes. What he doesn't tell you is what he doesn't know."
+  }
+}

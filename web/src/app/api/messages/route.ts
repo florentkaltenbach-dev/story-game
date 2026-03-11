@@ -40,10 +40,16 @@ const THREAD_EVAL_INTERVAL = 10; // Evaluate threads every N player messages
 const triggerState: TriggerState = { lastFired: {} };
 let messagesSinceLastEval = 0;
 
-// Cached config files (loaded once)
+// Cached config files (loaded once, invalidated on preset load)
 let cachedNpcs: NpcConfig[] | null = null;
 let cachedLocations: LocationConfig[] | null = null;
 let cachedTriggers: EventTrigger[] | null = null;
+
+export function invalidateMessageCaches(): void {
+  cachedNpcs = null;
+  cachedLocations = null;
+  cachedTriggers = null;
+}
 
 async function loadNpcs(): Promise<NpcConfig[]> {
   if (cachedNpcs) return cachedNpcs;

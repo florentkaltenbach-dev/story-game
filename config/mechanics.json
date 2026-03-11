@@ -117,5 +117,16 @@
     ],
     "theEcho": "The Keeper reads back each player's departure statement from Session 0. What they said they wanted. What they said they were afraid of. Then what they chose now. The distance between those statements is the measure of what the ceremony did to them.",
     "resolution": "Each player's journal closes with their choice. The ceremony ends. The wound stays open. There is no epilogue that resolves the tension."
+  },
+  "stateChains": {
+    "npcDisposition": {
+      "negative": ["neutral", "wary", "suspicious", "hostile"],
+      "positive": ["neutral", "curious", "friendly", "allied"]
+    },
+    "radioCondition": ["clear", "static", "degraded", "intermittent", "blackout"],
+    "injurySeverity": ["healthy", "shaken", "injured", "critical", "incapacitated"],
+    "fuelLevel": ["full", "adequate", "low", "critical", "empty"],
+    "weather": ["calm", "wind", "storm", "whiteout"],
+    "narrativeThread": ["dormant", "planted", "growing", "ripe", "resolved"]
   }
 }

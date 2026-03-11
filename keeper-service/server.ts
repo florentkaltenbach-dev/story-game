@@ -852,6 +852,12 @@ app.get("/cost", (_req, res) => {
   res.json(costTracker.summary(model));
 });
 
+app.post("/invalidate-cache", (_req, res) => {
+  invalidatePromptCache();
+  console.log("[Keeper] Cache invalidated (preset reload)");
+  res.json({ ok: true });
+});
+
 app.get("/health", (_req, res) => {
   res.json({
     status: "ok",

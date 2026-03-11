@@ -1,0 +1,14 @@
+{
+  "id": "nameless-scent",
+  "name": "The Nameless Scent",
+  "status": "dormant",
+  "triggerConditions": [
+    { "type": "session", "value": 2, "comparator": "gte" }
+  ],
+  "plantedInSession": null,
+  "payoffInSession": null,
+  "plantWindow": "Session 2 Act III (faint, at the threshold to the tunnels)",
+  "payoffWindow": "Session 3 Act II-III (overwhelming — the Shoggoth's signature)",
+  "content": "A faint, acrid, organic smell — impossible to name or classify. First detected as warm air rises from the corridor leading underground at the end of Session 2. Grows stronger with depth in Session 3. By the time the players find the dead Elder Things, the scent is thick and identifiable as the same substance coating the bodies: the dark-green ichor, the black iridescent slime. The nameless scent is the Shoggoth's chemical signature, registered by the players' bodies before the Shoggoth itself appears.",
+  "notes": "The Shoggoth's signature, registered before the Shoggoth appears. Sensory foreshadowing — the body knows before the mind. 'Something faintly acrid, pungent organic smell.'"
+}

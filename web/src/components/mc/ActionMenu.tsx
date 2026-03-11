@@ -16,6 +16,7 @@ interface ActionMenuProps {
   session: Session | null;
   onSessionAction: (action: string) => void;
   onReset: () => void;
+  onLoadPreset: () => void;
   onLogout: () => void;
 }
 
@@ -23,6 +24,7 @@ export default function ActionMenu({
   session,
   onSessionAction,
   onReset,
+  onLoadPreset,
   onLogout,
 }: ActionMenuProps) {
   const [open, setOpen] = useState(false);
@@ -78,6 +80,11 @@ export default function ActionMenu({
       hidden: !isEnded || (session?.number ?? 0) >= 4,
     },
     { label: "", onClick: () => {}, separator: true },
+    {
+      label: "Load Preset",
+      onClick: onLoadPreset,
+      danger: true,
+    },
     {
       label: "Reset Everything",
       onClick: onReset,

@@ -7,6 +7,7 @@ interface MCHeaderProps {
   breakpoint: Breakpoint;
   onSessionAction: (action: string) => void;
   onReset: () => void;
+  onLoadPreset: () => void;
   onLogout: () => void;
 }
 
@@ -49,6 +50,7 @@ export default function MCHeader({
   breakpoint,
   onSessionAction,
   onReset,
+  onLoadPreset,
   onLogout,
 }: MCHeaderProps) {
   const isWide = breakpoint === "wide";
@@ -102,6 +104,7 @@ export default function MCHeader({
           session={session}
           onSessionAction={onSessionAction}
           onReset={onReset}
+          onLoadPreset={onLoadPreset}
           onLogout={onLogout}
         />
       </div>

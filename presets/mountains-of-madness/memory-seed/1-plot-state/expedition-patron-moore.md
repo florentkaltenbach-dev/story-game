@@ -1,0 +1,1 @@
+Remains in Cambridge. Radio contact only. Skeptical of Dyer. Motive: debunking or rigorous scientific claim. Provides institutional legitimacy.

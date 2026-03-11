@@ -69,11 +69,11 @@ empathy turn, murals as mechanic, penguins, Danforth's vision, decision points,
 Lake's Camp investigation, recaps, expanded sensory palette, tone calibration.
 
 ### Research Gaps
-- D3 Real Antarctic logistics — partial (Byrd text needs extraction)
-- D4 1933 communication tech — open
-- D5 Dornier seaplane specs — open
-- D6 Lovecraft biographical context — partial
-- D8 Period media/public knowledge — open
+- D3 Real Antarctic logistics — **filled** (fuel, dogs, drill, whaling, medical, navigation in `sources/period-tech-culture-1933.md`)
+- D4 1933 communication tech — **filled** (full radio arc: spark gap → shortwave voice, Antarctic degradation mechanics in `sources/period-tech-culture-1933.md` §6)
+- D5 Dornier seaplane specs — **partial** (narrative texture filled; exact model numbers, range, fuel arithmetic still open)
+- D6 Lovecraft biographical context — **substantially filled** (Pym, Roerich, rare book culture added in `sources/period-tech-culture-1933.md` §8–10)
+- D8 Period media/public knowledge — **filled** (newspapers, telegrams, doubted photography in `sources/period-tech-culture-1933.md` §2, §7, §15)
 
 ### In-Game Gaps (design decisions needed)
 - G1 Gedney's fate
@@ -83,6 +83,27 @@ Lake's Camp investigation, recaps, expanded sensory palette, tone calibration.
 - G6 Dog handler significance
 - G9 Geographic error handling
 - G4, G7, G8, G10, G11 — secondary narrative gaps
+
+---
+
+## Visualizer — Ecosystem-Wide Visual Upgrades
+
+Code visualization techniques (graphs, state machines, swimlanes, heatmaps) applied to game state and infrastructure.
+Spans all surfaces: MC dashboard, player companion, Rigging, Hub, standalone D3 pages.
+Full plan with file mapping in `working/visualizer-todo.md`.
+
+| Priority | Visualizer | Surfaces | Backend Changes |
+|----------|-----------|----------|-----------------|
+| V1 | Relationship Map (force-directed entity graph) | MC panel + D3 page + Rigging viz | None |
+| V2 | Knowledge Fog Matrix (player × secrets heatmap) | MC panel + D3 page | None (fog API exists) |
+| V4 | State Transition Badges (inline state machines) | MC + Player + Rigging + Hub | None |
+| V3 | Session Timeline (swimlane sequence diagram) | MC panel + D3 page | None |
+| V10 | Player Journey Arc (personal narrative path) | Player companion | None |
+| V5 | Memory Constellation (memory file graph) | MC modal + D3 page | Cross-ref index |
+| V8 | Enhanced Hub Project Cards (mini topology) | Hub | None |
+| V6 | Budget Flame (token tier stacked bars) | MC panel + D3 page | Keeper-service logging |
+| V9 | Rigging Network Topology (interactive graph) | Rigging + D3 page | None |
+| V7 | Pipeline Debug View (data flow diagram) | MC debug + D3 page | Pipeline instrumentation |
 
 ---
 

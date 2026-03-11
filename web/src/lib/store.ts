@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import type { Message, Player, Session, SessionSnapshot, Invite, CharacterSheet, GameWidget, GroupChannel } from "./types";
+import type { Message, Player, Session, SessionSnapshot, Invite, CharacterSheet, GameWidget, GroupChannel, Scene } from "./types";
 import { stateEmitter } from "./events";
 import { appendMessage, writeSessionSnapshot, readSessionSnapshot, readAllMessages, archiveSessionMessages } from "./memory";
 
@@ -309,6 +309,53 @@ export async function resetSession(): Promise<void> {
       timestamp: Date.now() - 30000,
     }
   );
+
+  stateEmitter.emit("session", {
+    status: session.status,
+    number: session.number,
+    act: session.act,
+  });
+  await persistSnapshot();
+}
+
+export async function loadPreset(presetId: string, meta: {
+  name: string;
+  scene: Scene;
+  welcomeMessages: Array<{ sender: { role: string; name: string }; content: string }>;
+}): Promise<void> {
+  // Clear in-memory state
+  session.players = [];
+  session.status = "lobby";
+  session.keeperAutoRespond = false;
+  session.number = 0;
+  session.act = 1;
+  messages.length = 0;
+  invites.length = 0;
+  widgets.length = 0;
+  groupChannels.length = 0;
+  messageIdCounter = 100;
+
+  // Apply preset identity
+  session.id = `session-${Date.now()}`;
+  session.name = meta.name;
+  session.preset = presetId;
+  session.scene = { ...meta.scene };
+
+  // Seed welcome messages
+  const now = Date.now();
+  for (let i = 0; i < meta.welcomeMessages.length; i++) {
+    const msg = meta.welcomeMessages[i];
+    messages.push({
+      id: String(++messageIdCounter),
+      channel: "all",
+      sender: msg.sender as Message["sender"],
+      content: msg.content,
+      timestamp: now - (meta.welcomeMessages.length - i) * 30000,
+    });
+  }
+
+  // Mark store as initialized (prevent re-init from stale snapshot)
+  initPromise = Promise.resolve();
 
   stateEmitter.emit("session", {
     status: session.status,

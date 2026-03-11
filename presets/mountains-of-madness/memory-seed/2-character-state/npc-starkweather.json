@@ -1,0 +1,34 @@
+{
+  "id": "npc-starkweather",
+  "name": "Dr. Harold Starkweather",
+  "role": "patron",
+  "type": "npc",
+  "status": "active",
+  "location": "aboard the expedition vessel, Arkham wharf",
+  "patronOption": "B",
+  "background": "Former colleague of William Dyer at Miskatonic University. Read Dyer's private account — not just the published version. Believes every word. Where Dyer concluded 'stay away,' Starkweather concluded 'go back prepared.'",
+  "motive": "Vindication — for Dyer, for science, for the truth. He wants to prove that what Dyer saw was real, that the specimens exist, that the mountains hold what Dyer described. He believes a properly equipped expedition can succeed where the first one failed.",
+  "personality": "Intense, driven, slightly unhinged by what he read in Dyer's private account. Speaks with the fervor of a convert. His belief in Dyer's account borders on obsession. He included material in the briefing that Moore wanted cut.",
+  "relationship": {
+    "moore": "Co-patron. Starkweather respects Moore's scientific rigor but resents his skepticism. Their disagreement shapes the briefing — Starkweather's inclusions vs. Moore's caveats.",
+    "dyer": "Former colleague. Starkweather believes Dyer completely but chose the opposite response: not retreat but return. He excluded Dyer from the expedition — not out of malice, but because Dyer would undermine morale and try to stop them.",
+    "players": "Recruited them personally. Sees them as the team that will finally prove the truth. His expectations are high and possibly unrealistic."
+  },
+  "shipPresence": "aboard",
+  "hiddenKnowledge": [
+    "Has read Dyer's full private account, including details about the city and the Elder Things that the briefing omits",
+    "Knows more about the specimens' true nature than the briefing reveals",
+    "May have private reasons for wanting to reach the city beyond scientific vindication"
+  ],
+  "vulnerabilities": [
+    "His belief may cloud his judgment about when to retreat",
+    "The gap between what he knows and what he's told the players is a fracture that widens under pressure",
+    "If the evidence proves Dyer right, Starkweather must confront that Dyer's warning — which he ignored — was also right"
+  ],
+  "qualities": {
+    "academic expertise": "strong — geology, Antarctic geology specifically",
+    "leadership": "adequate — passionate but not always steady",
+    "composure under pressure": "fragile — his conviction gives him courage but his imagination gives him fear",
+    "trustworthiness": "compromised — he has withheld information from his own team"
+  }
+}

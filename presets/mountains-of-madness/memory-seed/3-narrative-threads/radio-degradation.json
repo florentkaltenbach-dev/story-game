@@ -1,0 +1,14 @@
+{
+  "id": "radio-degradation",
+  "name": "Radio Degradation",
+  "status": "dormant",
+  "triggerConditions": [
+    { "type": "session", "value": 1, "comparator": "gte" }
+  ],
+  "plantedInSession": null,
+  "payoffInSession": null,
+  "plantWindow": "Session 1 Act II (begins at base camp)",
+  "payoffWindow": "Session 3 (total blackout — alone)",
+  "content": "Radio contact with the ship and with Moore becomes intermittent. Static increases. Transmissions cut out mid-sentence. Weather is blamed. As the expedition moves inland, the degradation accelerates — but not uniformly. Reception is worse near certain geological formations. By Session 3, radio contact is lost entirely. The players are alone. The last voice of the outside world goes silent. This thread tightens the isolation progressively across three sessions, mirroring Lake's communication breakdown in the original expedition.",
+  "notes": "The isolation tightens. Mirrors Lake's communication breakdown. Moore's influence diminishes as radio degrades. In the original: 'Lake sent increasingly frantic radio messages, then went silent.'"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "dyers-private-journal",
+  "name": "Dyer's Private Journal Page",
+  "status": "dormant",
+  "triggerConditions": [
+    { "type": "session", "value": 2, "comparator": "gte" },
+    { "type": "location", "value": "mountains", "comparator": "contains" }
+  ],
+  "plantedInSession": null,
+  "payoffInSession": null,
+  "plantWindow": "Session 2 Act I (found near the mountains)",
+  "payoffWindow": "Session 2 Act II (it describes what they're now seeing)",
+  "content": "A page from Dyer's private journal — not the published account — is discovered among the expedition's cargo or at a camp site. Someone slipped it in: Danforth, a sympathetic colleague, or perhaps Dyer himself as a last desperate warning. The page describes something the players are about to see, or have just begun to see. It is the warning they cannot ignore — and the proof that Dyer saw truly, that his account was not madness but testimony.",
+  "notes": "The PROPHET-PARADOX made physical. Dyer wrote to prevent this expedition. His writing made it possible. Every time Dyer is proven right, the warning becomes more urgent — and more futile."
+}

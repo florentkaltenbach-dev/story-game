@@ -1,0 +1,15 @@
+{
+  "id": "tekeli-li",
+  "name": "Tekeli-li",
+  "status": "dormant",
+  "triggerConditions": [
+    { "type": "session", "value": 3, "comparator": "gte" },
+    { "type": "location", "value": "tunnels", "comparator": "contains" }
+  ],
+  "plantedInSession": null,
+  "payoffInSession": null,
+  "plantWindow": "Session 3 Act I (faint, dismissed as birds or echo)",
+  "payoffWindow": "Session 3 Act III (full Shoggoth encounter)",
+  "content": "A sound from deep below — wide-ranged, musical piping. Initially dismissed as subterranean bird calls (the giant blind albino penguins provide plausible cover) or acoustic echo in the tunnels. The sound recurs, closer, louder. When the Shoggoth appears — a vast, onrushing column of fetid black iridescence filling the fifteen-foot tunnel — the sound is revealed as its voice: 'Tekeli-li! Tekeli-li!' The most famous sound in Lovecraft. The Shoggoth learned to imitate the Elder Things' whistled language and turned it into a war cry.",
+  "notes": "The most famous sound in Lovecraft. Two appearances only: faint (Act I), full (Act III). 'Wide-ranged musical piping.' The Shoggoth imitates its creators' language — the Ahrimanic principle in sound."
+}

@@ -1,0 +1,15 @@
+{
+  "id": "dogs-refuse-food",
+  "name": "Dogs Refuse Food / Won't Face South",
+  "status": "dormant",
+  "triggerConditions": [
+    { "type": "session", "value": 1, "comparator": "gte" },
+    { "type": "location", "value": "ship or base camp", "comparator": "contains" }
+  ],
+  "plantedInSession": null,
+  "payoffInSession": null,
+  "plantWindow": "Session 1 Act I-II",
+  "payoffWindow": "Session 1 Act III (Lake's camp confirms animal instinct was correct)",
+  "content": "The sledge dogs exhibit unexplained behavioral changes: refusing food, showing agitation, refusing to face south. The dog handler interprets this as weather sensitivity. In truth, the animals sense what humans rationalize away — Stratum II bleeding into Stratum I. This is the earliest signal that the rational frame is insufficient. When the expedition reaches Lake's camp and finds the star-shaped graves and the evidence of what happened to the first expedition's dogs, the players can look back and realize the dogs knew all along.",
+  "notes": "Earliest signal that Stratum I is insufficient. Animals know before humans. Lovecraft's dogs savage toward specimens, hate the soapstone."
+}
