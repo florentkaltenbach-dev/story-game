@@ -136,5 +136,151 @@
       "template": "Recruited as a last-minute wireless operator. Survived. Went on to become a knight and industry chairman. Proof that surviving the extreme can forge a person.",
       "useFor": "Young NPCs or player characters. The graduate student, the assistant, anyone whose entire career begins with this expedition."
     }
+  ],
+  "pool": [
+    {
+      "id": "scientist-pabodie",
+      "name": "Dr. Frank H. Pabodie",
+      "archetype": "The Scientist",
+      "tagline": "The man who built the drill.",
+      "portrait": "Wire-rimmed glasses, calloused hands, graphite smudge on his temple. Moves with the deliberate economy of a man who has assembled heavy machinery in high winds.",
+      "background": "Professor of Engineering at Miskatonic University. Designed and built the experimental boring apparatus that made the 1930 expedition possible. When Starkweather proposed going back, Pabodie was the first man he called — not because Pabodie believed Dyer's account, but because no one else could keep the equipment running at forty below.",
+      "motivation": "The core samples from 1930 contained formations that shouldn't exist. Impossible things demand explanation, and explanation demands better equipment.",
+      "fear": "That the explanation will be something his instruments cannot measure and his training cannot accommodate.",
+      "qualities": ["Methodical", "Stubborn", "Mechanically gifted"],
+      "relationships": ["Designed all drilling and boring equipment for both expeditions", "Corresponded privately with Dyer before the old man stopped answering letters"]
+    },
+    {
+      "id": "scientist-bryce",
+      "name": "Dr. Amy Bryce",
+      "archetype": "The Scientist",
+      "tagline": "She studies what lives where nothing should.",
+      "portrait": "Sharp jaw, dark hair pinned severely back, hands reddened from years of cold-water specimen work. Wears men's expedition boots because no one manufactures women's.",
+      "background": "Marine biologist from Newnham College, Cambridge. Published a controversial monograph on abyssal organisms that survive at pressures and temperatures previously considered incompatible with complex life. The first woman appointed to an Antarctic geological survey — a fact that required three letters to the Royal Geographical Society and a threat of resignation from Moore.",
+      "motivation": "Dyer's published report mentioned biological specimens that defied classification. She intends to classify them.",
+      "fear": "That the organisms she finds will be alive in ways that rewrite the definition of the word.",
+      "qualities": ["Analytical", "Precise", "Fiercely independent"],
+      "relationships": ["Recruited by Moore for her deep-sea organism research", "Knows Pabodie by reputation — respects his rigour, suspects his imagination is limited"]
+    },
+    {
+      "id": "veteran-rourke",
+      "name": "Sgt. Douglas Rourke",
+      "archetype": "The Veteran",
+      "tagline": "Survived Gallipoli. Hired for worse.",
+      "portrait": "Weathered face, close-cropped grey hair, a scar along the left forearm he never explains. Stands like a man who learned to sleep standing up and never fully unlearned it.",
+      "background": "Served at Gallipoli with the ANZAC forces, then fourteen years as a private military contractor across three continents. Hired by Starkweather as expedition security after two other candidates read the briefing materials and declined. Rourke read them and named his price.",
+      "motivation": "The pay is extraordinary and the contract is simple: keep them alive until the ship comes back.",
+      "fear": "That he'll meet something in the ice that doesn't care how steady his hands are.",
+      "qualities": ["Unflappable", "Observant", "Haunted"],
+      "relationships": ["Hired directly by Starkweather, answers to no one else", "Served briefly with a Norwegian unit — speaks enough Norse to trade insults with Sørensen"]
+    },
+    {
+      "id": "journalist-caldwell",
+      "name": "Midge Caldwell",
+      "archetype": "The Journalist",
+      "tagline": "The Arkham Gazette sent their cheapest reporter. She intends to make them regret it.",
+      "portrait": "Small, wiry, perpetually bundled in an oversized parka. Graflex Speed Graphic slung across her chest like a weapon. Pencil behind one ear, spare behind the other.",
+      "background": "Reporter for the Arkham Gazette. Got the Antarctic posting by being persistent, cheap, and willing to sign a liability waiver no sane person would accept. Covered the Innsmouth affair — or tried to, before the government sealed the records. Has a nose for the story behind the story.",
+      "motivation": "Something happened on Dyer's expedition that the university covered up. Front-page stories don't bury themselves.",
+      "fear": "That the story, when she finds it, will be one no editor will print and no reader will believe.",
+      "qualities": ["Relentless", "Resourceful", "Recklessly curious"],
+      "relationships": ["Assigned by the Gazette to produce weekly dispatches for the Sunday edition", "Has already tried to interview Dyer — he refused, but his hands were shaking"]
+    },
+    {
+      "id": "mechanic-gedney",
+      "name": "Thomas Gedney",
+      "archetype": "The Mechanic",
+      "tagline": "If it has moving parts, he can fix it. If it doesn't, he'll add some.",
+      "portrait": "Broad shoulders, oil-stained fingers that never quite come clean, a gap-toothed grin. Keeps a leather tool roll in his breast pocket the way other men keep cigarettes.",
+      "background": "Aircraft mechanic, grew up in his father's machine shop in Gardiner, Maine. Rebuilt his first engine at fourteen. Keeps the expedition's two Fairchild 71 monoplanes airworthy under conditions the manufacturer's manual politely describes as 'not recommended.' Has never read a book cover to cover but can diagnose a misfiring cylinder by ear at fifty yards.",
+      "motivation": "The machines need him. That's enough. It's always been enough.",
+      "fear": "That something will break that has no mechanism — no parts, no logic, nothing he can take apart and understand.",
+      "qualities": ["Ingenious", "Practical", "Unshakeable loyalty to his machines"],
+      "relationships": ["Works alongside Webb on electrical systems — they argue like brothers", "Pabodie designed the drill; Gedney keeps it turning"]
+    },
+    {
+      "id": "mechanic-webb",
+      "name": "Elias Webb",
+      "archetype": "The Mechanic",
+      "tagline": "The expedition's link to the outside world. He hears things in the static others don't.",
+      "portrait": "Thin, angular, wire-rimmed spectacles. Fingers perpetually tapping as though keying Morse. A soldering iron burn on his right thumb that he considers a badge of honour.",
+      "background": "Radio operator and electrical technician. Builds crystal sets for recreation and has modified the expedition's Marconi equipment well beyond factory specifications. Grew up in a lighthouse on the Maine coast, where silence meant danger and the sound of static meant you were still connected to the living world.",
+      "motivation": "Maintain the link. As long as the radio works, they are not alone. As long as they are not alone, they can be saved.",
+      "fear": "That the signal he eventually receives will not come from any station he can identify.",
+      "qualities": ["Quiet", "Meticulous", "Acutely perceptive"],
+      "relationships": ["Responsible for all communication between base camp, the ship, and Moore in the States", "Gedney handles mechanical systems; Webb handles electrical — the division is sacred"]
+    },
+    {
+      "id": "agent-price",
+      "name": "Reginald Price",
+      "archetype": "The Patron's Agent",
+      "tagline": "Starkweather's money man. Keeps two ledgers.",
+      "portrait": "Immaculate even at sixty below — pressed collar, polished shoes replaced with polished boots. Thin moustache, thinner smile. The leather-bound expense ledger is always visible. The second ledger, no one has seen.",
+      "background": "Starkweather's business manager for eleven years. Sent south to protect the patron's considerable investment and ensure the expedition produces results that justify the expense. Has no scientific training and no interest in acquiring any. Understands logistics, leverage, and the precise moment when an investment becomes a loss.",
+      "motivation": "Starkweather has staked his fortune and his reputation. Price is here to ensure at least one of those survives.",
+      "fear": "That what they find will be worth more than Starkweather can control — and that others will realize it first.",
+      "qualities": ["Calculating", "Composed", "Quietly ruthless"],
+      "relationships": ["Reports to Starkweather but has authority over expedition finances and supply allocation", "Moore distrusts him; the feeling is mutual and professional"]
+    },
+    {
+      "id": "agent-ainsworth",
+      "name": "Dr. Catherine Ainsworth",
+      "archetype": "The Patron's Agent",
+      "tagline": "Moore's eyes and ears. Officially, a consulting geologist.",
+      "portrait": "Tall, composed, greying hair pulled into a practical bun. Wears a man's field jacket with the sleeves neatly altered. Carries a geological hammer and a codebook.",
+      "background": "Consulting geologist with a legitimate publication record and a less legitimate secondary role as Moore's scientific observer. Sent to keep the expedition honest — to ensure Starkweather's enthusiasm doesn't contaminate the data. Reports to Moore by coded radio on a frequency Price doesn't know about.",
+      "motivation": "The science must be clean. If what Dyer described is real, it must be documented with absolute rigour. If it isn't real, the expedition must say so.",
+      "fear": "That the evidence will be real and that rigour will not be enough to contain what it means.",
+      "qualities": ["Disciplined", "Perceptive", "Divided in loyalty"],
+      "relationships": ["Appointed by Moore as independent scientific oversight", "Suspects Price is running a parallel intelligence operation for Starkweather"]
+    },
+    {
+      "id": "expert-sorensen",
+      "name": "Nils Sørensen",
+      "archetype": "The Local Expert",
+      "tagline": "Twenty years on Antarctic waters. The ice speaks to him.",
+      "portrait": "Broad, weatherbeaten face, salt-white beard, hands like knotted rope. Eyes permanently narrowed against glare. Smells of pipe tobacco and seal oil.",
+      "background": "Norwegian whaler, twenty years on Antarctic waters out of Sandefjord. Hired as ice pilot and survival consultant. Has overwintered twice on South Georgia and once — involuntarily — on the pack ice itself. Knows the ice the way a sailor knows the sea: by sound, by smell, by the way it groans at three in the morning.",
+      "motivation": "The expedition pays well and the ice is the only country he has left. He goes where the ice goes.",
+      "fear": "That the old sailors' stories about what lives under the deep ice are not stories.",
+      "qualities": ["Weatherwise", "Laconic", "Deeply superstitious"],
+      "relationships": ["Hired as ice pilot — his word on ice conditions overrides all other authority", "Knew a man from Lars Larsen's whaling crew who spoke of stone ruins glimpsed from a crow's nest in 1929"]
+    },
+    {
+      "id": "expert-mcready",
+      "name": "Jack McReady",
+      "archetype": "The Local Expert",
+      "tagline": "The ice doesn't lie to you the way people do.",
+      "portrait": "Lean, sun-darkened, frost-nipped ears. Moves with a sledge driver's rolling gait. Dog hair on every garment he owns. The dogs trust him before they trust anyone.",
+      "background": "Dog handler and sledge driver. Was with Byrd's first Antarctic expedition in '29, where he drove supply runs across the Ross Ice Shelf in conditions that killed two other teams. Came back to the ice because civilian life felt like wearing a suit that didn't fit. The dogs understand him. He understands the dogs. Everything else is negotiable.",
+      "motivation": "The dogs came back wrong from Dyer's expedition — the survivors were never right again. McReady wants to know what they saw.",
+      "fear": "That the dogs will refuse to go forward, and that he'll understand why.",
+      "qualities": ["Intuitive", "Self-reliant", "Distrustful of authority"],
+      "relationships": ["Manages the expedition's dog teams and all sledge operations", "Sørensen respects him; they communicate in grunts and gestures that convey more than most men's speeches"]
+    },
+    {
+      "id": "believer-angell",
+      "name": "Professor Malcolm Angell",
+      "archetype": "The Believer",
+      "tagline": "He read Dyer's private account. He correlated it with older texts. He knows what he expects to find.",
+      "portrait": "Hollow-cheeked, deep-set eyes, prematurely grey at forty-two. Ink stains on his cuffs. Carries a battered leather satchel containing three notebooks and a monograph he will never publish.",
+      "background": "Folklore scholar from Brown University. A distant cousin of the late Professor George Gammell Angell, whose papers on certain anomalous cults were suppressed after his death. Read Dyer's private account — the one Miskatonic locked in the restricted archive — after calling in favours that cost him two professional friendships. Has spent three years correlating Dyer's observations with Pnakotic fragments, Eltdown Shards, and marginalia in a water-damaged copy of the Necronomicon.",
+      "motivation": "Confirmation. The texts describe something. Dyer saw something. If they are the same something, then a pattern emerges — and patterns can be understood.",
+      "fear": "That he is right, and that understanding the pattern will not make it less terrible.",
+      "qualities": ["Obsessive", "Erudite", "Fragile"],
+      "relationships": ["Secured his place on the expedition by providing Starkweather with translations Starkweather could not have obtained elsewhere", "Bryce considers him a crank; he considers her narrow"]
+    },
+    {
+      "id": "believer-waverly",
+      "name": "Sister Agnes Waverly",
+      "archetype": "The Believer",
+      "tagline": "She recognized Dyer's descriptions. She'd heard them before, in another tongue, on another shore.",
+      "portrait": "Weathered complexion, steady grey eyes, calloused hands from years of field nursing. Wears practical expedition clothing over a small silver cross she never removes. Moves with the unhurried competence of someone accustomed to emergencies.",
+      "background": "Former Church Missionary Society nurse. Served twelve years in remote stations across the Solomon Islands and New Guinea, treating tropical diseases and learning indigenous languages the Society preferred she didn't speak. Read Dyer's published account — the sanitized version — and recognized in his descriptions of alien geometry and impossible biology the same details she'd heard in oral traditions from three separate island cultures, separated by hundreds of miles of open ocean.",
+      "motivation": "The old stories are not superstition. They are warnings, preserved in the only medium that survives millennia — human memory. She is here to determine what they warned against.",
+      "fear": "That the warnings were not meant to prevent what is coming, but to prepare the survivors for what comes after.",
+      "qualities": ["Compassionate", "Unorthodox", "Quietly resolute"],
+      "relationships": ["Applied independently — Moore approved her as expedition medic; her real qualifications are ones he didn't ask about", "Angell treats her as a fellow traveller; she treats him as a man who has read too much and listened too little"]
+    }
   ]
 }

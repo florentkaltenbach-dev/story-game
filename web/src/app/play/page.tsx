@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Channel, Message, Player, Session, Scene, CharacterSheet, GameWidget, GroupChannel } from "@/lib/types";
+import { Channel, Message, Player, Session, Scene, CharacterSheet, GameWidget, GroupChannel, PresetCharacter } from "@/lib/types";
 import { apiUrl, authHeaders, authQueryParam, getStoredToken, setStoredToken, clearStoredToken, authFetch } from "@/lib/api";
 import { useEventStream } from "@/lib/useEventStream";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
@@ -12,6 +12,7 @@ import MessageInput from "@/components/MessageInput";
 import ChannelTabs from "@/components/ChannelTabs";
 import PlayerPanelShelf from "@/components/PlayerPanelShelf";
 import OnboardingWizard from "@/components/OnboardingWizard";
+import { CornerFrame, Flourish, MeanderStrip } from "@/components/Ornaments";
 
 function JoinForm({
   onJoin,
@@ -26,7 +27,7 @@ function JoinForm({
     <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-background via-surface/30 to-background" />
 
-      <div className="relative z-10 bg-surface border border-border rounded-lg p-8 max-w-md w-full mx-4">
+      <CornerFrame className="relative z-10 bg-surface border border-border rounded-lg p-8 max-w-md w-full mx-4">
         {session && (
           <div className="text-center mb-6">
             <p className="text-xs tracking-[0.3em] uppercase text-muted/80 mb-1">
@@ -44,7 +45,7 @@ function JoinForm({
           </div>
         )}
 
-        <div className="h-px bg-border mb-6" />
+        <Flourish size="sm" className="mb-6" />
 
         <h3 className="narrative-text text-lg text-foreground/90 text-center mb-1">
           Take your place
@@ -75,7 +76,7 @@ function JoinForm({
             Enter
           </button>
         </form>
-      </div>
+      </CornerFrame>
     </div>
   );
 }
@@ -101,18 +102,18 @@ function NoInvite() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-background via-surface/30 to-background" />
-      <div className="relative z-10 bg-surface border border-border rounded-lg p-8 max-w-md w-full mx-4 text-center">
+      <CornerFrame className="relative z-10 bg-surface border border-border rounded-lg p-8 max-w-md w-full mx-4 text-center">
         <h2 className="narrative-text text-xl text-accent mb-3">
           The Ceremony
         </h2>
-        <div className="h-px bg-border mb-4" />
+        <Flourish size="sm" className="mb-4" />
         <p className="text-sm text-foreground/85 mb-1">
           This gathering is by invitation only.
         </p>
         <p className="text-xs text-muted/70">
           Ask your MC for a link to join.
         </p>
-      </div>
+      </CornerFrame>
     </div>
   );
 }
@@ -203,6 +204,8 @@ function PlayPageInner() {
   const [myGroupChannels, setMyGroupChannels] = useState<GroupChannel[]>([]);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [streamingText, setStreamingText] = useState<string | null>(null);
+  const [characterPool, setCharacterPool] = useState<PresetCharacter[]>([]);
+  const [claimedCharacterIds, setClaimedCharacterIds] = useState<string[]>([]);
 
   // Reconnect from localStorage on mount
   useEffect(() => {
@@ -238,6 +241,12 @@ function PlayPageInner() {
           if (Array.isArray(currentSession.widgets)) {
             setWidgets(currentSession.widgets);
           }
+          if (Array.isArray(currentSession.characterPool)) {
+            setCharacterPool(currentSession.characterPool);
+          }
+          if (Array.isArray(currentSession.characterClaims)) {
+            setClaimedCharacterIds(currentSession.characterClaims);
+          }
         } else {
           localStorage.removeItem("ceremony_player");
           clearStoredToken();
@@ -271,6 +280,12 @@ function PlayPageInner() {
     setSession(data);
     if (Array.isArray(data.widgets)) {
       setWidgets(data.widgets);
+    }
+    if (Array.isArray(data.characterPool)) {
+      setCharacterPool(data.characterPool);
+    }
+    if (Array.isArray(data.characterClaims)) {
+      setClaimedCharacterIds(data.characterClaims);
     }
   }, []);
 
@@ -372,6 +387,14 @@ function PlayPageInner() {
       const { widgetId } = data as { widgetId: string };
       setWidgets((prev) => prev.filter((w) => w.id !== widgetId));
     },
+    onPoolUpdate: (data) => {
+      const { characterId, released } = data as { characterId: string; claimedBy?: string; released?: boolean };
+      if (released) {
+        setClaimedCharacterIds((prev) => prev.filter((id) => id !== characterId));
+      } else {
+        setClaimedCharacterIds((prev) => prev.includes(characterId) ? prev : [...prev, characterId]);
+      }
+    },
     onKeeperTyping: (data) => {
       const { text } = data as { text: string; playerId?: string };
       setStreamingText((prev) => (prev ?? "") + text);
@@ -425,6 +448,25 @@ function PlayPageInner() {
     );
   }
 
+  async function handleCharacterClaim(characterId: string) {
+    if (!player) return;
+    const res = await authFetch("/api/session", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ characterClaim: characterId }),
+    });
+    if (res.status === 409) {
+      // Already claimed — refresh pool
+      await fetchSession();
+      return;
+    }
+    if (res.ok) {
+      const updated = await res.json();
+      setPlayer((prev) => prev ? { ...prev, ...updated } : prev);
+      setClaimedCharacterIds((prev) => [...prev, characterId]);
+    }
+  }
+
   async function handleCharacterUpdate(fields: Partial<CharacterSheet>) {
     if (!player) return;
     const res = await authFetch("/api/session", {
@@ -475,8 +517,9 @@ function PlayPageInner() {
       <OnboardingWizard
         player={player}
         session={session!}
-        onCharacterUpdate={handleCharacterUpdate}
-        onCharacterSubmit={handleCharacterSubmit}
+        availableCharacters={characterPool}
+        claimedCharacterIds={claimedCharacterIds}
+        onCharacterClaim={handleCharacterClaim}
       />
     );
   }
@@ -496,7 +539,7 @@ function PlayPageInner() {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-surface">
+      <div className="flex items-center justify-between px-4 py-2 bg-surface">
         <div className="flex items-center gap-3">
           <h1 className="narrative-text text-lg text-accent">The Ceremony</h1>
           <span className="text-xs text-muted/70">|</span>
@@ -516,6 +559,7 @@ function PlayPageInner() {
           <span className="text-xs text-ice font-medium">{player.name}</span>
         </div>
       </div>
+      <MeanderStrip className="opacity-50" />
 
       {/* Scene */}
       {session?.scene && <SceneDisplay scene={session.scene} />}

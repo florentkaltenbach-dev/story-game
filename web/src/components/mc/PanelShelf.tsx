@@ -82,7 +82,7 @@ function usePanelDefs(props: PanelShelfProps): PanelDef[] {
   } = props;
 
   const players = session?.players ?? [];
-  const submittedCount = players.filter((p) => p.character.status === "submitted").length;
+  const unpickedCount = players.filter((p) => p.character.status !== "approved").length;
   const newInviteCount = invites.filter((i) => i.status === "new").length;
 
   return [
@@ -109,10 +109,9 @@ function usePanelDefs(props: PanelShelfProps): PanelDef[] {
       id: "characters",
       title: "Characters",
       icon: "📋",
-      badge: submittedCount > 0 ? (
-        <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full rounded-full bg-accent opacity-40 animate-ping" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
+      badge: unpickedCount > 0 ? (
+        <span className="text-[10px] text-accent/80 bg-accent/10 px-1.5 py-0.5 rounded-full">
+          {unpickedCount}
         </span>
       ) : undefined,
       content: (

@@ -1,33 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import type { Player, Session, CharacterSheet } from "@/lib/types";
-import CharacterCreation from "./CharacterCreation";
+import type { Player, Session, PresetCharacter } from "@/lib/types";
+import CharacterSelection from "./CharacterSelection";
+import { CornerFrame, Flourish } from "./Ornaments";
 
-type WizardStep = "welcome" | "briefing" | "character" | "waiting";
+type WizardStep = "welcome" | "briefing" | "character_select";
 
 interface OnboardingWizardProps {
   player: Player;
   session: Session;
-  onCharacterUpdate: (fields: Partial<CharacterSheet>) => void;
-  onCharacterSubmit: () => void;
+  availableCharacters: PresetCharacter[];
+  claimedCharacterIds: string[];
+  onCharacterClaim: (id: string) => void;
 }
 
 function WelcomeStep({ session, onNext }: { session: Session; onNext: () => void }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-background via-surface/30 to-background" />
-      <div className="relative z-10 bg-surface border border-border rounded-lg p-8 max-w-lg w-full mx-4 text-center">
+      <CornerFrame className="relative z-10 bg-surface border border-border rounded-lg p-8 max-w-lg w-full mx-4 text-center">
         <p className="text-[10px] tracking-[0.4em] uppercase text-muted/60 mb-2">
           You have been summoned to
         </p>
         <h2 className="narrative-text text-2xl text-accent mb-3">
           {session.name}
         </h2>
-        <div className="h-px bg-border my-5" />
+        <Flourish size="md" className="my-5" />
         <p className="text-sm text-foreground/80 leading-relaxed mb-6 narrative-text">
           Before we begin, you will receive a briefing document
-          and create your character for this expedition.
+          and choose your character for this expedition.
         </p>
         {session.players.length > 1 && (
           <p className="text-xs text-muted/70 mb-6">
@@ -40,7 +42,7 @@ function WelcomeStep({ session, onNext }: { session: Session; onNext: () => void
         >
           Continue
         </button>
-      </div>
+      </CornerFrame>
     </div>
   );
 }
@@ -49,7 +51,7 @@ function BriefingStep({ onNext }: { onNext: () => void }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-background via-surface/30 to-background" />
-      <div className="relative z-10 bg-surface border border-border rounded-lg p-6 max-w-2xl w-full mx-4">
+      <CornerFrame className="relative z-10 bg-surface border border-border rounded-lg p-6 max-w-2xl w-full mx-4">
         <div className="text-center mb-4">
           <p className="text-[10px] tracking-[0.3em] uppercase text-muted/60 mb-1">
             Briefing Document
@@ -58,7 +60,7 @@ function BriefingStep({ onNext }: { onNext: () => void }) {
             What You Know
           </h3>
         </div>
-        <div className="h-px bg-border mb-5" />
+        <Flourish size="sm" className="mb-5" />
         <div className="narrative-text text-sm text-foreground/85 leading-relaxed space-y-4 max-h-[50vh] overflow-y-auto px-2">
           <p>
             In 1930, a geological survey of Antarctica led by Professor William Dyer
@@ -86,50 +88,18 @@ function BriefingStep({ onNext }: { onNext: () => void }) {
             onClick={onNext}
             className="px-6 py-2.5 bg-accent/20 text-accent border border-accent/30 rounded text-sm tracking-wide hover:bg-accent/30 transition-colors"
           >
-            Create Your Character
+            Choose Your Character
           </button>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function WaitingStep({ player }: { player: Player }) {
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-surface/30 to-background" />
-      <div className="relative z-10 bg-surface border border-border rounded-lg p-8 max-w-md w-full mx-4 text-center">
-        <div className="mb-4">
-          <span className="relative flex h-3 w-3 mx-auto">
-            <span className="absolute inline-flex h-full w-full rounded-full bg-accent opacity-40 animate-ping" />
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-accent" />
-          </span>
-        </div>
-        <h3 className="narrative-text text-lg text-accent mb-2">
-          Awaiting Review
-        </h3>
-        <p className="text-sm text-foreground/70 mb-1">
-          Your personnel record has been submitted, {player.name}.
-        </p>
-        <p className="text-xs text-muted/60">
-          The MC is reviewing your character. You&rsquo;ll be notified when approved.
-        </p>
-      </div>
+      </CornerFrame>
     </div>
   );
 }
 
 function resolveStep(player: Player, userStep: WizardStep | null): WizardStep {
-  // If MC sent back for revision, go to character step
-  if (player.character.status === "draft" && player.character.revisionComment) {
-    return "character";
-  }
-  // Submitted → waiting
-  if (player.character.status === "submitted") {
-    return "waiting";
-  }
+  // If already approved → wizard is done (parent handles this)
   // If user has advanced past welcome/briefing, stay there
-  if (userStep === "character" || userStep === "briefing") {
+  if (userStep === "character_select" || userStep === "briefing") {
     return userStep;
   }
   // Fresh (pending or empty draft) → welcome
@@ -137,15 +107,16 @@ function resolveStep(player: Player, userStep: WizardStep | null): WizardStep {
       (player.character.status === "draft" && !player.character.archetype)) {
     return userStep ?? "welcome";
   }
-  // In-progress draft → character
-  return "character";
+  // Fallback to selection
+  return "character_select";
 }
 
 export default function OnboardingWizard({
   player,
   session,
-  onCharacterUpdate,
-  onCharacterSubmit,
+  availableCharacters,
+  claimedCharacterIds,
+  onCharacterClaim,
 }: OnboardingWizardProps) {
   const [userStep, setUserStep] = useState<WizardStep | null>(null);
   const step = resolveStep(player, userStep);
@@ -154,8 +125,8 @@ export default function OnboardingWizard({
     case "welcome":
       return <WelcomeStep session={session} onNext={() => setUserStep("briefing")} />;
     case "briefing":
-      return <BriefingStep onNext={() => setUserStep("character")} />;
-    case "character":
+      return <BriefingStep onNext={() => setUserStep("character_select")} />;
+    case "character_select":
       return (
         <div className="h-screen flex flex-col">
           <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-surface">
@@ -163,16 +134,14 @@ export default function OnboardingWizard({
             <span className="text-xs text-ice font-medium">{player.name}</span>
           </div>
           <div className="flex-1 overflow-y-auto">
-            <CharacterCreation
-              player={player}
-              session={session}
-              onUpdate={onCharacterUpdate}
-              onSubmit={onCharacterSubmit}
+            <CharacterSelection
+              characters={availableCharacters}
+              claimedIds={claimedCharacterIds}
+              onClaim={onCharacterClaim}
+              playerName={player.name}
             />
           </div>
         </div>
       );
-    case "waiting":
-      return <WaitingStep player={player} />;
   }
 }

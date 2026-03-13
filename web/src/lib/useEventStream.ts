@@ -15,6 +15,7 @@ interface UseEventStreamOptions {
   onKeeperResponse?: EventHandler;
   onKeeperTyping?: EventHandler;
   onCharacterUpdate?: EventHandler;
+  onPoolUpdate?: EventHandler;
   onWidgetUpdate?: EventHandler;
   onWidgetRemove?: EventHandler;
   enabled?: boolean;
@@ -30,6 +31,7 @@ export function useEventStream({
   onKeeperResponse,
   onKeeperTyping,
   onCharacterUpdate,
+  onPoolUpdate,
   onWidgetUpdate,
   onWidgetRemove,
   enabled = true,
@@ -44,6 +46,7 @@ export function useEventStream({
     onKeeperResponse,
     onKeeperTyping,
     onCharacterUpdate,
+    onPoolUpdate,
     onWidgetUpdate,
     onWidgetRemove,
   });
@@ -58,6 +61,7 @@ export function useEventStream({
     onKeeperResponse,
     onKeeperTyping,
     onCharacterUpdate,
+    onPoolUpdate,
     onWidgetUpdate,
     onWidgetRemove,
   };
@@ -95,6 +99,9 @@ export function useEventStream({
           case "character_update":
             handlers.onCharacterUpdate?.(data);
             break;
+          case "pool_update":
+            handlers.onPoolUpdate?.(data);
+            break;
           case "player_kicked":
             handlers.onPlayerKicked?.(data);
             break;
@@ -118,6 +125,7 @@ export function useEventStream({
     source.addEventListener("keeper_response", handle("keeper_response"));
     source.addEventListener("keeper_typing", handle("keeper_typing"));
     source.addEventListener("character_update", handle("character_update"));
+    source.addEventListener("pool_update", handle("pool_update"));
     source.addEventListener("widget_update", handle("widget_update"));
     source.addEventListener("widget_remove", handle("widget_remove"));
 

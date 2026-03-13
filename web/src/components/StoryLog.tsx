@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Message } from "@/lib/types";
+import { SystemDivider } from "./Ornaments";
 
 function formatTime(timestamp: number): string {
   return new Date(timestamp).toLocaleTimeString([], {
@@ -15,13 +16,11 @@ function MessageBubble({ message }: { message: Message }) {
 
   if (sender.role === "system") {
     return (
-      <div className="py-3 flex items-center gap-3 px-4">
-        <span className="h-px flex-1 bg-border" />
+      <SystemDivider>
         <span className="text-xs text-muted/80 italic whitespace-nowrap">
           {content}
         </span>
-        <span className="h-px flex-1 bg-border" />
-      </div>
+      </SystemDivider>
     );
   }
 

@@ -247,6 +247,21 @@ export interface GameWidget {
   priority?: number;         // sort order (lower = first)
 }
 
+// === Preset character pool types ===
+
+export interface PresetCharacter {
+  id: string;
+  name: string;
+  archetype: string;
+  tagline: string;
+  portrait: string;
+  background: string;
+  motivation: string;
+  fear: string;
+  qualities: string[];
+  relationships: string[];
+}
+
 // === SSE event types ===
 
 export type EventType =
@@ -259,6 +274,7 @@ export type EventType =
   | "keeper_typing"
   | "memory_update"
   | "character_update"
+  | "pool_update"
   | "widget_update"
   | "widget_remove";
 

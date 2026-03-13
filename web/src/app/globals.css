@@ -121,6 +121,12 @@ body {
   padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
 }
 
+/* Meander fade — soft edge fade for ornamental strips */
+.meander-fade {
+  mask-image: linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+
 /* Touch-friendly: show elements that are normally hover-gated */
 @media (hover: none) {
   .touch-visible {

@@ -22,6 +22,11 @@ import {
   updateWidget,
   removeWidget,
   getWidgetsForPlayer,
+  claimCharacter,
+  claimCharacterAsMC,
+  getClaimedCharacterIds,
+  mcCharacterId,
+  mcCharacterData,
 } from "@/lib/store";
 import { writeMemoryLevel } from "@/lib/memory";
 import { matchTriggers } from "@/lib/scripts/triggers";
@@ -29,11 +34,30 @@ import { queryKeeper } from "@/lib/keeper";
 import { compressAct, buildRecap } from "@/lib/compression";
 import { authenticateRequest, requireRole, createToken } from "@/lib/auth";
 import type { AuthContext } from "@/lib/auth";
-import type { EventTrigger, TriggerState, Message } from "@/lib/types";
+import type { EventTrigger, TriggerState, Message, PresetCharacter } from "@/lib/types";
 import type { DetectedEvent } from "@/lib/scripts/types";
 import { readFile } from "fs/promises";
 import { join } from "path";
 import { nextMessageId, addMessage } from "@/lib/store";
+
+// === Character pool loader (cached) ===
+let cachedPool: PresetCharacter[] | null = null;
+
+export function invalidatePoolCache(): void {
+  cachedPool = null;
+}
+
+async function loadCharacterPool(): Promise<PresetCharacter[]> {
+  if (cachedPool) return cachedPool;
+  try {
+    const raw = await readFile(join(process.cwd(), "..", "config", "characters.json"), "utf-8");
+    const data = JSON.parse(raw);
+    cachedPool = data.pool || [];
+    return cachedPool!;
+  } catch {
+    return [];
+  }
+}
 
 // Session-scoped trigger state for scene transitions
 const sceneTriggerState: TriggerState = { lastFired: {} };
@@ -76,6 +100,10 @@ export async function GET(request: Request) {
       }
     }
 
+    // Load character pool for the response
+    const pool = await loadCharacterPool();
+    const claimedIds = getClaimedCharacterIds();
+
     return NextResponse.json({
       id: session.id,
       name: session.name,
@@ -86,6 +114,10 @@ export async function GET(request: Request) {
       number: session.number,
       act: session.act,
       widgets: filteredWidgets,
+      characterPool: pool,
+      characterClaims: claimedIds,
+      mcCharacterId,
+      mcCharacterData,
     });
   } catch (err) {
     console.error("[session/GET]", err);
@@ -294,6 +326,41 @@ export async function PATCH(request: Request) {
       if (playerId) {
         await updatePlayerNotes(playerId, body.notes);
       }
+    }
+
+    // Character pool claim (player picks a pre-written character)
+    if (typeof body.characterClaim === "string") {
+      const playerId = (auth as AuthContext).playerId;
+      if (!playerId) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      const pool = await loadCharacterPool();
+      const preset = pool.find((c) => c.id === body.characterClaim);
+      if (!preset) {
+        return NextResponse.json({ error: "Character not found in pool" }, { status: 404 });
+      }
+      const claimed = await claimCharacter(playerId, body.characterClaim, preset);
+      if (!claimed) {
+        return NextResponse.json({ error: "Character already claimed" }, { status: 409 });
+      }
+      return NextResponse.json(claimed);
+    }
+
+    // MC character pool claim
+    if (typeof body.mcCharacterClaim === "string") {
+      if (!requireRole(auth as AuthContext, "mc")) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      const pool = await loadCharacterPool();
+      const preset = pool.find((c) => c.id === body.mcCharacterClaim);
+      if (!preset) {
+        return NextResponse.json({ error: "Character not found in pool" }, { status: 404 });
+      }
+      const success = await claimCharacterAsMC(body.mcCharacterClaim, preset);
+      if (!success) {
+        return NextResponse.json({ error: "Character already claimed" }, { status: 409 });
+      }
+      return NextResponse.json({ mcCharacterId: body.mcCharacterClaim, mcCharacterData: preset });
     }
 
     // Character updates (player saves their own fields)

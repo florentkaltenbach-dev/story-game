@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Channel, Message, Session, Player, Invite, GameWidget } from "@/lib/types";
+import { Channel, Message, Session, Player, Invite, GameWidget, PresetCharacter } from "@/lib/types";
 import { apiUrl, authHeaders, authQueryParam, getStoredToken, setStoredToken, clearStoredToken, authFetch } from "@/lib/api";
 import { useEventStream } from "@/lib/useEventStream";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
@@ -13,6 +13,8 @@ import MCHeader from "@/components/mc/MCHeader";
 import KeeperPanel from "@/components/mc/KeeperPanel";
 import PanelShelf from "@/components/mc/PanelShelf";
 import ConfirmModal from "@/components/mc/ConfirmModal";
+import { CornerFrame, Flourish } from "@/components/Ornaments";
+import CharacterSelection from "@/components/CharacterSelection";
 import type { Scene } from "@/lib/types";
 import { parseCommand } from "@/lib/mc-commands";
 import type { NpcEntry } from "@/components/mc/panels/NpcPanel";
@@ -57,14 +59,14 @@ function MCLogin({ onAuth }: { onAuth: () => void }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-background via-surface/30 to-background" />
-      <div className="relative z-10 bg-surface border border-border rounded-lg p-8 max-w-md w-full mx-4">
+      <CornerFrame className="relative z-10 bg-surface border border-border rounded-lg p-8 max-w-md w-full mx-4">
         <h2 className="narrative-text text-xl text-accent text-center mb-1">
           The Ceremony
         </h2>
         <p className="text-xs text-muted/80 text-center mb-6">
           Master of Ceremonies login
         </p>
-        <div className="h-px bg-border mb-6" />
+        <Flourish size="sm" className="mb-6" />
         <form onSubmit={handleSubmit}>
           <input
             type="password"
@@ -85,7 +87,7 @@ function MCLogin({ onAuth }: { onAuth: () => void }) {
             {loading ? "Authenticating..." : "Enter"}
           </button>
         </form>
-      </div>
+      </CornerFrame>
     </div>
   );
 }
@@ -115,6 +117,10 @@ export default function MCDashboard() {
   const [memoryFileContents, setMemoryFileContents] = useState<Record<number, Record<string, string>>>({});
   const [cost, setCost] = useState<{ totalCalls: number; totalInput: number; totalOutput: number; totalCacheRead: number; totalCostUsd: number } | null>(null);
   const [npcs, setNpcs] = useState<NpcEntry[]>([]);
+  const [mcCharacterId, setMcCharacterId] = useState<string | null>(null);
+  const [mcCharacter, setMcCharacter] = useState<PresetCharacter | null>(null);
+  const [characterPool, setCharacterPool] = useState<PresetCharacter[]>([]);
+  const [claimedCharacterIds, setClaimedCharacterIds] = useState<string[]>([]);
 
   // Check existing token on mount
   useEffect(() => {
@@ -173,6 +179,18 @@ export default function MCDashboard() {
     setSession(data);
     if (Array.isArray(data.widgets)) {
       setMcWidgets(data.widgets);
+    }
+    if (Array.isArray(data.characterPool)) {
+      setCharacterPool(data.characterPool);
+    }
+    if (Array.isArray(data.characterClaims)) {
+      setClaimedCharacterIds(data.characterClaims);
+    }
+    if (data.mcCharacterId) {
+      setMcCharacterId(data.mcCharacterId);
+    }
+    if (data.mcCharacterData) {
+      setMcCharacter(data.mcCharacterData);
     }
   }, []);
 
@@ -266,6 +284,14 @@ export default function MCDashboard() {
     onWidgetRemove: (data) => {
       const { widgetId } = data as { widgetId: string };
       setMcWidgets((prev) => prev.filter((w) => w.id !== widgetId));
+    },
+    onPoolUpdate: (data) => {
+      const { characterId, released } = data as { characterId: string; claimedBy?: string; released?: boolean };
+      if (released) {
+        setClaimedCharacterIds((prev) => prev.filter((id) => id !== characterId));
+      } else {
+        setClaimedCharacterIds((prev) => prev.includes(characterId) ? prev : [...prev, characterId]);
+      }
     },
     onKeeperResponse: (data) => {
       const resp = data as { narrative: string; internalNotes?: string; playerId?: string; channel?: string };
@@ -380,6 +406,24 @@ export default function MCDashboard() {
       });
       // Refresh cost after keeper call
       fetchCost();
+    }
+  }
+
+  async function handleMcCharacterClaim(characterId: string) {
+    const res = await authFetch("/api/session", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ mcCharacterClaim: characterId }),
+    });
+    if (res.status === 409) {
+      await fetchSession();
+      return;
+    }
+    if (res.ok) {
+      const data = await res.json();
+      setMcCharacterId(data.mcCharacterId);
+      setMcCharacter(data.mcCharacterData);
+      setClaimedCharacterIds((prev) => [...prev, characterId]);
     }
   }
 
@@ -512,6 +556,26 @@ export default function MCDashboard() {
   if (checking) return null;
   if (!authenticated) return <MCLogin onAuth={() => setAuthenticated(true)} />;
 
+  // MC must pick a character before accessing the dashboard
+  if (!mcCharacterId && characterPool.length > 0) {
+    return (
+      <div className="h-screen flex flex-col">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-surface">
+          <h1 className="narrative-text text-lg text-accent">The Ceremony</h1>
+          <span className="text-xs text-ice font-medium">MC</span>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          <CharacterSelection
+            characters={characterPool}
+            claimedIds={claimedCharacterIds}
+            onClaim={handleMcCharacterClaim}
+            playerName="MC"
+          />
+        </div>
+      </div>
+    );
+  }
+
   const isNarrow = breakpoint === "narrow";
   const isWide = breakpoint === "wide";
 
@@ -570,6 +634,7 @@ export default function MCDashboard() {
       <MCHeader
         session={session}
         breakpoint={breakpoint}
+        mcCharacter={mcCharacter}
         onSessionAction={handleSessionAction}
         onReset={() => setConfirmReset(true)}
         onLoadPreset={() => setConfirmLoadPreset(true)}

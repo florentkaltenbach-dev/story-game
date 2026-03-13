@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import type { Message, Player, Session, SessionSnapshot, Invite, CharacterSheet, GameWidget, GroupChannel, Scene } from "./types";
+import type { Message, Player, Session, SessionSnapshot, Invite, CharacterSheet, GameWidget, GroupChannel, Scene, PresetCharacter } from "./types";
 import { stateEmitter } from "./events";
 import { appendMessage, writeSessionSnapshot, readSessionSnapshot, readAllMessages, archiveSessionMessages } from "./memory";
 
@@ -31,6 +31,13 @@ export const session: Session = {
 export const messages: Message[] = [];
 export const widgets: GameWidget[] = [];
 export const groupChannels: GroupChannel[] = [];
+
+// === Character pool claims (characterId → playerId) ===
+export const characterClaims = new Map<string, string>();
+
+// === MC character claim ===
+export let mcCharacterId: string | null = null;
+export let mcCharacterData: PresetCharacter | null = null;
 
 // === Invite management ===
 
@@ -116,6 +123,18 @@ async function doInitialize(): Promise<void> {
     if (Array.isArray(raw.groupChannels)) {
       groupChannels.length = 0;
       groupChannels.push(...(raw.groupChannels as GroupChannel[]));
+    }
+    if (raw.characterClaims && typeof raw.characterClaims === "object" && !Array.isArray(raw.characterClaims)) {
+      characterClaims.clear();
+      for (const [k, v] of Object.entries(raw.characterClaims as Record<string, string>)) {
+        characterClaims.set(k, v);
+      }
+    }
+    if (typeof raw.mcCharacterId === "string") {
+      mcCharacterId = raw.mcCharacterId;
+    }
+    if (raw.mcCharacterData && typeof raw.mcCharacterData === "object") {
+      mcCharacterData = raw.mcCharacterData as PresetCharacter;
     }
   }
 
@@ -215,8 +234,11 @@ async function persistSnapshot(): Promise<void> {
     invites,
     widgets,
     groupChannels,
+    characterClaims: Object.fromEntries(characterClaims),
+    mcCharacterId,
+    mcCharacterData,
     timestamp: Date.now(),
-  } as SessionSnapshot & { invites: Invite[]; keeperAutoRespond: boolean; widgets: GameWidget[]; groupChannels: GroupChannel[] };
+  } as SessionSnapshot & { invites: Invite[]; keeperAutoRespond: boolean; widgets: GameWidget[]; groupChannels: GroupChannel[]; characterClaims: Record<string, string>; mcCharacterId: string | null; mcCharacterData: PresetCharacter | null };
 
   try {
     await writeSessionSnapshot(snapshot as unknown as Record<string, unknown>);
@@ -289,6 +311,9 @@ export async function resetSession(): Promise<void> {
   invites.length = 0;
   widgets.length = 0;
   groupChannels.length = 0;
+  characterClaims.clear();
+  mcCharacterId = null;
+  mcCharacterData = null;
   messageIdCounter = 100;
 
   // Re-seed with welcome messages
@@ -333,6 +358,9 @@ export async function loadPreset(presetId: string, meta: {
   invites.length = 0;
   widgets.length = 0;
   groupChannels.length = 0;
+  characterClaims.clear();
+  mcCharacterId = null;
+  mcCharacterData = null;
   messageIdCounter = 100;
 
   // Apply preset identity
@@ -370,6 +398,14 @@ export async function kickPlayer(playerId: string): Promise<boolean> {
   if (idx === -1) return false;
 
   const [removed] = session.players.splice(idx, 1);
+  // Release any character claim
+  for (const [charId, pId] of characterClaims) {
+    if (pId === removed.id) {
+      characterClaims.delete(charId);
+      stateEmitter.emit("pool_update", { characterId: charId, released: true });
+      break;
+    }
+  }
   stateEmitter.emit("player_kicked", { playerId: removed.id, name: removed.name });
   await persistSnapshot();
   return true;
@@ -463,6 +499,72 @@ export async function reviseCharacter(playerId: string, comment?: string): Promi
   return player;
 }
 
+// === Character pool claim ===
+
+export function getClaimedCharacterIds(): string[] {
+  const ids = Array.from(characterClaims.keys());
+  if (mcCharacterId) ids.push(mcCharacterId);
+  return ids;
+}
+
+export async function claimCharacterAsMC(
+  characterId: string,
+  preset: PresetCharacter
+): Promise<boolean> {
+  // Exclusivity check (against both player and MC claims)
+  if (characterClaims.has(characterId)) return false;
+  if (mcCharacterId === characterId) return false;
+
+  mcCharacterId = characterId;
+  mcCharacterData = preset;
+
+  stateEmitter.emit("pool_update", {
+    characterId,
+    claimedBy: "mc",
+  });
+  await persistSnapshot();
+  return true;
+}
+
+export async function claimCharacter(
+  playerId: string,
+  characterId: string,
+  preset: PresetCharacter
+): Promise<Player | null> {
+  // Exclusivity check
+  if (characterClaims.has(characterId)) return null;
+
+  const player = session.players.find((p) => p.id === playerId);
+  if (!player) return null;
+
+  // Record claim
+  characterClaims.set(characterId, playerId);
+
+  // Populate character sheet from preset — auto-approved
+  player.characterName = preset.name;
+  player.character = {
+    status: "approved",
+    archetype: preset.archetype,
+    background: preset.background,
+    motivation: preset.motivation,
+    fear: preset.fear,
+    qualities: [...preset.qualities],
+    relationships: [...preset.relationships],
+  };
+
+  stateEmitter.emit("character_update", {
+    playerId,
+    status: player.character.status,
+    character: player.character,
+  });
+  stateEmitter.emit("pool_update", {
+    characterId,
+    claimedBy: playerId,
+  });
+  await persistSnapshot();
+  return player;
+}
+
 // === Widget management ===
 
 export async function updateWidget(widget: GameWidget): Promise<void> {
@@ -531,6 +633,9 @@ export function _resetForTesting(): void {
   invites.length = 0;
   widgets.length = 0;
   groupChannels.length = 0;
+  characterClaims.clear();
+  mcCharacterId = null;
+  mcCharacterData = null;
   messageIdCounter = 100;
   initPromise = null;
 }

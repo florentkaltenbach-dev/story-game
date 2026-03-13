@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Scene } from "@/lib/types";
+import { MeanderStrip } from "./Ornaments";
 
 interface SceneDisplayProps {
   scene: Scene;
@@ -87,6 +88,7 @@ export default function SceneDisplay({
       <p className="narrative-text mt-2 text-xs sm:text-sm text-foreground/90 leading-relaxed">
         {scene.description}
       </p>
+      <MeanderStrip className="mt-3 opacity-40" />
     </div>
   );
 }
