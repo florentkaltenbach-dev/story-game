@@ -79,13 +79,25 @@ function MCLogin({ onAuth }: { onAuth: () => void }) {
           {error && (
             <p className="text-xs text-[var(--danger)] mb-3">{error}</p>
           )}
-          <button
-            type="submit"
-            disabled={!secret || loading}
-            className="w-full py-2.5 bg-accent/20 text-accent border border-accent/30 rounded text-sm tracking-wide hover:bg-accent/30 transition-colors disabled:opacity-50"
-          >
-            {loading ? "Authenticating..." : "Enter"}
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={!secret || loading}
+              className="flex-1 py-2.5 bg-accent/20 text-accent border border-accent/30 rounded text-sm tracking-wide hover:bg-accent/30 transition-colors disabled:opacity-50"
+            >
+              {loading ? "Authenticating..." : "Enter"}
+            </button>
+            {process.env.NEXT_PUBLIC_DEV_MC_SECRET && (
+              <button
+                type="button"
+                onClick={() => setSecret(process.env.NEXT_PUBLIC_DEV_MC_SECRET!)}
+                className="px-3 py-2.5 bg-surface-light border border-border rounded text-xs text-muted hover:text-foreground hover:border-accent/30 transition-colors"
+                title="Autofill dev secret"
+              >
+                DEV
+              </button>
+            )}
+          </div>
         </form>
       </CornerFrame>
     </div>
@@ -128,7 +140,8 @@ export default function MCDashboard() {
     if (token) {
       fetch(apiUrl("/api/invites"), { headers: { Authorization: `Bearer ${token}` } })
         .then((res) => {
-          if (res.ok) setAuthenticated(true);
+          // Guard against proxy redirects to login pages (302→200 HTML)
+          if (res.ok && !res.redirected && res.headers.get("content-type")?.includes("json")) setAuthenticated(true);
           else clearStoredToken();
         })
         .catch(() => clearStoredToken())

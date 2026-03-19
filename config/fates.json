@@ -1,0 +1,181 @@
+{
+  "description": "Pre-planned death scenarios for unchosen pool characters. MC activates fates for whichever 6 weren't selected by players. Each death fulfills the character's stated fear, removes a capability, and advances a narrative thread.",
+  "deathSlots": [
+    {
+      "slot": 1,
+      "session": 1,
+      "act": "Lake's Camp",
+      "escalation": "explainable",
+      "narrative": "The first death. Seems like an accident — weather, terrain, bad luck. But the details don't quite fit. The rational explanation is just barely sufficient. Players who pay attention notice the cracks."
+    },
+    {
+      "slot": 2,
+      "session": 2,
+      "act": "The Ascent",
+      "escalation": "ambiguous",
+      "narrative": "Technology fails in ways the manual doesn't cover. The death involves equipment behaving impossibly near certain geological formations. No rational explanation survives close inspection."
+    },
+    {
+      "slot": 3,
+      "session": 2,
+      "act": "The Murals",
+      "escalation": "undeniable",
+      "narrative": "Knowledge kills. Someone understands too much, too fast. The city's truth is not safe to hold. Their expertise — the very thing that got them here — is what destroys them."
+    },
+    {
+      "slot": 4,
+      "session": 3,
+      "act": "Into the Tunnels",
+      "escalation": "supernatural",
+      "narrative": "The warning systems all failed or were ignored. This death happens in the dark, underground, where the temperature is wrong and the scent is stronger. The body may not be recoverable."
+    },
+    {
+      "slot": 5,
+      "session": 3,
+      "act": "The Encounter",
+      "escalation": "horror",
+      "narrative": "The Shoggoth — or what the Shoggoths became. This character sees it. Their response (greed, duty, curiosity) keeps them one second too long. Tekeli-li."
+    },
+    {
+      "slot": 6,
+      "session": 3,
+      "act": "Flight",
+      "escalation": "sacrifice",
+      "narrative": "A choice. Someone stays behind so others can run. This is the only death that is not inflicted but chosen. The most human moment in the most inhuman place."
+    }
+  ],
+  "fates": [
+    {
+      "characterId": "expert-sorensen",
+      "name": "Nils Sørensen",
+      "slot": 1,
+      "manner": "The ice spoke to him for twenty years. This time it lied. Sørensen reads the surface wrong near Lake's camp — or the surface is wrong. He falls through into a crevasse that shouldn't exist at this temperature. The dogs wouldn't go near that spot. His last words are in Norwegian, and nobody translates them.",
+      "capabilityLost": "Ice navigation. The expedition's best reader of terrain is gone. Every ice crossing after this is a guess.",
+      "fearFulfilled": "The old sailors' stories about what lives under the deep ice are not stories.",
+      "threadsAdvanced": ["dogs-refuse-food"],
+      "triggerCondition": "Party reaches Lake's camp perimeter. Dogs balk at a specific patch of ice.",
+      "discoverable": "His ice axe is found later, driven into the wall of the crevasse. The marks below it suggest he climbed — downward."
+    },
+    {
+      "characterId": "veteran-rourke",
+      "name": "Sgt. Douglas Rourke",
+      "slot": 1,
+      "manner": "Rourke investigates something at Lake's camp alone. Standard security sweep. He's done a thousand of them. Found the next morning at the edge of camp, sidearm drawn but unfired. No visible wounds. His expression suggests he saw something his training had no protocol for. The medical examination is inconclusive. Cardiac arrest, perhaps. Perhaps.",
+      "capabilityLost": "Security. The one person hired specifically to keep them alive is dead. No one else has his training or his nerve.",
+      "fearFulfilled": "He met something in the ice that doesn't care how steady his hands are.",
+      "threadsAdvanced": ["equipment-malfunctions"],
+      "triggerCondition": "Night watch at Lake's camp. Anomalous sounds or tracks near the perimeter.",
+      "discoverable": "His service journal, last entry unfinished mid-sentence. The pencil snapped."
+    },
+    {
+      "characterId": "mechanic-webb",
+      "name": "Elias Webb",
+      "slot": 2,
+      "manner": "Webb picks up a signal — clear, strong, on no frequency any station uses. He traces it, adjusting the Marconi equipment past its specifications. The signal intensifies near certain rock formations on the approach to the mountains. He follows it, headphones on, antenna extended. The equipment overloads. The blast is electrical, magnetic, something in between. Webb is found with the headphones fused to his hands. The signal continues.",
+      "capabilityLost": "Radio communications. Moore's voice goes silent permanently. The expedition is alone. The radio-degradation thread completes in one catastrophic moment.",
+      "fearFulfilled": "The signal he eventually receives does not come from any station he can identify.",
+      "threadsAdvanced": ["radio-degradation", "equipment-malfunctions"],
+      "triggerCondition": "Approaching the mountain range. Anomalous radio interference becomes a coherent signal.",
+      "discoverable": "The modified Marconi set. Someone with electrical skill can partially reconstruct what frequency he was tuned to. It matches no known broadcast band — but it matches a frequency described in Angell's Pnakotic fragments."
+    },
+    {
+      "characterId": "mechanic-gedney",
+      "name": "Thomas Gedney",
+      "slot": 2,
+      "manner": "Pabodie's drill strikes something at depth that isn't rock. Gedney descends to inspect the bore head. The core sample contains material that moves under its own power — slowly, like a living thing remembering how to be alive. Gedney tries to extract it with tools. Tools don't work on something with no mechanism. The bore shaft collapses. They dig for hours. What they find of Gedney is incomplete, and what's missing was not taken by the rock.",
+      "capabilityLost": "Mechanical repair. The planes, the drill, the stoves — Gedney kept them all running. Without him, every mechanical failure is potentially terminal.",
+      "fearFulfilled": "Something broke that has no mechanism — no parts, no logic, nothing he can take apart and understand.",
+      "threadsAdvanced": ["equipment-malfunctions"],
+      "triggerCondition": "Drill operation near the mountains. Core sample contains anomalous biological material.",
+      "discoverable": "His leather tool roll, found in the debris. Every tool accounted for except the smallest screwdriver. The bore sample, if preserved, contains cells that are still dividing."
+    },
+    {
+      "characterId": "scientist-bryce",
+      "name": "Dr. Amy Bryce",
+      "slot": 3,
+      "manner": "Bryce finds biological specimens in the city — preserved, ancient, impossible. Her training takes over. She collects, catalogs, sections. The specimens are not dead. They were never dead. They were dormant, and her scalpel woke them. The organisms she classifies are alive in ways that rewrite the definition of the word. She documents everything until she can't. Her field notes are meticulous to the last page.",
+      "capabilityLost": "Biological analysis. The one person who could have identified what they're dealing with — classified it, warned them — is gone. What remains is her notes, and her notes are terrifying.",
+      "fearFulfilled": "The organisms she finds are alive in ways that rewrite the definition of the word.",
+      "threadsAdvanced": ["nameless-scent"],
+      "triggerCondition": "Discovery of preserved biological specimens in the city. The nameless scent is strongest here.",
+      "discoverable": "Her field journal. Precise anatomical drawings of organisms that match nothing in the fossil record — except the things carved on the city walls a billion years ago. The last drawing is unfinished."
+    },
+    {
+      "characterId": "believer-angell",
+      "name": "Professor Malcolm Angell",
+      "slot": 3,
+      "manner": "Angell reads the murals. He correlates them with the Pnakotic fragments, the Eltdown Shards, the marginalia in the Necronomicon. The pattern emerges — complete, coherent, terrible. He was right about everything. He sits down in front of the final mural, the one that shows what happened when the Elder Things lost control, and he begins to write. He fills three notebooks. Somewhere in the third notebook, the handwriting changes. It is still his hand, but the language is not. He does not respond when spoken to. He does not leave the mural chamber. He is still writing when they find him, and what he is writing is older than human language.",
+      "capabilityLost": "Textual interpretation. The one person who could read the warnings is gone — or worse, is still present but no longer himself. His notebooks become an artifact as dangerous as the murals.",
+      "fearFulfilled": "He was right, and understanding the pattern did not make it less terrible.",
+      "threadsAdvanced": ["dyers-private-journal", "crude-carvings"],
+      "triggerCondition": "Extended exposure to the city murals. Cross-referencing with texts brought from Miskatonic.",
+      "discoverable": "Three notebooks. The first two are scholarship. The third is something else. A linguist could spend a career on it. A linguist should not."
+    },
+    {
+      "characterId": "expert-mcready",
+      "name": "Jack McReady",
+      "slot": 4,
+      "manner": "The dogs refuse to enter the tunnels. All of them. McReady understands — he always understood the dogs better than people. He knows what their refusal means. He goes in anyway, because someone has to scout ahead, and the dogs have told him everything he needs to know about what's down there. He takes a lantern, a knife, and the lead dog's collar as a talisman. The lantern is found two hundred yards in, still burning. The knife is found further. The collar is not found.",
+      "capabilityLost": "Dog teams and animal instinct. The expedition's early warning system is gone. The dogs will not work for anyone else. Some refuse to eat. The thread pays off: dogs-refuse-food was always about this moment.",
+      "fearFulfilled": "The dogs refused to go forward. He understood why. He went in anyway.",
+      "threadsAdvanced": ["dogs-refuse-food"],
+      "triggerCondition": "Entering the tunnel system. Dogs refuse universally — not fear behavior, but informed refusal.",
+      "discoverable": "The lead dog, two days later, will not stop howling. It has not eaten since McReady left. It will die of this."
+    },
+    {
+      "characterId": "journalist-caldwell",
+      "name": "Midge Caldwell",
+      "slot": 4,
+      "manner": "Caldwell finds the story. The real one — not Starkweather's vindication narrative, not Moore's debunking, but the actual truth of what this place is and what happened here. She photographs it. The Graflex flash illuminates something in the tunnel that the lanterns couldn't reach. For one fifth of a second, she sees clearly. She gets the photograph. The photograph will survive. Caldwell does not. What the flash revealed moved toward the light.",
+      "capabilityLost": "Documentation. The one person recording the expedition objectively is dead. Her photographs survive — and they are the most dangerous objects the expedition carries. The story no editor will print.",
+      "fearFulfilled": "The story, when she found it, was one no editor will print and no reader will believe.",
+      "threadsAdvanced": ["tekeli-li"],
+      "triggerCondition": "Deep in the tunnel system. A chamber the lanterns don't fully illuminate.",
+      "discoverable": "The Graflex and its plate holder. The photograph, when developed, shows something in the background that was not visible to the unaided eye. The Arkham Gazette will not print it."
+    },
+    {
+      "characterId": "agent-price",
+      "name": "Reginald Price",
+      "slot": 5,
+      "manner": "Price sees the value. Even here, in the dark, facing the impossible, his mind calculates. Specimens, artifacts, the city itself — worth more than Starkweather's entire fortune. Worth more than anyone can control. He attempts to secure biological material from the tunnel ecosystem. He uses the wrong container. Or there is no right container. The material does not wish to be contained. What kills Price is not malice but indifference — the organism does not distinguish between the container and the hand that holds it.",
+      "capabilityLost": "Financial authority and supply allocation. The man who controlled the expedition's resources is dead, and with him dies any pretense that this is still a funded scientific venture. It is now a survival situation.",
+      "fearFulfilled": "What they found is worth more than Starkweather can control — and Price realized it first.",
+      "threadsAdvanced": ["tekeli-li", "nameless-scent"],
+      "triggerCondition": "The Shoggoth encounter. Price attempts to collect specimens instead of retreating.",
+      "discoverable": "The second ledger. The one no one has seen. It contains Price's private assessment of the commercial value of Elder Thing technology. The final entry is a number with too many zeros."
+    },
+    {
+      "characterId": "agent-ainsworth",
+      "name": "Dr. Catherine Ainsworth",
+      "slot": 5,
+      "manner": "Ainsworth stays to document. Rigour demands it. The evidence is real — she confirmed it, cross-referenced it, established the chain of custody that would survive peer review. She is still taking measurements when the others begin to run. She has seventeen minutes of additional data that no one else possesses. Moore will never receive her coded transmission. The codebook is found near the tunnel entrance, open to a page she never reached.",
+      "capabilityLost": "Independent scientific oversight. The expedition's last claim to institutional credibility dies with Ainsworth. Nothing they report will be verified by a disinterested party.",
+      "fearFulfilled": "The evidence was real and rigour was not enough to contain what it means.",
+      "threadsAdvanced": ["crude-carvings"],
+      "triggerCondition": "The retreat from the Shoggoth. Ainsworth delays departure to complete documentation.",
+      "discoverable": "Her geological hammer, embedded in the tunnel wall at a height of eight feet — thrown, not placed. Her coded field notes, partially transmitted. Moore's archive contains a fragment that ends mid-word."
+    },
+    {
+      "characterId": "scientist-pabodie",
+      "name": "Dr. Frank H. Pabodie",
+      "slot": 6,
+      "manner": "Pabodie's drill opened the way in. Pabodie closes it behind. He rigs the boring apparatus with the remaining dynamite — the same combination that opened the first bore shaft a billion years after the Elder Things carved these tunnels. The explosion seals the tunnel entrance. The survivors are on one side. Pabodie is on the other. His instruments, in the final seconds before the blast, measure something his training cannot accommodate. He records the reading on the dynamite casing in graphite. The number is found later, on a fragment of steel, and it is impossible.",
+      "capabilityLost": "Engineering. The drill that got them in is destroyed. The man who built it chose to destroy it. There is no going back. There was never going to be a way to go back.",
+      "fearFulfilled": "The explanation was something his instruments could not measure and his training could not accommodate.",
+      "threadsAdvanced": ["equipment-malfunctions"],
+      "triggerCondition": "Retreat through the tunnels. Something is following. The tunnel must be sealed.",
+      "discoverable": "A fragment of the boring apparatus casing, marked in graphite: a temperature reading, a pressure reading, and a magnetic field strength. All three are physically impossible. All three are consistent with each other."
+    },
+    {
+      "characterId": "believer-waverly",
+      "name": "Sister Agnes Waverly",
+      "slot": 6,
+      "manner": "Waverly stays with the wounded. Her nursing training is real; her faith is real; her understanding of what is happening is the deepest of anyone present. The old stories she heard in the Solomons described this moment — not the specifics, but the shape. The warnings were not meant to prevent what is coming. They were meant to prepare the survivors. She prepares them. She gives the wounded what comfort medicine and prayer can offer. She does not leave. On the western horizon, the dim elfin line of violet pinnacles is visible. She recognizes it. She has heard it described in three languages, on three islands, separated by hundreds of miles of ocean. She makes her peace with it.",
+      "capabilityLost": "Medical care. The expedition's medic is gone. Wounds sustained during the flight will go untreated. The group that reaches the ship will carry injuries that mark them for life.",
+      "fearFulfilled": "The warnings were not meant to prevent what is coming, but to prepare the survivors for what comes after.",
+      "threadsAdvanced": ["violet-mountains"],
+      "triggerCondition": "The flight across the ice. Wounded party members cannot keep pace. The Violet Mountains are visible.",
+      "discoverable": "Her silver cross, left deliberately with the wounded. A note in her handwriting: 'The warnings were true. I was sent to translate them. This is the translation.'"
+    }
+  ]
+}

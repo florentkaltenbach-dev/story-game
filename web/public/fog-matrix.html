@@ -1,3 +1,4 @@
+<!-- VIZ-META {"title":"Knowledge Fog Matrix","description":"Player × secrets revelation heatmap","category":"visualization"} -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Ceremony — Knowledge Fog Matrix</title>
 <script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="/the-ceremony/js/ceremony-data.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap');
 
@@ -425,6 +427,9 @@
 
 <div class="tooltip" id="tooltip"></div>
 
+<div id="loading" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;color:#5a6a7a;letter-spacing:0.15em;text-transform:uppercase;z-index:100">Loading fog data...</div>
+<div id="update-badge" style="position:fixed;top:12px;right:12px;padding:4px 12px;background:#1e2d44;border:1px solid #c4a35a44;border-radius:4px;font-size:10px;color:#c4a35a;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:100">Data updated</div>
+
 <script>
 // ─── DATA ─────────────────────────────────────────────────────────
 const STATES = {
@@ -436,108 +441,107 @@ const STATES = {
 
 const STATE_CYCLE = ['unknown', 'rumored', 'confirmed'];
 
-const players = [
-  { id: 'harrow',  name: 'Dr. Elizabeth Harrow', archetype: 'The Scientist' },
-  { id: 'walsh',   name: 'Sgt. Frank Walsh',     archetype: 'The Veteran' },
-  { id: 'okafor',  name: 'Mara Okafor',          archetype: 'The Journalist' },
-  { id: 'reed',    name: 'Thomas Reed',           archetype: 'The Mechanic' },
-  { id: 'crane',   name: 'Isabelle Crane',        archetype: 'The Believer' }
-];
-
-const categories = [
+var players = [];
+var categories = [
   { id: 'npcs',      label: 'NPCs Met',        color: '#6b9e7a' },
   { id: 'locations',  label: 'Locations Visited', color: '#7ba4c7' },
   { id: 'clues',      label: 'Clues & Secrets',  color: '#c4a35a' }
 ];
+var knowledgeItems = [];
 
-const knowledgeItems = [
-  // NPCs Met
-  { id: 'npc-starkweather',  label: 'Dr. Harold Starkweather',  category: 'npcs',
-    states: { harrow: 'confirmed', walsh: 'confirmed', okafor: 'confirmed', reed: 'confirmed', crane: 'confirmed' } },
-  { id: 'npc-moore',         label: 'Professor James Moore',    category: 'npcs',
-    states: { harrow: 'confirmed', walsh: 'confirmed', okafor: 'confirmed', reed: 'confirmed', crane: 'confirmed' } },
-  { id: 'npc-ship-captain',  label: 'The Ship Captain',         category: 'npcs',
-    states: { harrow: 'confirmed', walsh: 'confirmed', okafor: 'confirmed', reed: 'confirmed', crane: 'confirmed' } },
-  { id: 'npc-radio-operator',label: 'The Radio Operator',       category: 'npcs',
-    states: { harrow: 'confirmed', walsh: 'confirmed', okafor: 'confirmed', reed: 'unknown', crane: 'unknown' } },
-  { id: 'npc-dog-handler',   label: 'The Dog Handler',          category: 'npcs',
-    states: { harrow: 'unknown', walsh: 'confirmed', okafor: 'unknown', reed: 'confirmed', crane: 'unknown' } },
-  { id: 'npc-echoes',        label: 'Echoes (First Expedition)',category: 'npcs',
-    states: { harrow: 'rumored', walsh: 'rumored', okafor: 'unknown', reed: 'unknown', crane: 'unknown' },
-    secret: 'The first expedition left more than journals behind.' },
+// ─── FALLBACK DATA ────────────────────────────────────────────────
+function buildFallbackPlayers() {
+  return [
+    { id: 'harrow',  name: 'Dr. Elizabeth Harrow', archetype: 'The Scientist' },
+    { id: 'walsh',   name: 'Sgt. Frank Walsh',     archetype: 'The Veteran' },
+    { id: 'okafor',  name: 'Mara Okafor',          archetype: 'The Journalist' },
+    { id: 'reed',    name: 'Thomas Reed',           archetype: 'The Mechanic' },
+    { id: 'crane',   name: 'Isabelle Crane',        archetype: 'The Believer' }
+  ];
+}
 
-  // Locations Visited
-  { id: 'loc-mcmurdo',       label: 'McMurdo Sound',            category: 'locations',
-    states: { harrow: 'confirmed', walsh: 'confirmed', okafor: 'confirmed', reed: 'confirmed', crane: 'confirmed' } },
-  { id: 'loc-ross-barrier',  label: 'Ross Ice Barrier',         category: 'locations',
-    states: { harrow: 'confirmed', walsh: 'confirmed', okafor: 'confirmed', reed: 'confirmed', crane: 'confirmed' } },
-  { id: 'loc-beardmore',     label: 'Beardmore Glacier',        category: 'locations',
-    states: { harrow: 'confirmed', walsh: 'confirmed', okafor: 'rumored', reed: 'confirmed', crane: 'confirmed' } },
-  { id: 'loc-plateau',       label: 'The Plateau',              category: 'locations',
-    states: { harrow: 'confirmed', walsh: 'confirmed', okafor: 'unknown', reed: 'unknown', crane: 'unknown' } },
-  { id: 'loc-mountains',     label: 'The Mountains',            category: 'locations',
-    states: { harrow: 'confirmed', walsh: 'rumored', okafor: 'unknown', reed: 'unknown', crane: 'unknown' } },
-  { id: 'loc-city-beyond',   label: 'The City Beyond',          category: 'locations',
-    states: { harrow: 'rumored', walsh: 'unknown', okafor: 'unknown', reed: 'unknown', crane: 'unknown' },
-    secret: 'Not a natural formation. Architecture predates human civilization.' },
-  { id: 'loc-tunnels',       label: 'The Tunnels',              category: 'locations',
-    states: { harrow: 'unknown', walsh: 'unknown', okafor: 'unknown', reed: 'unknown', crane: 'unknown' },
-    secret: 'Something still moves through them.' },
-  { id: 'loc-cape-evans',    label: 'Cape Evans Hut',           category: 'locations',
-    states: { harrow: 'rumored', walsh: 'unknown', okafor: 'confirmed', reed: 'unknown', crane: 'unknown' } },
+function buildFallbackKnowledge() {
+  return [
+    { id: 'npc-starkweather', label: 'Dr. Harold Starkweather', category: 'npcs',
+      states: { harrow: 'confirmed', walsh: 'confirmed', okafor: 'confirmed', reed: 'confirmed', crane: 'confirmed' } }
+  ];
+}
 
-  // Clues & Secrets
-  { id: 'clue-graves',       label: 'Star-shaped graves',       category: 'clues',
-    states: { harrow: 'confirmed', walsh: 'confirmed', okafor: 'unknown', reed: 'unknown', crane: 'unknown' } },
-  { id: 'clue-soapstone',    label: 'Soapstone fragments',      category: 'clues',
-    states: { harrow: 'confirmed', walsh: 'unknown', okafor: 'unknown', reed: 'rumored', crane: 'unknown' } },
-  { id: 'clue-dogs',         label: "Dogs' behavioral change",  category: 'clues',
-    states: { harrow: 'unknown', walsh: 'confirmed', okafor: 'unknown', reed: 'confirmed', crane: 'rumored' } },
-  { id: 'clue-radio',        label: 'Radio degradation pattern',category: 'clues',
-    states: { harrow: 'unknown', walsh: 'unknown', okafor: 'confirmed', reed: 'confirmed', crane: 'unknown' } },
-  { id: 'clue-wind',         label: 'Wind piping anomaly',      category: 'clues',
-    states: { harrow: 'rumored', walsh: 'rumored', okafor: 'unknown', reed: 'unknown', crane: 'unknown' },
-    secret: 'The wind does not come from any natural source.' },
-  { id: 'clue-murals',       label: 'Mural fragments',          category: 'clues',
-    states: { harrow: 'rumored', walsh: 'unknown', okafor: 'unknown', reed: 'unknown', crane: 'unknown' },
-    secret: 'The murals depict a history that predates the earth itself.' },
-  { id: 'clue-equipment',    label: 'Equipment malfunction pattern', category: 'clues',
-    states: { harrow: 'rumored', walsh: 'unknown', okafor: 'unknown', reed: 'confirmed', crane: 'unknown' } },
-  { id: 'clue-scent',        label: 'The nameless scent',       category: 'clues',
-    states: { harrow: 'unknown', walsh: 'unknown', okafor: 'unknown', reed: 'unknown', crane: 'unknown' },
-    secret: 'An olfactory signature that defies classification. Triggers primal dread.' },
-  { id: 'clue-tekeli',       label: 'Tekeli-li',                category: 'clues',
-    states: { harrow: 'unknown', walsh: 'unknown', okafor: 'unknown', reed: 'unknown', crane: 'unknown' },
-    secret: 'A sound that should not exist. Once heard, it cannot be unheard.' }
-];
+// ─── DATA LOADING ─────────────────────────────────────────────────
+CeremonyData.load({ slice: 'fog' }).then(function(data) {
+  // Transform API fog data to match the existing format
+  if (data.fog && data.fog.length > 0) {
+    players = data.fog.map(function(f) {
+      return { id: f.playerId, name: f.playerName, archetype: '' };
+    });
 
-// ─── STATE ────────────────────────────────────────────────────────
-let mcMode = false;
-let rowSort = 'category';
-let colSort = 'default';
-let visibleCategories = new Set(categories.map(c => c.id));
+    // Build knowledge items from fog entries
+    // Each unique knowledge key becomes a row
+    var allKeys = new Set();
+    data.fog.forEach(function(f) {
+      Object.keys(f.knowledge || {}).forEach(function(k) { allKeys.add(k); });
+    });
 
-// Deep-copy item states so we can mutate via click
-const itemStates = {};
-knowledgeItems.forEach(item => {
-  itemStates[item.id] = Object.assign({}, item.states);
-});
+    knowledgeItems = Array.from(allKeys).map(function(key) {
+      // Infer category from key prefix
+      var category = 'clues';
+      if (key.startsWith('npc-')) category = 'npcs';
+      else if (key.startsWith('loc-')) category = 'locations';
 
-// ─── LAYOUT CONSTANTS ─────────────────────────────────────────────
-const CELL_SIZE = 40;
-const CELL_PAD = 3;
-const CELL_RADIUS = 4;
-const ROW_LABEL_WIDTH = 220;
-const COL_HEADER_HEIGHT = 100;
-const CATEGORY_ROW_HEIGHT = 32;
-const SUMMARY_ROW_HEIGHT = 36;
+      var states = {};
+      data.fog.forEach(function(f) {
+        states[f.playerId] = (f.knowledge || {})[key] || 'unknown';
+      });
 
-// ─── INIT ─────────────────────────────────────────────────────────
-const svg = d3.select('#matrix-svg');
-const tooltip = d3.select('#tooltip');
+      return {
+        id: key,
+        label: key.replace(/^(npc-|loc-|clue-)/, '').replace(/-/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); }),
+        category: category,
+        states: states
+      };
+    });
+  }
 
-buildCategoryFilters();
-render();
+  // If no data from API, use fallback data so the page isn't empty
+  if (players.length === 0) {
+    players = buildFallbackPlayers();
+    knowledgeItems = buildFallbackKnowledge();
+  }
+
+  document.getElementById('loading').style.display = 'none';
+
+  // ─── STATE ────────────────────────────────────────────────────────
+  let mcMode = false;
+  let rowSort = 'category';
+  let colSort = 'default';
+  let visibleCategories = new Set(categories.map(c => c.id));
+
+  // Deep-copy item states so we can mutate via click
+  const itemStates = {};
+  knowledgeItems.forEach(item => {
+    itemStates[item.id] = Object.assign({}, item.states);
+  });
+
+  // ─── LAYOUT CONSTANTS ─────────────────────────────────────────────
+  const CELL_SIZE = 40;
+  const CELL_PAD = 3;
+  const CELL_RADIUS = 4;
+  const ROW_LABEL_WIDTH = 220;
+  const COL_HEADER_HEIGHT = 100;
+  const CATEGORY_ROW_HEIGHT = 32;
+  const SUMMARY_ROW_HEIGHT = 36;
+
+  // ─── INIT ─────────────────────────────────────────────────────────
+  const svg = d3.select('#matrix-svg');
+  const tooltip = d3.select('#tooltip');
+
+  buildCategoryFilters();
+  render();
+
+  // Expose interactive functions to global scope for HTML onclick handlers
+  window.toggleMcMode = toggleMcMode;
+  window.setRowSort = setRowSort;
+  window.setColSort = setColSort;
 
 // ─── RENDER ───────────────────────────────────────────────────────
 function render() {
@@ -1099,6 +1103,29 @@ function updateStatsBar(sortedPlayers, filteredItems) {
 
   bar.appendChild(totalDiv);
 }
+
+  // ─── LIVE UPDATE SUBSCRIPTION ───────────────────────────────────
+  CeremonyData.subscribe(function(data) {
+    if (data.fog && data.fog.length > 0) {
+      // Update knowledge states from new data
+      data.fog.forEach(function(f) {
+        Object.keys(f.knowledge || {}).forEach(function(key) {
+          if (typeof itemStates !== 'undefined' && itemStates[key]) {
+            itemStates[key][f.playerId] = f.knowledge[key];
+          }
+        });
+      });
+      if (typeof render === 'function') render();
+    }
+    // Flash update badge
+    var badge = document.getElementById('update-badge');
+    if (badge) {
+      badge.style.opacity = '1';
+      setTimeout(function() { badge.style.opacity = '0'; }, 2000);
+    }
+  });
+
+}); // end CeremonyData.load().then()
 </script>
 </body>
 </html>

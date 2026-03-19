@@ -1,0 +1,972 @@
+{
+  "id": 2,
+  "name": "The Mountains",
+  "acts": [
+    {
+      "name": "The Approach",
+      "index": 0
+    },
+    {
+      "name": "The City",
+      "index": 1
+    },
+    {
+      "name": "The Threshold",
+      "index": 2
+    }
+  ],
+  "beats": [
+    {
+      "characterId": "scientist-pabodie",
+      "session": 2,
+      "act": 0,
+      "location": "Mountain approach",
+      "status": "healthy",
+      "emotional": "awestruck",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "mirage-city",
+        "wind-piping",
+        "equipment-malfunctions"
+      ],
+      "danger": 2,
+      "activity": "Instruments fail completely. The mountains exceed all expectations"
+    },
+    {
+      "characterId": "scientist-pabodie",
+      "session": 2,
+      "act": 1,
+      "location": "The cyclopean city",
+      "status": "healthy",
+      "emotional": "overwhelmed",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "crude-carvings",
+        "dyers-private-journal"
+      ],
+      "danger": 2,
+      "activity": "Engineering mind struggles with impossible architecture"
+    },
+    {
+      "characterId": "scientist-pabodie",
+      "session": 2,
+      "act": 2,
+      "location": "City threshold",
+      "status": "healthy",
+      "emotional": "dread",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "violet-mountains",
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Warm air from below. Temperature readings impossible for Antarctica"
+    },
+    {
+      "characterId": "scientist-bryce",
+      "session": 2,
+      "act": 0,
+      "location": "Mountain approach",
+      "status": "healthy",
+      "emotional": "conflicted",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "mirage-city",
+        "equipment-malfunctions"
+      ],
+      "danger": 2,
+      "activity": "Scientific rigor demands investigation. Self-preservation says stop"
+    },
+    {
+      "characterId": "scientist-bryce",
+      "session": 2,
+      "act": 1,
+      "location": "The cyclopean city",
+      "status": "healthy",
+      "emotional": "awe-horror",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "shoggoth-creation"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "crude-carvings"
+      ],
+      "danger": 2,
+      "activity": "The murals showing Shoggoth creation rewrites the definition of life"
+    },
+    {
+      "characterId": "scientist-bryce",
+      "session": 2,
+      "act": 2,
+      "location": "City threshold",
+      "status": "healthy",
+      "emotional": "dread",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "shoggoth-creation",
+        "warm-air-below"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "violet-mountains",
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Underground ecosystem implies life forms adapted to conditions she cannot model"
+    },
+    {
+      "characterId": "veteran-rourke",
+      "session": 2,
+      "act": 0,
+      "location": "Mountain approach",
+      "status": "healthy",
+      "emotional": "on-guard",
+      "knowledge": [
+        "briefing-document",
+        "night-sounds",
+        "lakes-camp-destruction",
+        "specimen-existence",
+        "mountain-scale"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "mirage-city",
+        "wind-piping"
+      ],
+      "danger": 2,
+      "activity": "Scans terrain for threats. The scale offers no cover, no retreat"
+    },
+    {
+      "characterId": "veteran-rourke",
+      "session": 2,
+      "act": 1,
+      "location": "The cyclopean city",
+      "status": "healthy",
+      "emotional": "controlled-fear",
+      "knowledge": [
+        "briefing-document",
+        "night-sounds",
+        "lakes-camp-destruction",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "crude-carvings"
+      ],
+      "danger": 2,
+      "activity": "Treats the city as hostile territory. Marks exit routes"
+    },
+    {
+      "characterId": "veteran-rourke",
+      "session": 2,
+      "act": 2,
+      "location": "City threshold",
+      "status": "healthy",
+      "emotional": "tense",
+      "knowledge": [
+        "briefing-document",
+        "night-sounds",
+        "lakes-camp-destruction",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "warm-air-below"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "violet-mountains",
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Advises against going deeper. Overruled or convinced"
+    },
+    {
+      "characterId": "journalist-caldwell",
+      "session": 2,
+      "act": 0,
+      "location": "Mountain approach",
+      "status": "healthy",
+      "emotional": "driven",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "mirage-city",
+        "wind-piping"
+      ],
+      "danger": 2,
+      "activity": "Insists on going further. No story without the payoff"
+    },
+    {
+      "characterId": "journalist-caldwell",
+      "session": 2,
+      "act": 1,
+      "location": "The cyclopean city",
+      "status": "healthy",
+      "emotional": "overwhelmed",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "crude-carvings"
+      ],
+      "danger": 2,
+      "activity": "Photographs the murals. Fills three notebooks. No editor will believe this"
+    },
+    {
+      "characterId": "journalist-caldwell",
+      "session": 2,
+      "act": 2,
+      "location": "City threshold",
+      "status": "healthy",
+      "emotional": "fear-ambition",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "The story behind the story. Warm air = something still alive down there"
+    },
+    {
+      "characterId": "mechanic-gedney",
+      "session": 2,
+      "act": 0,
+      "location": "Mountain approach",
+      "status": "healthy",
+      "emotional": "worried",
+      "knowledge": [
+        "briefing-document",
+        "equipment-anomalies",
+        "lakes-camp-destruction",
+        "fuel-calculation"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "equipment-malfunctions"
+      ],
+      "danger": 2,
+      "activity": "Calculates fuel margins. Crossing means limited return options"
+    },
+    {
+      "characterId": "mechanic-gedney",
+      "session": 2,
+      "act": 1,
+      "location": "The cyclopean city",
+      "status": "healthy",
+      "emotional": "disbelief",
+      "knowledge": [
+        "briefing-document",
+        "equipment-anomalies",
+        "lakes-camp-destruction",
+        "fuel-calculation",
+        "impossible-architecture"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "The architecture has no joints, no mortar. His mechanical mind can't process it"
+    },
+    {
+      "characterId": "mechanic-gedney",
+      "session": 2,
+      "act": 2,
+      "location": "City threshold",
+      "status": "healthy",
+      "emotional": "dread",
+      "knowledge": [
+        "briefing-document",
+        "equipment-anomalies",
+        "lakes-camp-destruction",
+        "fuel-calculation",
+        "impossible-architecture",
+        "warm-air-below"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Warm air from below. Thermodynamically impossible"
+    },
+    {
+      "characterId": "mechanic-webb",
+      "session": 2,
+      "act": 0,
+      "location": "Mountain approach",
+      "status": "healthy",
+      "emotional": "worried",
+      "knowledge": [
+        "briefing-document",
+        "unusual-static",
+        "radio-signal-anomaly"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "radio-degradation",
+        "wind-piping"
+      ],
+      "danger": 2,
+      "activity": "Radio contact with Moore fading. The wind sounds like it's trying to form words"
+    },
+    {
+      "characterId": "mechanic-webb",
+      "session": 2,
+      "act": 1,
+      "location": "The cyclopean city",
+      "status": "healthy",
+      "emotional": "disturbed",
+      "knowledge": [
+        "briefing-document",
+        "unusual-static",
+        "radio-signal-anomaly",
+        "elder-thing-murals"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "radio-degradation"
+      ],
+      "danger": 2,
+      "activity": "Radio dead in the city. Silence for the first time. They are alone"
+    },
+    {
+      "characterId": "mechanic-webb",
+      "session": 2,
+      "act": 2,
+      "location": "City threshold",
+      "status": "healthy",
+      "emotional": "dread",
+      "knowledge": [
+        "briefing-document",
+        "unusual-static",
+        "radio-signal-anomaly",
+        "elder-thing-murals",
+        "warm-air-below"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "radio-degradation",
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "No signal. No connection. The link to civilization is severed"
+    },
+    {
+      "characterId": "agent-price",
+      "session": 2,
+      "act": 0,
+      "location": "Mountain approach",
+      "status": "healthy",
+      "emotional": "ambitious",
+      "knowledge": [
+        "briefing-document",
+        "anomaly-value",
+        "specimen-existence",
+        "mountain-scale"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "mirage-city"
+      ],
+      "danger": 2,
+      "activity": "Pushes to continue. The discovery value justifies any fuel risk"
+    },
+    {
+      "characterId": "agent-price",
+      "session": 2,
+      "act": 1,
+      "location": "The cyclopean city",
+      "status": "healthy",
+      "emotional": "overwhelmed-greedy",
+      "knowledge": [
+        "briefing-document",
+        "anomaly-value",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "An alien city. The discovery of the millennium. Starkweather was right"
+    },
+    {
+      "characterId": "agent-price",
+      "session": 2,
+      "act": 2,
+      "location": "City threshold",
+      "status": "healthy",
+      "emotional": "conflicted",
+      "knowledge": [
+        "briefing-document",
+        "anomaly-value",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Value vs. risk calculation breaks down. What's down there may be worth more — or worthless"
+    },
+    {
+      "characterId": "agent-ainsworth",
+      "session": 2,
+      "act": 0,
+      "location": "Mountain approach",
+      "status": "healthy",
+      "emotional": "torn",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "radio-degradation",
+        "mirage-city"
+      ],
+      "danger": 2,
+      "activity": "Moore's last clear message: 'Do not cross the mountains.' Radio dies"
+    },
+    {
+      "characterId": "agent-ainsworth",
+      "session": 2,
+      "act": 1,
+      "location": "The cyclopean city",
+      "status": "healthy",
+      "emotional": "awe-discipline",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "crude-carvings"
+      ],
+      "danger": 2,
+      "activity": "Documents everything with geological rigor. The evidence is real. Moore must know"
+    },
+    {
+      "characterId": "agent-ainsworth",
+      "session": 2,
+      "act": 2,
+      "location": "City threshold",
+      "status": "healthy",
+      "emotional": "conflicted",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "No way to report. Alone with evidence that rewrites geology"
+    },
+    {
+      "characterId": "expert-sorensen",
+      "session": 2,
+      "act": 0,
+      "location": "Mountain approach",
+      "status": "healthy",
+      "emotional": "fatalistic",
+      "knowledge": [
+        "briefing-document",
+        "ice-behavior",
+        "sailors-stories",
+        "lakes-camp-destruction",
+        "mountain-scale"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "mirage-city",
+        "wind-piping"
+      ],
+      "danger": 2,
+      "activity": "Warns against crossing. The old stories said these mountains are forbidden"
+    },
+    {
+      "characterId": "expert-sorensen",
+      "session": 2,
+      "act": 1,
+      "location": "The cyclopean city",
+      "status": "healthy",
+      "emotional": "vindicated-terrified",
+      "knowledge": [
+        "briefing-document",
+        "ice-behavior",
+        "sailors-stories",
+        "lakes-camp-destruction",
+        "mountain-scale",
+        "elder-thing-murals"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "crude-carvings"
+      ],
+      "danger": 2,
+      "activity": "The old stories were true. He always knew. Wishes he hadn't been right"
+    },
+    {
+      "characterId": "expert-sorensen",
+      "session": 2,
+      "act": 2,
+      "location": "City threshold",
+      "status": "healthy",
+      "emotional": "dread",
+      "knowledge": [
+        "briefing-document",
+        "ice-behavior",
+        "sailors-stories",
+        "lakes-camp-destruction",
+        "mountain-scale",
+        "elder-thing-murals",
+        "warm-air-below"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Refuses to go below. May be convinced or overruled"
+    },
+    {
+      "characterId": "expert-mcready",
+      "session": 2,
+      "act": 0,
+      "location": "Mountain approach",
+      "status": "healthy",
+      "emotional": "resistant",
+      "knowledge": [
+        "briefing-document",
+        "dog-behavior",
+        "dogs-facing-away",
+        "lakes-camp-destruction",
+        "mountain-scale"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "dogs-refuse-food",
+        "wind-piping"
+      ],
+      "danger": 2,
+      "activity": "Dogs refuse to approach the mountains. McReady trusts them over orders"
+    },
+    {
+      "characterId": "expert-mcready",
+      "session": 2,
+      "act": 1,
+      "location": "The cyclopean city",
+      "status": "healthy",
+      "emotional": "haunted",
+      "knowledge": [
+        "briefing-document",
+        "dog-behavior",
+        "dogs-facing-away",
+        "lakes-camp-destruction",
+        "mountain-scale",
+        "elder-thing-murals"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "No dogs in the city. Left them at the plane. They wouldn't enter"
+    },
+    {
+      "characterId": "expert-mcready",
+      "session": 2,
+      "act": 2,
+      "location": "City threshold",
+      "status": "healthy",
+      "emotional": "dread",
+      "knowledge": [
+        "briefing-document",
+        "dog-behavior",
+        "dogs-facing-away",
+        "lakes-camp-destruction",
+        "mountain-scale",
+        "elder-thing-murals",
+        "warm-air-below"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "The dogs knew. They always know first"
+    },
+    {
+      "characterId": "believer-angell",
+      "session": 2,
+      "act": 0,
+      "location": "Mountain approach",
+      "status": "healthy",
+      "emotional": "rapture",
+      "knowledge": [
+        "pnakotic-fragments",
+        "eltdown-shards",
+        "necronomicon-marginalia",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "mirage-city",
+        "wind-piping"
+      ],
+      "danger": 2,
+      "activity": "The mountains of the Pnakotic texts. They're real. Everything is real"
+    },
+    {
+      "characterId": "believer-angell",
+      "session": 2,
+      "act": 1,
+      "location": "The cyclopean city",
+      "status": "healthy",
+      "emotional": "transcendent-breaking",
+      "knowledge": [
+        "pnakotic-fragments",
+        "eltdown-shards",
+        "necronomicon-marginalia",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "crude-carvings"
+      ],
+      "danger": 2,
+      "activity": "The murals confirm every text. He was right. Understanding the pattern does not make it less terrible"
+    },
+    {
+      "characterId": "believer-angell",
+      "session": 2,
+      "act": 2,
+      "location": "City threshold",
+      "status": "healthy",
+      "emotional": "dread-certainty",
+      "knowledge": [
+        "pnakotic-fragments",
+        "eltdown-shards",
+        "necronomicon-marginalia",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "violet-mountains",
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "The texts describe what's below. He knows what they'll find. He goes anyway"
+    },
+    {
+      "characterId": "believer-waverly",
+      "session": 2,
+      "act": 0,
+      "location": "Mountain approach",
+      "status": "healthy",
+      "emotional": "accepting",
+      "knowledge": [
+        "oral-traditions",
+        "island-warnings",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "mirage-city"
+      ],
+      "danger": 2,
+      "activity": "The forbidden mountains. Every culture has them. Every warning is the same: do not pass"
+    },
+    {
+      "characterId": "believer-waverly",
+      "session": 2,
+      "act": 1,
+      "location": "The cyclopean city",
+      "status": "healthy",
+      "emotional": "recognition",
+      "knowledge": [
+        "oral-traditions",
+        "island-warnings",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "crude-carvings"
+      ],
+      "danger": 2,
+      "activity": "The murals tell the same story the elders told. Different medium, same truth preserved across millennia"
+    },
+    {
+      "characterId": "believer-waverly",
+      "session": 2,
+      "act": 2,
+      "location": "City threshold",
+      "status": "healthy",
+      "emotional": "duty",
+      "knowledge": [
+        "oral-traditions",
+        "island-warnings",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "The warnings were not to prevent this. They were to prepare the survivors"
+    },
+    {
+      "characterId": "patron-starkweather",
+      "session": 2,
+      "act": 0,
+      "location": "Mountain approach",
+      "status": "healthy",
+      "emotional": "obsessed",
+      "knowledge": [
+        "dyer-account",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "mirage-city",
+        "wind-piping"
+      ],
+      "danger": 2,
+      "activity": "Insists they cross the mountains. 'This is what I funded. This is what we came for'",
+      "mcNote": "Starkweather invokes patron authority here. He's the money, and he knows it. Anyone who objects gets reminded who signs the checks. The True Believer has become something more dangerous — a True Believer with authority and nothing left to prove except the worst part.",
+      "npcBehavior": "Overrides Sorensen's warnings. Overrides Rourke's tactical concerns. 'I didn't bring you here to turn back.' If Gedney raises fuel concerns, Starkweather calculates the risk aloud and accepts it — for everyone."
+    },
+    {
+      "characterId": "patron-starkweather",
+      "session": 2,
+      "act": 1,
+      "location": "The cyclopean city",
+      "status": "healthy",
+      "emotional": "vindication-becoming-terror",
+      "knowledge": [
+        "dyer-account",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization"
+      ],
+      "narrativeRole": "pivot",
+      "threadsActive": [
+        "crude-carvings"
+      ],
+      "danger": 2,
+      "activity": "Stands in the city Dyer described. He was right about everything. Including the parts Dyer begged people to believe",
+      "mcNote": "Peak Starkweather moment. The vindication is total — and so is the horror. He funded a journey to prove something real that should have stayed buried. The murals show him a civilization a billion years old. His face should show a man watching his greatest triumph become his greatest mistake. He cannot turn back because he already won.",
+      "npcBehavior": "Goes quiet for the first time. Touches the walls. Reads the murals like a man reading his own obituary. If spoken to, responds with fragments: 'Dyer was... he wasn't... this is...' Then snaps back to authority: 'Document everything. All of it.'"
+    },
+    {
+      "characterId": "patron-starkweather",
+      "session": 2,
+      "act": 2,
+      "location": "City threshold",
+      "status": "healthy",
+      "emotional": "denial-drive",
+      "knowledge": [
+        "dyer-account",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Warm air from below. He should stop. He doesn't. The patron has become the thing that pushes them deeper"
+    },
+    {
+      "characterId": "patron-moore",
+      "session": 2,
+      "act": 0,
+      "location": "Harvard (via radio — intermittent)",
+      "status": "healthy",
+      "emotional": "alarmed",
+      "knowledge": [
+        "dyer-account-redacted",
+        "briefing-document",
+        "triangular-markings-reported"
+      ],
+      "narrativeRole": "tension",
+      "threadsActive": [
+        "radio-degradation"
+      ],
+      "danger": 2,
+      "activity": "One last fragmented transmission gets through: 'Do not cross the mountains.' Then static",
+      "mcNote": "Moore's final directive. The skeptic, who dismissed Dyer's supernatural claims, is now telling them not to cross — but is it scientific caution or something more? His reasons are lost in static. The expedition only hears the command, not the reasoning. Starkweather overrides it.",
+      "npcBehavior": "The radio crackles. Moore's voice, distorted: '...readings are... anomalous... do NOT cross the mountains... Ainsworth, report immed—' Static. Silence. If anyone tries to respond, only dead air."
+    },
+    {
+      "characterId": "patron-moore",
+      "session": 2,
+      "act": 1,
+      "location": "Radio silence — Harvard",
+      "status": "healthy",
+      "emotional": "absent",
+      "knowledge": [
+        "dyer-account-redacted",
+        "briefing-document",
+        "triangular-markings-reported"
+      ],
+      "narrativeRole": "absent",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "Radio silence. Moore's voice is gone. The skeptic cannot see the city that proves him wrong"
+    },
+    {
+      "characterId": "patron-moore",
+      "session": 2,
+      "act": 2,
+      "location": "Radio silence — Harvard",
+      "status": "healthy",
+      "emotional": "absent",
+      "knowledge": [
+        "dyer-account-redacted",
+        "briefing-document",
+        "triangular-markings-reported"
+      ],
+      "narrativeRole": "absent",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "No contact. Somewhere in Harvard, Moore is trying to reach them. The silence is mutual"
+    }
+  ]
+}

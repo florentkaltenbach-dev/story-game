@@ -1,3 +1,4 @@
+<!-- VIZ-META {"title":"Narrative Architecture","description":"5-session story structure with acts, threads, and journey arcs","category":"visualization"} -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Ceremony — Narrative Architecture</title>
 <script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="/the-ceremony/js/ceremony-data.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap');
 
@@ -350,180 +352,8 @@ function el(tag, attrs, children) {
 function clearEl(e) { while (e.firstChild) e.removeChild(e.firstChild); }
 
 /* ── Data ── */
-var SESSIONS = [
-  {
-    id: 0, name: 'The Circle', subtitle: 'Session 0 \u2014 Character Creation',
-    duration: 90, color: '#7ba4c7',
-    dramaticQuestion: 'Who are these people, and why would they go?',
-    cosmologicalRegister: 'Stratum I \u2014 The Rational Surface',
-    acts: [
-      { name: 'The World', duration: 20, purpose: 'Set the stage', beats: [
-        '1933. Antarctica. The public story of the first Miskatonic expedition',
-        'The era, the geography, the state of polar exploration',
-        'Players explore the universe \u2014 the Keeper answers from the published record'
-      ]},
-      { name: 'The Characters', duration: 40, purpose: 'Build identities through conversation', beats: [
-        'Who are you? Background, expertise, name',
-        'Why join a dangerous Antarctic expedition in 1933?',
-        'What are you afraid of? (Something human, not monsters)',
-        'Relationships \u2014 at least one connection per player',
-        'Journals written: qualities, relationships, motives, fears'
-      ]},
-      { name: 'The Briefing', duration: 20, purpose: "The patron's curated version", beats: [
-        'Edited Dyer excerpts, selected Lake bulletins, maps',
-        "The patron's spin: bad weather, bad luck, extraordinary fossils",
-        'Players discuss in character \u2014 cracks may or may not be noticed'
-      ]},
-      { name: 'The Departure', duration: 10, purpose: 'The ceremony of leaving', beats: [
-        'Each player states \u2014 in character \u2014 why they\'re going',
-        'The Keeper records departure statements (echoed in Session 4)',
-        'The ship pulls away from the dock'
-      ]}
-    ]
-  },
-  {
-    id: 1, name: 'The Ice', subtitle: 'Session 1 \u2014 Into Antarctica',
-    duration: 90, color: '#6b9e7a',
-    dramaticQuestion: 'What really happened at Lake\'s camp?',
-    cosmologicalRegister: 'Stratum I dominant, Stratum IV subtle',
-    acts: [
-      { name: 'The Crossing', duration: 30, purpose: 'The world shrinks', beats: [
-        'Mirages on the horizon \u2014 distant mountains float like enchanted cities',
-        'The dogs are uneasy \u2014 dismissed as weather sensitivity',
-        "Something wrong with the patron's cargo or orders",
-        'First sight of the Ross Ice Barrier \u2014 200ft vertical ice',
-        'Stratum IV subtle: wind sounds musical, mirage lingers, dream fragment'
-      ]},
-      { name: 'Base Camp', duration: 20, purpose: 'First anomalies', beats: [
-        "Triangular markings in strata that shouldn't contain them",
-        'Instruments behave strangely near certain locations',
-        'Dogs refuse food, refuse to face one direction',
-        "Night event: a sound the wind doesn't explain, equipment moved"
-      ]},
-      { name: "Lake's Camp", duration: 40, purpose: 'Evidence overwhelms', beats: [
-        'The destroyed advance camp \u2014 three years of ice over remains',
-        'Star-shaped mounds that look deliberate',
-        'Empty specimen containers, dissection tools laid out with care',
-        "Lake's private field journal with increasingly frantic entries",
-        "Gedney still missing. One specimen remains that shouldn't exist",
-        'The mountains visible \u2014 higher than anything. Are those cave mouths?'
-      ]}
-    ]
-  },
-  {
-    id: 2, name: 'The Mountains', subtitle: 'Session 2 \u2014 The Demiurge\'s City',
-    duration: 90, color: '#9b7ed4',
-    dramaticQuestion: 'What story do these walls tell, and who carved the last ones?',
-    cosmologicalRegister: 'Stratum II dominant \u2014 the Demiurge autobiography',
-    acts: [
-      { name: 'The Approach', duration: 20, purpose: 'The impossible range', beats: [
-        'Peaks exceeding 35,000 feet. Black, bare of snow',
-        'Mirage of a city beyond the peaks \u2014 persistent and detailed',
-        'Wind sounds like musical piping. Readings make no sense',
-        "Dyer's private journal page \u2014 describes exactly what they see",
-        'The decision: crossing means limited fuel for return'
-      ]},
-      { name: 'The City', duration: 50, purpose: "The Demiurge's autobiography", beats: [
-        'Cyclopean architecture older than complex life on Earth',
-        'Mural 1: Star-headed things descending from cosmic space',
-        'Mural 2: Building cities, creating life, the Shoggoths',
-        'Mural 3: Art, science, civilization spanning a billion years',
-        'Mural 4: The Cthulhu spawn wars, retreat, division',
-        'Mural 5: Mi-Go invasion, trapped on Earth, Antarctic retreat',
-        'Mural 6: Art of creation lost, Shoggoth rebellions, ice advances',
-        'Mural 7: Crude carvings overlaid \u2014 a different hand'
-      ]},
-      { name: 'The Threshold', duration: 20, purpose: 'Two linked revelations', beats: [
-        'Violet mountains on western horizon \u2014 the Elder Things feared them',
-        'Warmer air from below \u2014 temperature wrong in Antarctica',
-        'From far below \u2014 a sound that might be birds',
-        'The question shifts: what ended them?'
-      ]}
-    ]
-  },
-  {
-    id: 3, name: 'The Descent', subtitle: 'Session 3 \u2014 Into the Tunnels',
-    duration: 90, color: '#e06f6f',
-    dramaticQuestion: 'Are they still down there?',
-    cosmologicalRegister: 'Stratum III \u2014 the Ahrimanic force',
-    acts: [
-      { name: 'Down', duration: 25, purpose: 'The Promethean descent', beats: [
-        'Fifteen-foot carved passages descending into warmth',
-        'Carvings degrade then change \u2014 crude spirals over originals',
-        'Giant blind albino penguins \u2014 underground ecosystem',
-        'The nameless scent grows stronger',
-        'Elder Thing artifacts: soapstone, tools, evidence of recent passage'
-      ]},
-      { name: 'The Empathy Turn', duration: 25, purpose: 'They were men', beats: [
-        'Headless Elder Things. Dark-green slime. Recent \u2014 not millions of years',
-        "They woke up. Were found by Lake's team. Were dissected",
-        'They defended themselves. Killed Lake\'s men. Took supplies',
-        'Tried to go home \u2014 something in the tunnels killed them',
-        "'Whatever they had been, they were men'"
-      ]},
-      { name: 'Tekeli-li', duration: 20, purpose: 'The Shoggoth', beats: [
-        'The sound. Not birds',
-        'A vast column of fetid black iridescence filling the tunnel',
-        'Temporary eyes forming and unforming',
-        'Tekeli-li. Tekeli-li'
-      ]},
-      { name: 'Escape', duration: 20, purpose: 'Pure flight', beats: [
-        'Back through tunnels, city, to surface',
-        "Someone glimpses something they can't process",
-        'Fragments in journal \u2014 half-formed impressions',
-        'They made it out'
-      ]}
-    ]
-  },
-  {
-    id: 4, name: 'The Return', subtitle: 'Session 4 \u2014 The Moral Weight',
-    duration: 90, color: '#c4a35a',
-    dramaticQuestion: 'What do you do with knowledge that could change everything?',
-    cosmologicalRegister: 'All strata echo; Stratum I reasserts',
-    acts: [
-      { name: 'The Crossing', duration: 20, purpose: 'Back over the mountains', beats: [
-        'The plane. The mountain crossing. Everyone rattled',
-        'Someone looks back \u2014 the city extends endlessly',
-        "Instrument reading that can't be right",
-        'The pass at 24,000 feet. Engine sounds wrong'
-      ]},
-      { name: 'The Vision', duration: 15, purpose: 'Stratum IV contact', beats: [
-        'The clouds above the violet western mountains',
-        "Fragments from Danforth's list \u2014 not all, not in order",
-        "'The black pit. A rim, carved. Something with five dimensions'",
-        'The entry stops mid-sentence'
-      ]},
-      { name: 'The Return to Base', duration: 15, purpose: 'The world wants answers', beats: [
-        'McMurdo Sound. The ship. The radio. The world',
-        'The patron wants a report \u2014 findings, specimens, coordinates',
-        'The world wants an explanation'
-      ]},
-      { name: 'The Choice', duration: 40, purpose: 'The moral climax', beats: [
-        'Tell the truth \u2014 Dyer tried this, nobody believed',
-        'Tell the patron what they want \u2014 guarantees a third expedition',
-        'Lie \u2014 destroy evidence, burn photographs',
-        "Keep silent \u2014 delay but don't resolve",
-        'Something else \u2014 choices that emerge from the story',
-        'The Echo: departure statements read back'
-      ]}
-    ]
-  }
-];
-
-var THREADS = [
-  { id: 1, name: 'Dogs refuse food', plantSession: 1, plantAct: 1, paySession: 1, payAct: 2, color: '#e06f6f' },
-  { id: 2, name: "Dyer's journal page", plantSession: 2, plantAct: 0, paySession: 2, payAct: 1, color: '#c4a35a' },
-  { id: 3, name: 'Wind piping', plantSession: 1, plantAct: 0, paySession: 4, payAct: 0, color: '#9b7ed4',
-    waypoints: [{ session: 3, act: 2 }] },
-  { id: 4, name: 'Mirage of a city', plantSession: 1, plantAct: 0, paySession: 2, payAct: 0, color: '#7ba4c7' },
-  { id: 5, name: 'Equipment malfunctions', plantSession: 1, plantAct: 1, paySession: 2, payAct: 0, color: '#6b9e7a' },
-  { id: 6, name: 'Radio degradation', plantSession: 1, plantAct: 1, paySession: 3, payAct: 0, color: '#8b9bb4' },
-  { id: 7, name: 'Nameless scent', plantSession: 2, plantAct: 2, paySession: 3, payAct: 2, color: '#d4a05a',
-    waypoints: [{ session: 3, act: 1 }] },
-  { id: 8, name: 'Tekeli-li', plantSession: 3, plantAct: 0, paySession: 3, payAct: 2, color: '#e06f6f' },
-  { id: 9, name: 'Crude carvings', plantSession: 2, plantAct: 1, paySession: 3, payAct: 0, color: '#22d3ee' },
-  { id: 10, name: 'Violet mountains', plantSession: 2, plantAct: 2, paySession: 4, payAct: 1, color: '#bf7ed4' }
-];
+var SESSIONS = [];
+var THREADS = [];
 
 var STRATA = [
   { name: 'Stratum I \u2014 Rational', color: '#7ba4c7', opacities: [1.0, 0.8, 0.3, 0.1, 0.2] },
@@ -532,39 +362,9 @@ var STRATA = [
   { name: 'Stratum IV \u2014 Azathothic', color: '#c4a35a', opacities: [0.0, 0.0, 0.1, 0.4, 0.2] }
 ];
 
-var DECISIONS = [
-  { id: 1, session: 0, act: 3, name: 'Join the expedition', stakes: 'Personal risk',
-    fallback: "The ceremony doesn't begin",
-    description: 'Each player must commit their character to the expedition. This is the first and simplest choice, but it sets the tone: these characters chose to go.' },
-  { id: 2, session: 1, act: 2, name: 'Press inland toward mountains', stakes: 'Safety vs discovery',
-    fallback: 'Patron overrides',
-    description: 'After the horror of Lake\'s camp, the party must decide whether to investigate the mountains. The patron has their own agenda and will push regardless.' },
-  { id: 3, session: 2, act: 0, name: 'Cross the mountains', stakes: 'Point of no return (fuel)',
-    fallback: 'Someone forces crossing',
-    description: 'Crossing the mountains means insufficient fuel to return the same way. This is the mechanical point of no return. If nobody chooses it, circumstances force it.' },
-  { id: 4, session: 2, act: 1, name: 'Enter the city', stakes: 'Curiosity vs self-preservation',
-    fallback: 'Can stay at plane',
-    description: 'The alien city stretches before them. Players can choose to explore or remain at the relative safety of the landing site. Most will enter. The city calls.' },
-  { id: 5, session: 3, act: 0, name: 'Descend into tunnels', stakes: 'Deepest Promethean choice',
-    fallback: 'Can refuse',
-    description: 'The tunnels lead down into warmth and darkness. This is the Promethean descent \u2014 to seek knowledge at any cost. Players can genuinely refuse this one.' },
-  { id: 6, session: 4, act: 3, name: 'What to tell', stakes: 'Entire moral weight',
-    fallback: 'No wrong answer',
-    description: 'The final and most significant choice. What do you tell the world about what you found? Every option has consequences. There is no wrong answer, only difficult ones.' }
-];
+var DECISIONS = [];
 
-var LOCATIONS = [
-  { name: 'Arkham', session: 0, x: 0.05 },
-  { name: 'At Sea', session: 1, x: 0.15 },
-  { name: 'McMurdo Sound', session: 1, x: 0.25 },
-  { name: 'Ross Ice Barrier', session: 1, x: 0.33 },
-  { name: "Lake's Camp", session: 1, x: 0.42 },
-  { name: 'Mountain Approach', session: 2, x: 0.52 },
-  { name: 'The City', session: 2, x: 0.62 },
-  { name: 'The Tunnels', session: 3, x: 0.72 },
-  { name: 'Mountain Pass', session: 4, x: 0.82 },
-  { name: 'McMurdo Return', session: 4, x: 0.93 }
-];
+var LOCATIONS = [];
 
 var SENSORY = {
   sight: {
@@ -594,6 +394,107 @@ var SENSORY = {
   }
 };
 
+// Show loading state
+document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#5a6a7a;font-size:14px;letter-spacing:0.15em;text-transform:uppercase;background:#0a0e17">Loading narrative data...</div>';
+
+CeremonyData.load({ slice: 'narrative' }).then(function(data) {
+  // Transform API data to match existing format
+  if (data.sessions && data.sessions.length > 0) {
+    // Build session color palette
+    var sessionColors = ['#7ba4c7', '#6b9e7a', '#9b7ed4', '#e06f6f', '#c4a35a'];
+    SESSIONS = data.sessions.map(function(s, i) {
+      return {
+        id: s.id || i,
+        name: s.name || ('Session ' + i),
+        subtitle: s.subtitle || '',
+        duration: 90,
+        color: s.color || sessionColors[i % sessionColors.length],
+        dramaticQuestion: '',
+        cosmologicalRegister: '',
+        acts: (s.acts || []).map(function(a) {
+          return {
+            name: a.name || '',
+            duration: 20,
+            purpose: '',
+            beats: a.beats || []
+          };
+        })
+      };
+    });
+  }
+
+  // Fallback: if API returns empty sessions, use hardcoded defaults
+  if (SESSIONS.length === 0) {
+    SESSIONS = buildDefaultSessions();
+  }
+
+  // Transform thread nodes into THREADS format
+  var threadNodes = (data.nodes || []).filter(function(n) { return n.type === 'thread'; });
+  if (threadNodes.length > 0) {
+    var threadColors = ['#e06f6f', '#c4a35a', '#9b7ed4', '#7ba4c7', '#6b9e7a', '#8b9bb4', '#d4a05a', '#e06f6f', '#22d3ee', '#bf7ed4'];
+    THREADS = threadNodes.map(function(t, i) {
+      return {
+        id: i + 1,
+        name: t.name,
+        plantSession: 1,
+        plantAct: 0,
+        paySession: 3,
+        payAct: 2,
+        color: threadColors[i % threadColors.length]
+      };
+    });
+  }
+
+  // Transform location nodes into LOCATIONS format
+  var locationNodes = (data.nodes || []).filter(function(n) { return n.type === 'location'; });
+  if (locationNodes.length > 0) {
+    LOCATIONS = locationNodes.map(function(loc, i) {
+      return {
+        name: loc.name,
+        session: loc.session || Math.floor(i * 4 / locationNodes.length),
+        x: (i + 0.5) / locationNodes.length
+      };
+    });
+  }
+
+  // Restore the full body and initialize
+  document.body.innerHTML = '';
+  initializeVisualization();
+});
+
+CeremonyData.subscribe(function(data) {
+  // Re-transform and re-render
+  if (data.sessions && data.sessions.length > 0) {
+    var sessionColors = ['#7ba4c7', '#6b9e7a', '#9b7ed4', '#e06f6f', '#c4a35a'];
+    SESSIONS = data.sessions.map(function(s, i) {
+      return {
+        id: s.id || i, name: s.name || ('Session ' + i),
+        subtitle: s.subtitle || '', duration: 90,
+        color: s.color || sessionColors[i % sessionColors.length],
+        dramaticQuestion: '', cosmologicalRegister: '',
+        acts: (s.acts || []).map(function(a) {
+          return { name: a.name || '', duration: 20, purpose: '', beats: a.beats || [] };
+        })
+      };
+    });
+  }
+  // Flash update badge or re-render
+  if (typeof render === 'function') render();
+});
+
+function buildDefaultSessions() {
+  // Minimal fallback so rendering doesn't crash
+  return [0,1,2,3,4].map(function(i) {
+    var colors = ['#7ba4c7', '#6b9e7a', '#9b7ed4', '#e06f6f', '#c4a35a'];
+    return {
+      id: i, name: 'Session ' + i, subtitle: '', duration: 90,
+      color: colors[i], dramaticQuestion: '', cosmologicalRegister: '',
+      acts: [{ name: 'Act I', duration: 30, purpose: '', beats: [] }]
+    };
+  });
+}
+
+function initializeVisualization() {
 /* ── State ── */
 var state = {
   overlays: { threads: false, strata: false, decisions: false, sensory: false },
@@ -1940,6 +1841,9 @@ window.addEventListener('resize', function() {
 
 /* ── Initial Render ── */
 render();
+
+} // end initializeVisualization
+
 
 </script>
 </body>

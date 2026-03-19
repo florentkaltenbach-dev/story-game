@@ -40,23 +40,36 @@ import { readFile } from "fs/promises";
 import { join } from "path";
 import { nextMessageId, addMessage } from "@/lib/store";
 
-// === Character pool loader (cached) ===
+// === Character config loader (cached) ===
 let cachedPool: PresetCharacter[] | null = null;
+let cachedArchetypes: Array<{ name: string; motivation: string; skills: string; vulnerability: string }> | null = null;
 
 export function invalidatePoolCache(): void {
   cachedPool = null;
+  cachedArchetypes = null;
 }
 
-async function loadCharacterPool(): Promise<PresetCharacter[]> {
-  if (cachedPool) return cachedPool;
+async function loadCharactersConfig(): Promise<{ pool: PresetCharacter[]; archetypes: Array<{ name: string; motivation: string; skills: string; vulnerability: string }> }> {
+  if (cachedPool && cachedArchetypes) return { pool: cachedPool, archetypes: cachedArchetypes };
   try {
     const raw = await readFile(join(process.cwd(), "..", "config", "characters.json"), "utf-8");
     const data = JSON.parse(raw);
     cachedPool = data.pool || [];
-    return cachedPool!;
+    cachedArchetypes = data.archetypes || [];
+    return { pool: cachedPool!, archetypes: cachedArchetypes! };
   } catch {
-    return [];
+    return { pool: [], archetypes: [] };
   }
+}
+
+async function loadCharacterPool(): Promise<PresetCharacter[]> {
+  const { pool } = await loadCharactersConfig();
+  return pool;
+}
+
+async function loadArchetypes(): Promise<Array<{ name: string; motivation: string; skills: string; vulnerability: string }>> {
+  const { archetypes } = await loadCharactersConfig();
+  return archetypes;
 }
 
 // Session-scoped trigger state for scene transitions
@@ -100,8 +113,9 @@ export async function GET(request: Request) {
       }
     }
 
-    // Load character pool for the response
+    // Load character pool and archetypes for the response
     const pool = await loadCharacterPool();
+    const archetypes = await loadArchetypes();
     const claimedIds = getClaimedCharacterIds();
 
     return NextResponse.json({
@@ -116,6 +130,7 @@ export async function GET(request: Request) {
       widgets: filteredWidgets,
       characterPool: pool,
       characterClaims: claimedIds,
+      archetypes,
       mcCharacterId,
       mcCharacterData,
     });

@@ -1,3 +1,4 @@
+<!-- VIZ-META {"title":"Relationship Map","description":"Force-directed entity graph of NPCs, locations, and threads","category":"visualization"} -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Ceremony — Relationship Map</title>
 <script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="/the-ceremony/js/ceremony-data.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap');
 
@@ -449,6 +451,9 @@
 </head>
 <body>
 
+<div id="loading" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;color:#5a6a7a;letter-spacing:0.15em;text-transform:uppercase;z-index:100">Loading story data...</div>
+<div id="update-badge" style="position:fixed;top:12px;right:12px;padding:4px 12px;background:#1e2d44;border:1px solid #c4a35a44;border-radius:4px;font-size:10px;color:#c4a35a;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:100">Data updated</div>
+
 <header>
   <h1>The Ceremony <span>Force-directed entity graph</span></h1>
   <span class="stats" id="stats"></span>
@@ -509,764 +514,692 @@ var EDGE_TYPES = {
   'thread-link': { label: 'Thread Link', color: '#8b7bb5', width: 1, dash: null }
 };
 
-var nodes = [
-  // Player Characters
-  { id: 'harrow', name: 'Dr. Elizabeth Harrow', type: 'player', desc: 'The Scientist. Geologist with the Miskatonic faculty. Curiosity overrides self-preservation. Here to prove or disprove Dyer\'s claims with empirical evidence.', location: 'beardmore' },
-  { id: 'walsh', name: 'Sgt. Frank Walsh', type: 'player', desc: 'The Veteran. Great War survivor hired for protection. Calm under pressure, practical skills. What he\'s seen before doesn\'t prepare him for this.', location: 'beardmore' },
-  { id: 'okafor', name: 'Mara Okafor', type: 'player', desc: 'The Journalist. Here for the byline of a lifetime. Asks questions others don\'t, records everything. Will risk others for the scoop.', location: 'mcmurdo' },
+var nodes = [];
+var edges = [];
 
-  // NPCs
-  { id: 'starkweather', name: 'Dr. Harold Starkweather', type: 'npc', desc: 'Co-patron (True Believer). Aboard the expedition. Read Dyer\'s private account. Believes every word. Pushes the expedition forward when players hesitate.', role: 'Patron, True Believer' },
-  { id: 'moore', name: 'Professor James Moore', type: 'npc', desc: 'Co-patron (Skeptic). Remains in the US, communicates by radio. Hard-nosed empiricist. His voice becomes increasingly distant, then silent.', role: 'Patron, Skeptic (Remote)' },
-  { id: 'captain', name: 'The Ship Captain', type: 'npc', desc: 'Veteran Antarctic whaler. Practical, skeptical, loyal to crew over mission. Will resist orders that endanger the ship.', role: 'Crew Safety' },
-  { id: 'radio-op', name: 'The Radio Operator', type: 'npc', desc: 'The voice of the outside world. Maintains communication with the ship and Moore. When this voice goes silent, everything changes.', role: 'Communications' },
-  { id: 'dog-handler', name: 'The Dog Handler', type: 'npc', desc: 'Interprets the dogs\' behavior \u2014 initially as weather sensitivity, later with growing unease. The dogs know first; this person translates.', role: 'Early Warning System' },
-  { id: 'second-agent', name: 'The Patron\'s Second Agent', type: 'npc', desc: 'Hidden operative. Secondary objectives unknown to the players. Reports to Moore or has independent instructions.', role: 'Hidden Operative' },
-  { id: 'echoes', name: 'Echoes of the First Expedition', type: 'npc', desc: 'Not a living NPC. Journals, equipment, bodies, star-shaped graves. Lake\'s private field journal with increasingly frantic entries.', role: 'Absent Presence' },
+var simulation;
 
-  // Locations -- Geography
-  { id: 'mcmurdo', name: 'McMurdo Sound', type: 'location', desc: 'The base of operations. Ships, supply caches, the last connection to the world.' },
-  { id: 'barrier', name: 'Ross Ice Barrier', type: 'location', desc: 'The wall of ice marking the edge of the navigable south. Two hundred feet of vertical ice.' },
-  { id: 'beardmore', name: 'Beardmore Glacier', type: 'location', desc: 'The largest valley glacier in the world. The crossing point from coast to interior.' },
-  { id: 'plateau', name: 'The Plateau', type: 'location', desc: 'The high Antarctic interior. Miles of ice over dead rock. 8,500+ feet above sea level.' },
-  { id: 'mountains', name: 'The Mountains', type: 'location', desc: 'Lovecraft\'s unnamed range. Peaks exceeding 35,000 feet. Black, bare of snow. Caves with regular openings.' },
-  { id: 'city', name: 'The City Beyond', type: 'location', desc: 'Ancient ruins behind the mountain range. Cyclopean architecture. Murals telling the history of Earth\'s true first civilization.' },
-  { id: 'tunnels', name: 'The Tunnels', type: 'location', desc: 'Fifteen-foot carved passages descending from the city into warmth. Crude carvings overlay the originals. Giant blind albino penguins.' },
-  { id: 'violet', name: 'The Violet Mountains', type: 'location', desc: 'A dim, elfin line of pinnacled violet on the western horizon. The Elder Things feared them. Something lives there.' },
-
-  // Locations -- Historic Sites
-  { id: 'cape-evans', name: 'Cape Evans Hut', type: 'location', desc: 'Scott\'s Terra Nova expedition base. A palimpsest of four expeditions. Accumulated material from Discovery, Nimrod, Terra Nova, and Ross Sea party.' },
-  { id: 'hut-point', name: 'Hut Point', type: 'location', desc: 'Edge of the Barrier. Scott\'s Discovery expedition. The oldest European structure in Antarctica. The Ross Sea party was stranded here.' },
-  { id: 'minna-bluff', name: 'Minna Bluff Depot', type: 'location', desc: 'First major depot site on the route south. Laid by the Ross Sea party during both seasons. The first season killed all ten dogs.' },
-  { id: '80s-depot', name: '80S Depot', type: 'location', desc: 'Second depot site. Reaching this point during the first season cost all ten sled dogs their lives.' },
-  { id: 'mt-hope', name: 'Mount Hope Depot', type: 'location', desc: 'Final depot. The furthest point the Ross Sea party reached. 198 continuous days of sledging. Wild\'s undelivered letter.' },
-
-  // Narrative Threads
-  { id: 't-dogs', name: 'Dogs Refuse Food', type: 'thread', desc: 'Dogs refuse food, won\'t face south. Planted Session 1, payoff Session 1 Act III.', status: 'dormant', planted: 'Session 1', payoff: 'Session 1 Act III' },
-  { id: 't-dyer', name: 'Dyer\'s Private Journal', type: 'thread', desc: 'A page from Dyer\'s private journal \u2014 not the published account. Planted Session 2 Act I.', status: 'dormant', planted: 'Session 2 Act I', payoff: 'Session 2 Act II' },
-  { id: 't-wind', name: 'Wind Piping', type: 'thread', desc: 'Wind cadences hold vague suggestions of wild, half-sentient musical piping. Crescendo through Sessions 3-4.', status: 'dormant', planted: 'Session 1 Act I', payoff: 'Sessions 3-4' },
-  { id: 't-mirage', name: 'Mirage City', type: 'thread', desc: 'Vivid, persistent mirages. Distant mountains float as enchanted cities. Reality unreliable from the start.', status: 'dormant', planted: 'Session 1 Act I', payoff: 'Session 2 Act I' },
-  { id: 't-equip', name: 'Equipment Malfunctions', type: 'thread', desc: 'Equipment malfunctions near five-pointed structures. Electrical and magnetic interference.', status: 'dormant', planted: 'Session 1 Act II', payoff: 'Session 2' },
-  { id: 't-radio', name: 'Radio Degradation', type: 'thread', desc: 'Radio contact degrades. Isolation tightens. Total blackout by Session 3.', status: 'dormant', planted: 'Session 1 Act II', payoff: 'Session 3' },
-  { id: 't-scent', name: 'The Nameless Scent', type: 'thread', desc: 'Faintly acrid, pungent organic scent. Grows stronger approaching Shoggoth territory.', status: 'dormant', planted: 'Session 2 Act III', payoff: 'Session 3 Act II-III' },
-  { id: 't-tekeli', name: 'Tekeli-li', type: 'thread', desc: 'The cry from Poe\'s Pym echoed by the Shoggoths. Planted Session 3, climax Session 3 Act III.', status: 'dormant', planted: 'Session 3 Act I', payoff: 'Session 3 Act III' },
-  { id: 't-carvings', name: 'Crude Carvings', type: 'thread', desc: 'Crude carvings overlaid on the originals. A different hand. Something else has been here since the builders left.', status: 'dormant', planted: 'Session 2 Act II', payoff: 'Session 3 Act I' },
-  { id: 't-violet', name: 'The Violet Mountains', type: 'thread', desc: 'The Elder Things feared them. Cities built there crumbled. Something lives there they refused to carve clearly.', status: 'dormant', planted: 'Session 2 Act III', payoff: 'Session 4 Act II' }
-];
-
-var edges = [
-  // Player <-> Player bonds
-  { source: 'harrow', target: 'walsh', type: 'bond', desc: 'Expedition colleagues. Mutual respect \u2014 science and soldier.' },
-  { source: 'harrow', target: 'okafor', type: 'tension', desc: 'Harrow seeks truth for science. Okafor seeks it for publication. Competing claims on evidence.' },
-  { source: 'walsh', target: 'okafor', type: 'bond', desc: 'Walsh respects Okafor\'s nerve. Protective instinct.' },
-
-  // Starkweather connections
-  { source: 'starkweather', target: 'harrow', type: 'bond', desc: 'Starkweather recruited Harrow for her geological expertise. Trusts her findings.' },
-  { source: 'starkweather', target: 'walsh', type: 'bond', desc: 'Hired Walsh for security. Expects obedience under pressure.' },
-  { source: 'starkweather', target: 'okafor', type: 'tension', desc: 'Starkweather wants vindication, not publicity. Okafor wants headlines.' },
-  { source: 'starkweather', target: 'moore', type: 'tension', desc: 'True believer vs. skeptic. Co-patrons with fundamentally opposed readings of Dyer\'s account.' },
-  { source: 'starkweather', target: 'mountains', type: 'presence', desc: 'Pushing the expedition toward the unnamed range.' },
-  { source: 'starkweather', target: 'beardmore', type: 'presence', desc: 'With the main expedition party.' },
-
-  // Moore connections
-  { source: 'moore', target: 'radio-op', type: 'bond', desc: 'Moore\'s voice reaches the expedition through the radio operator. His lifeline.' },
-  { source: 'moore', target: 'second-agent', type: 'secret', desc: 'The second agent may report to Moore. Independent instructions.' },
-  { source: 'moore', target: 'harrow', type: 'bond', desc: 'Respects her empiricism. Expects objective reports.' },
-
-  // Ship Captain
-  { source: 'captain', target: 'mcmurdo', type: 'presence', desc: 'The ship anchored at McMurdo Sound. Last link to civilization.' },
-  { source: 'captain', target: 'starkweather', type: 'tension', desc: 'Will resist orders that endanger crew. Starkweather pushes forward regardless.' },
-
-  // Radio Operator
-  { source: 'radio-op', target: 'mcmurdo', type: 'presence', desc: 'Based at McMurdo Sound. Maintaining the radio link.' },
-
-  // Dog Handler
-  { source: 'dog-handler', target: 'beardmore', type: 'presence', desc: 'Traveling with the expedition, managing the dog teams.' },
-  { source: 'dog-handler', target: 'walsh', type: 'bond', desc: 'Practical people. Walsh trusts the handler\'s animal instincts.' },
-
-  // Second Agent
-  { source: 'second-agent', target: 'beardmore', type: 'presence', desc: 'Embedded within the expedition party. Watching.' },
-  { source: 'second-agent', target: 'harrow', type: 'secret', desc: 'Monitoring Harrow\'s findings for the patron.' },
-
-  // Echoes
-  { source: 'echoes', target: 'mountains', type: 'presence', desc: 'Lake\'s camp. Equipment, bodies, star-shaped graves. The warning that went unheeded.' },
-  { source: 'echoes', target: 'city', type: 'presence', desc: 'Evidence scattered through the ancient ruins. What the first expedition found.' },
-  { source: 'echoes', target: 'harrow', type: 'secret', desc: 'Lake\'s private field journal. Harrow may find it. Increasingly frantic entries.' },
-
-  // Okafor at McMurdo
-  { source: 'okafor', target: 'mcmurdo', type: 'presence', desc: 'Stayed behind at base camp. Filing dispatches.' },
-  { source: 'okafor', target: 'captain', type: 'bond', desc: 'Trading stories. The captain knows things about Antarctic history.' },
-  { source: 'okafor', target: 'radio-op', type: 'bond', desc: 'Relies on the radio operator for contact with the main party.' },
-
-  // Players at locations
-  { source: 'harrow', target: 'beardmore', type: 'presence', desc: 'With the main expedition party at the glacier.' },
-  { source: 'walsh', target: 'beardmore', type: 'presence', desc: 'With the main expedition party at the glacier.' },
-
-  // Thread <-> NPC/Location links
-  { source: 't-dogs', target: 'dog-handler', type: 'thread-link', desc: 'The dogs\' refusal to eat or face south. The handler notices first.' },
-  { source: 't-dogs', target: 'mcmurdo', type: 'thread-link', desc: 'Begins at base camp before the push inland.' },
-
-  { source: 't-dyer', target: 'echoes', type: 'thread-link', desc: 'Dyer\'s private journal \u2014 the unedited account of the first expedition.' },
-  { source: 't-dyer', target: 'starkweather', type: 'thread-link', desc: 'Starkweather read the private account. It changed him.' },
-
-  { source: 't-wind', target: 'mountains', type: 'thread-link', desc: 'The piping intensifies near the unnamed range.' },
-  { source: 't-wind', target: 'plateau', type: 'thread-link', desc: 'First heard crossing the high plateau. Vague musical cadences.' },
-
-  { source: 't-mirage', target: 'barrier', type: 'thread-link', desc: 'First mirages seen crossing the Ross Ice Barrier. Floating cities.' },
-  { source: 't-mirage', target: 'mountains', type: 'thread-link', desc: 'The mirages resolve into something real at the mountain range.' },
-
-  { source: 't-equip', target: 'mountains', type: 'thread-link', desc: 'Equipment fails near five-pointed structures in the mountain caves.' },
-  { source: 't-equip', target: 'harrow', type: 'thread-link', desc: 'Harrow\'s instruments malfunction. The scientist can\'t trust her tools.' },
-
-  { source: 't-radio', target: 'radio-op', type: 'thread-link', desc: 'The radio operator fights to maintain contact as the signal degrades.' },
-  { source: 't-radio', target: 'moore', type: 'thread-link', desc: 'Moore\'s voice fades. The skeptic goes silent.' },
-  { source: 't-radio', target: 'mcmurdo', type: 'thread-link', desc: 'Radio link between McMurdo and the inland party fails.' },
-
-  { source: 't-scent', target: 'tunnels', type: 'thread-link', desc: 'The acrid organic scent grows strongest in the tunnels below.' },
-  { source: 't-scent', target: 'city', type: 'thread-link', desc: 'Faint traces in the city. Stronger as you descend.' },
-
-  { source: 't-tekeli', target: 'tunnels', type: 'thread-link', desc: 'The cry echoes through the carved passages. Poe was not writing fiction.' },
-
-  { source: 't-carvings', target: 'city', type: 'thread-link', desc: 'Crude carvings overlaid on Elder Thing murals. A different hand.' },
-  { source: 't-carvings', target: 'tunnels', type: 'thread-link', desc: 'The carvings become more frequent and more desperate underground.' },
-
-  { source: 't-violet', target: 'violet', type: 'thread-link', desc: 'The thread and the location are one. The Elder Things feared what lives there.' },
-  { source: 't-violet', target: 'city', type: 'thread-link', desc: 'The murals avert from the violet mountains. Damaged deliberately.' },
-
-  // Location adjacency (geographic routes)
-  { source: 'mcmurdo', target: 'cape-evans', type: 'presence', desc: 'Cape Evans is near McMurdo Sound. Walking distance.' },
-  { source: 'mcmurdo', target: 'hut-point', type: 'presence', desc: 'Hut Point is at the edge of McMurdo Sound.' },
-  { source: 'mcmurdo', target: 'barrier', type: 'presence', desc: 'The Barrier begins south of McMurdo Sound.' },
-  { source: 'barrier', target: 'minna-bluff', type: 'presence', desc: 'Minna Bluff depot on the route across the Barrier.' },
-  { source: 'minna-bluff', target: '80s-depot', type: 'presence', desc: 'The depot chain continues south.' },
-  { source: '80s-depot', target: 'mt-hope', type: 'presence', desc: 'Mount Hope at the foot of the Beardmore Glacier.' },
-  { source: 'mt-hope', target: 'beardmore', type: 'presence', desc: 'The depot marks the start of the glacier ascent.' },
-  { source: 'beardmore', target: 'plateau', type: 'presence', desc: 'The glacier leads up onto the high interior plateau.' },
-  { source: 'plateau', target: 'mountains', type: 'presence', desc: 'The mountains rise from the plateau edge.' },
-  { source: 'mountains', target: 'city', type: 'presence', desc: 'The city lies beyond the mountain pass.' },
-  { source: 'city', target: 'tunnels', type: 'presence', desc: 'The tunnels descend from the city into warmth.' },
-  { source: 'city', target: 'violet', type: 'presence', desc: 'The violet mountains are visible on the western horizon from the city.' }
-];
-
-// ---- BUILD THE VISUALIZATION ----------------------------------------
-
-var svgEl = d3.select('#graph');
-var container = document.getElementById('graph-container');
-var tooltip = document.getElementById('tooltip');
-var sidebar = document.getElementById('sidebar');
-var searchBox = document.getElementById('search-box');
-var statsEl = document.getElementById('stats');
-
-var selectedNode = null;
-var visibleNodeTypes = {};
-var visibleEdgeTypes = {};
-Object.keys(NODE_TYPES).forEach(function(k) { visibleNodeTypes[k] = true; });
-Object.keys(EDGE_TYPES).forEach(function(k) { visibleEdgeTypes[k] = true; });
-
-function getNodeById(id) {
-  for (var i = 0; i < nodes.length; i++) {
-    if (nodes[i].id === id) return nodes[i];
-  }
-  return null;
-}
-
-function getSourceId(e) { return typeof e.source === 'object' ? e.source.id : e.source; }
-function getTargetId(e) { return typeof e.target === 'object' ? e.target.id : e.target; }
-function getSourceType(e) { return typeof e.source === 'object' ? e.source.type : getNodeById(e.source).type; }
-function getTargetType(e) { return typeof e.target === 'object' ? e.target.type : getNodeById(e.target).type; }
-
-// Clone data for D3 mutation
-var graphNodes = nodes.map(function(d) { return Object.assign({}, d); });
-var graphEdges = edges.map(function(d) { return Object.assign({}, d); });
-
-function updateStats() {
-  var vn = 0, ve = 0;
-  graphNodes.forEach(function(n) { if (visibleNodeTypes[n.type]) vn++; });
-  graphEdges.forEach(function(e) {
-    var st = getSourceType(e), tt = getTargetType(e);
-    if (visibleEdgeTypes[e.type] && visibleNodeTypes[st] && visibleNodeTypes[tt]) ve++;
-  });
-  statsEl.textContent = vn + ' nodes / ' + ve + ' edges';
-}
-
-// ---- FILTERS ---------------------------------------------------------
-
-var nodeFiltersEl = document.getElementById('node-filters');
-Object.keys(NODE_TYPES).forEach(function(key) {
-  var cfg = NODE_TYPES[key];
-  var chip = document.createElement('div');
-  chip.className = 'cat-chip';
-  chip.setAttribute('data-type', key);
-  var dot = document.createElement('span');
-  dot.className = 'dot';
-  dot.style.background = cfg.color;
-  chip.appendChild(dot);
-  chip.appendChild(document.createTextNode(cfg.label));
-  chip.addEventListener('click', function() {
-    if (visibleNodeTypes[key]) {
-      visibleNodeTypes[key] = false;
-      chip.classList.add('hidden');
-    } else {
-      visibleNodeTypes[key] = true;
-      chip.classList.remove('hidden');
-    }
-    applyFilters();
-  });
-  nodeFiltersEl.appendChild(chip);
-});
-
-var edgeFiltersEl = document.getElementById('edge-filters');
-Object.keys(EDGE_TYPES).forEach(function(key) {
-  var cfg = EDGE_TYPES[key];
-  var chip = document.createElement('div');
-  chip.className = 'edge-chip';
-  chip.setAttribute('data-type', key);
-  var sample = document.createElement('span');
-  sample.className = 'line-sample';
-  if (cfg.dash && cfg.dash.indexOf('3') >= 0) {
-    sample.style.borderTop = '2px dotted ' + cfg.color;
-    sample.style.height = '0';
-  } else if (cfg.dash) {
-    sample.style.borderTop = '2px dashed ' + cfg.color;
-    sample.style.height = '0';
-  } else {
-    sample.style.background = cfg.color;
-  }
-  chip.appendChild(sample);
-  chip.appendChild(document.createTextNode(cfg.label));
-  chip.addEventListener('click', function() {
-    if (visibleEdgeTypes[key]) {
-      visibleEdgeTypes[key] = false;
-      chip.classList.add('hidden');
-    } else {
-      visibleEdgeTypes[key] = true;
-      chip.classList.remove('hidden');
-    }
-    applyFilters();
-  });
-  edgeFiltersEl.appendChild(chip);
-});
-
-function applyFilters() {
-  nodeG.style('display', function(d) { return visibleNodeTypes[d.type] ? null : 'none'; });
-  linkG.style('display', function(d) {
-    var st = getSourceType(d), tt = getTargetType(d);
-    return visibleEdgeTypes[d.type] && visibleNodeTypes[st] && visibleNodeTypes[tt] ? null : 'none';
-  });
-  updateStats();
-}
-
-// ---- SEARCH ----------------------------------------------------------
-
-searchBox.addEventListener('input', function() {
-  var q = searchBox.value.toLowerCase().trim();
-  if (!q) {
-    clearHighlight();
-    return;
-  }
-  var matches = {};
-  graphNodes.forEach(function(n) {
-    if (n.name.toLowerCase().indexOf(q) >= 0 || n.id.toLowerCase().indexOf(q) >= 0) {
-      matches[n.id] = true;
-    }
-  });
-  if (Object.keys(matches).length === 0) {
-    clearHighlight();
-    return;
-  }
-  var neighbors = {};
-  Object.keys(matches).forEach(function(k) { neighbors[k] = true; });
-  graphEdges.forEach(function(e) {
-    var sid = getSourceId(e), tid = getTargetId(e);
-    if (matches[sid]) neighbors[tid] = true;
-    if (matches[tid]) neighbors[sid] = true;
+CeremonyData.load({ slice: 'relationships' }).then(function(graph) {
+  // Map API nodes to our format
+  nodes = graph.nodes.map(function(n) {
+    var cfg = NODE_TYPES[n.type] || NODE_TYPES.npc;
+    return {
+      id: n.id, name: n.name, type: n.type, desc: n.desc,
+      role: n.role || '', status: n.status || '',
+      radius: cfg.radius
+    };
   });
 
-  nodeG.select('.node-circle')
-    .classed('dimmed', function(d) { return !neighbors[d.id]; })
-    .classed('selected', function(d) { return !!matches[d.id]; });
-  nodeG.selectAll('.node-label')
-    .classed('dimmed', function(d) { return !neighbors[d.id]; });
-  linkG
-    .classed('highlighted', function(d) {
-      return !!matches[getSourceId(d)] || !!matches[getTargetId(d)];
-    })
-    .classed('dimmed', function(d) {
-      return !matches[getSourceId(d)] && !matches[getTargetId(d)];
-    });
-});
+  edges = graph.edges.map(function(e) {
+    return { source: e.source, target: e.target, type: e.type, desc: e.desc };
+  });
 
-// ---- RESET -----------------------------------------------------------
+  // Filter edges referencing missing nodes
+  var nodeIds = new Set(nodes.map(function(n) { return n.id; }));
+  edges = edges.filter(function(e) {
+    return nodeIds.has(e.source) && nodeIds.has(e.target);
+  });
 
-document.getElementById('reset-btn').addEventListener('click', function() {
-  searchBox.value = '';
-  selectedNode = null;
-  clearHighlight();
-  closeSidebar();
+  document.getElementById('loading').style.display = 'none';
+
+  // ---- BUILD THE VISUALIZATION ----------------------------------------
+
+  var svgEl = d3.select('#graph');
+  var container = document.getElementById('graph-container');
+  var tooltip = document.getElementById('tooltip');
+  var sidebar = document.getElementById('sidebar');
+  var searchBox = document.getElementById('search-box');
+  var statsEl = document.getElementById('stats');
+
+  var selectedNode = null;
+  var visibleNodeTypes = {};
+  var visibleEdgeTypes = {};
   Object.keys(NODE_TYPES).forEach(function(k) { visibleNodeTypes[k] = true; });
   Object.keys(EDGE_TYPES).forEach(function(k) { visibleEdgeTypes[k] = true; });
-  document.querySelectorAll('.cat-chip, .edge-chip').forEach(function(c) { c.classList.remove('hidden'); });
-  applyFilters();
-});
 
-// ---- SVG SETUP -------------------------------------------------------
+  function getNodeById(id) {
+    for (var i = 0; i < nodes.length; i++) {
+      if (nodes[i].id === id) return nodes[i];
+    }
+    return null;
+  }
 
-var width = container.clientWidth;
-var height = container.clientHeight;
+  function getSourceId(e) { return typeof e.source === 'object' ? e.source.id : e.source; }
+  function getTargetId(e) { return typeof e.target === 'object' ? e.target.id : e.target; }
+  function getSourceType(e) { return typeof e.source === 'object' ? e.source.type : getNodeById(e.source).type; }
+  function getTargetType(e) { return typeof e.target === 'object' ? e.target.type : getNodeById(e.target).type; }
 
-svgEl.attr('viewBox', [0, 0, width, height]);
+  // Clone data for D3 mutation
+  var graphNodes = nodes.map(function(d) { return Object.assign({}, d); });
+  var graphEdges = edges.map(function(d) { return Object.assign({}, d); });
 
-var g = svgEl.append('g');
+  function updateStats() {
+    var vn = 0, ve = 0;
+    graphNodes.forEach(function(n) { if (visibleNodeTypes[n.type]) vn++; });
+    graphEdges.forEach(function(e) {
+      var st = getSourceType(e), tt = getTargetType(e);
+      if (visibleEdgeTypes[e.type] && visibleNodeTypes[st] && visibleNodeTypes[tt]) ve++;
+    });
+    statsEl.textContent = vn + ' nodes / ' + ve + ' edges';
+  }
 
-var zoom = d3.zoom()
-  .scaleExtent([0.15, 5])
-  .on('zoom', function(e) { g.attr('transform', e.transform); });
+  // ---- FILTERS ---------------------------------------------------------
 
-svgEl.call(zoom);
+  var nodeFiltersEl = document.getElementById('node-filters');
+  Object.keys(NODE_TYPES).forEach(function(key) {
+    var cfg = NODE_TYPES[key];
+    var chip = document.createElement('div');
+    chip.className = 'cat-chip';
+    chip.setAttribute('data-type', key);
+    var dot = document.createElement('span');
+    dot.className = 'dot';
+    dot.style.background = cfg.color;
+    chip.appendChild(dot);
+    chip.appendChild(document.createTextNode(cfg.label));
+    chip.addEventListener('click', function() {
+      if (visibleNodeTypes[key]) {
+        visibleNodeTypes[key] = false;
+        chip.classList.add('hidden');
+      } else {
+        visibleNodeTypes[key] = true;
+        chip.classList.remove('hidden');
+      }
+      applyFilters();
+    });
+    nodeFiltersEl.appendChild(chip);
+  });
 
-svgEl.on('click', function(e) {
-  if (e.target === svgEl.node()) {
+  var edgeFiltersEl = document.getElementById('edge-filters');
+  Object.keys(EDGE_TYPES).forEach(function(key) {
+    var cfg = EDGE_TYPES[key];
+    var chip = document.createElement('div');
+    chip.className = 'edge-chip';
+    chip.setAttribute('data-type', key);
+    var sample = document.createElement('span');
+    sample.className = 'line-sample';
+    if (cfg.dash && cfg.dash.indexOf('3') >= 0) {
+      sample.style.borderTop = '2px dotted ' + cfg.color;
+      sample.style.height = '0';
+    } else if (cfg.dash) {
+      sample.style.borderTop = '2px dashed ' + cfg.color;
+      sample.style.height = '0';
+    } else {
+      sample.style.background = cfg.color;
+    }
+    chip.appendChild(sample);
+    chip.appendChild(document.createTextNode(cfg.label));
+    chip.addEventListener('click', function() {
+      if (visibleEdgeTypes[key]) {
+        visibleEdgeTypes[key] = false;
+        chip.classList.add('hidden');
+      } else {
+        visibleEdgeTypes[key] = true;
+        chip.classList.remove('hidden');
+      }
+      applyFilters();
+    });
+    edgeFiltersEl.appendChild(chip);
+  });
+
+  function applyFilters() {
+    nodeG.style('display', function(d) { return visibleNodeTypes[d.type] ? null : 'none'; });
+    linkG.style('display', function(d) {
+      var st = getSourceType(d), tt = getTargetType(d);
+      return visibleEdgeTypes[d.type] && visibleNodeTypes[st] && visibleNodeTypes[tt] ? null : 'none';
+    });
+    updateStats();
+  }
+
+  // ---- SEARCH ----------------------------------------------------------
+
+  searchBox.addEventListener('input', function() {
+    var q = searchBox.value.toLowerCase().trim();
+    if (!q) {
+      clearHighlight();
+      return;
+    }
+    var matches = {};
+    graphNodes.forEach(function(n) {
+      if (n.name.toLowerCase().indexOf(q) >= 0 || n.id.toLowerCase().indexOf(q) >= 0) {
+        matches[n.id] = true;
+      }
+    });
+    if (Object.keys(matches).length === 0) {
+      clearHighlight();
+      return;
+    }
+    var neighbors = {};
+    Object.keys(matches).forEach(function(k) { neighbors[k] = true; });
+    graphEdges.forEach(function(e) {
+      var sid = getSourceId(e), tid = getTargetId(e);
+      if (matches[sid]) neighbors[tid] = true;
+      if (matches[tid]) neighbors[sid] = true;
+    });
+
+    nodeG.select('.node-circle')
+      .classed('dimmed', function(d) { return !neighbors[d.id]; })
+      .classed('selected', function(d) { return !!matches[d.id]; });
+    nodeG.selectAll('.node-label')
+      .classed('dimmed', function(d) { return !neighbors[d.id]; });
+    linkG
+      .classed('highlighted', function(d) {
+        return !!matches[getSourceId(d)] || !!matches[getTargetId(d)];
+      })
+      .classed('dimmed', function(d) {
+        return !matches[getSourceId(d)] && !matches[getTargetId(d)];
+      });
+  });
+
+  // ---- RESET -----------------------------------------------------------
+
+  document.getElementById('reset-btn').addEventListener('click', function() {
+    searchBox.value = '';
     selectedNode = null;
     clearHighlight();
     closeSidebar();
-  }
-});
+    Object.keys(NODE_TYPES).forEach(function(k) { visibleNodeTypes[k] = true; });
+    Object.keys(EDGE_TYPES).forEach(function(k) { visibleEdgeTypes[k] = true; });
+    document.querySelectorAll('.cat-chip, .edge-chip').forEach(function(c) { c.classList.remove('hidden'); });
+    applyFilters();
+  });
 
-// ---- FORCE SIMULATION ------------------------------------------------
+  // ---- SVG SETUP -------------------------------------------------------
 
-var simulation = d3.forceSimulation(graphNodes)
-  .force('link', d3.forceLink(graphEdges).id(function(d) { return d.id; })
-    .distance(function(d) {
-      if (d.type === 'presence') return 100;
-      if (d.type === 'bond') return 120;
-      if (d.type === 'tension') return 150;
-      if (d.type === 'secret') return 140;
-      if (d.type === 'thread-link') return 110;
-      return 120;
+  var width = container.clientWidth;
+  var height = container.clientHeight;
+
+  svgEl.attr('viewBox', [0, 0, width, height]);
+
+  var g = svgEl.append('g');
+
+  var zoom = d3.zoom()
+    .scaleExtent([0.15, 5])
+    .on('zoom', function(e) { g.attr('transform', e.transform); });
+
+  svgEl.call(zoom);
+
+  svgEl.on('click', function(e) {
+    if (e.target === svgEl.node()) {
+      selectedNode = null;
+      clearHighlight();
+      closeSidebar();
+    }
+  });
+
+  // ---- FORCE SIMULATION ------------------------------------------------
+
+  simulation = d3.forceSimulation(graphNodes)
+    .force('link', d3.forceLink(graphEdges).id(function(d) { return d.id; })
+      .distance(function(d) {
+        if (d.type === 'presence') return 100;
+        if (d.type === 'bond') return 120;
+        if (d.type === 'tension') return 150;
+        if (d.type === 'secret') return 140;
+        if (d.type === 'thread-link') return 110;
+        return 120;
+      })
+      .strength(function(d) {
+        if (d.type === 'presence') return 0.3;
+        if (d.type === 'thread-link') return 0.15;
+        return 0.2;
+      })
+    )
+    .force('charge', d3.forceManyBody()
+      .strength(function(d) {
+        if (d.type === 'thread') return -150;
+        if (d.type === 'location') return -250;
+        return -350;
+      })
+    )
+    .force('center', d3.forceCenter(width / 2, height / 2).strength(0.05))
+    .force('collision', d3.forceCollide().radius(function(d) { return NODE_TYPES[d.type].radius + 8; }))
+    .force('x', d3.forceX(function(d) {
+      if (d.type === 'player') return width * 0.35;
+      if (d.type === 'npc') return width * 0.25;
+      if (d.type === 'location') return width * 0.65;
+      if (d.type === 'thread') return width * 0.75;
+      return width / 2;
+    }).strength(0.04))
+    .force('y', d3.forceY(function(d) {
+      if (d.type === 'player') return height * 0.35;
+      if (d.type === 'npc') return height * 0.55;
+      if (d.type === 'location') return height * 0.45;
+      if (d.type === 'thread') return height * 0.55;
+      return height / 2;
+    }).strength(0.04))
+    .alphaDecay(0.015);
+
+  // ---- RENDER LINKS ----------------------------------------------------
+
+  var linkG = g.append('g')
+    .selectAll('line')
+    .data(graphEdges)
+    .join('line')
+      .attr('class', function(d) {
+        var cls = 'link';
+        if (d.type === 'tension') cls += ' dashed';
+        if (d.type === 'secret') cls += ' dotted';
+        return cls;
+      })
+      .attr('stroke', function(d) { return EDGE_TYPES[d.type].color; })
+      .attr('stroke-width', function(d) { return EDGE_TYPES[d.type].width; })
+      .attr('stroke-dasharray', function(d) { return EDGE_TYPES[d.type].dash; });
+
+  // ---- RENDER NODES ----------------------------------------------------
+
+  var nodeG = g.append('g')
+    .selectAll('g')
+    .data(graphNodes)
+    .join('g')
+      .call(d3.drag()
+        .on('start', dragStarted)
+        .on('drag', dragged)
+        .on('end', dragEnded)
+      );
+
+  nodeG.append('circle')
+    .attr('class', 'node-circle')
+    .attr('r', function(d) { return NODE_TYPES[d.type].radius; })
+    .attr('fill', function(d) {
+      var c = d3.color(NODE_TYPES[d.type].color);
+      c.opacity = 0.15;
+      return c;
     })
-    .strength(function(d) {
-      if (d.type === 'presence') return 0.3;
-      if (d.type === 'thread-link') return 0.15;
-      return 0.2;
+    .attr('stroke', function(d) { return NODE_TYPES[d.type].color; });
+
+  // Name labels below node
+  nodeG.append('text')
+    .attr('class', 'node-label')
+    .attr('dy', function(d) { return NODE_TYPES[d.type].radius + 14; })
+    .text(function(d) {
+      var max = d.type === 'thread' ? 16 : 20;
+      return d.name.length > max ? d.name.slice(0, max - 1) + '\u2026' : d.name;
+    });
+
+  // Inner type letter
+  nodeG.append('text')
+    .attr('class', 'node-label')
+    .attr('font-size', function(d) {
+      if (d.type === 'player') return '14px';
+      if (d.type === 'npc') return '11px';
+      if (d.type === 'location') return '10px';
+      return '8px';
     })
-  )
-  .force('charge', d3.forceManyBody()
-    .strength(function(d) {
-      if (d.type === 'thread') return -150;
-      if (d.type === 'location') return -250;
-      return -350;
-    })
-  )
-  .force('center', d3.forceCenter(width / 2, height / 2).strength(0.05))
-  .force('collision', d3.forceCollide().radius(function(d) { return NODE_TYPES[d.type].radius + 8; }))
-  .force('x', d3.forceX(function(d) {
-    if (d.type === 'player') return width * 0.35;
-    if (d.type === 'npc') return width * 0.25;
-    if (d.type === 'location') return width * 0.65;
-    if (d.type === 'thread') return width * 0.75;
-    return width / 2;
-  }).strength(0.04))
-  .force('y', d3.forceY(function(d) {
-    if (d.type === 'player') return height * 0.35;
-    if (d.type === 'npc') return height * 0.55;
-    if (d.type === 'location') return height * 0.45;
-    if (d.type === 'thread') return height * 0.55;
-    return height / 2;
-  }).strength(0.04))
-  .alphaDecay(0.015);
+    .attr('fill', function(d) { return NODE_TYPES[d.type].color; })
+    .attr('opacity', 0.7)
+    .text(function(d) {
+      if (d.type === 'player') return 'P';
+      if (d.type === 'npc') return 'N';
+      if (d.type === 'location') return 'L';
+      return 'T';
+    });
 
-// ---- RENDER LINKS ----------------------------------------------------
+  // ---- HOVER TOOLTIP ---------------------------------------------------
 
-var linkG = g.append('g')
-  .selectAll('line')
-  .data(graphEdges)
-  .join('line')
-    .attr('class', function(d) {
-      var cls = 'link';
-      if (d.type === 'tension') cls += ' dashed';
-      if (d.type === 'secret') cls += ' dotted';
-      return cls;
-    })
-    .attr('stroke', function(d) { return EDGE_TYPES[d.type].color; })
-    .attr('stroke-width', function(d) { return EDGE_TYPES[d.type].width; })
-    .attr('stroke-dasharray', function(d) { return EDGE_TYPES[d.type].dash; });
+  nodeG.on('mouseenter', function(e, d) {
+    var cfg = NODE_TYPES[d.type];
+    var connCount = 0;
+    graphEdges.forEach(function(ed) {
+      if (getSourceId(ed) === d.id || getTargetId(ed) === d.id) connCount++;
+    });
 
-// ---- RENDER NODES ----------------------------------------------------
+    // Build tooltip using DOM methods
+    tooltip.textContent = '';
+    var nameDiv = document.createElement('div');
+    nameDiv.className = 'tt-name';
+    nameDiv.textContent = d.name;
+    tooltip.appendChild(nameDiv);
 
-var nodeG = g.append('g')
-  .selectAll('g')
-  .data(graphNodes)
-  .join('g')
-    .call(d3.drag()
-      .on('start', dragStarted)
-      .on('drag', dragged)
-      .on('end', dragEnded)
-    );
+    var catDiv = document.createElement('div');
+    catDiv.className = 'tt-cat';
+    catDiv.style.background = cfg.color + '22';
+    catDiv.style.color = cfg.color;
+    catDiv.textContent = cfg.label;
+    tooltip.appendChild(catDiv);
 
-nodeG.append('circle')
-  .attr('class', 'node-circle')
-  .attr('r', function(d) { return NODE_TYPES[d.type].radius; })
-  .attr('fill', function(d) {
-    var c = d3.color(NODE_TYPES[d.type].color);
-    c.opacity = 0.15;
-    return c;
+    if (d.role) {
+      var roleDiv = document.createElement('div');
+      roleDiv.className = 'tt-desc';
+      roleDiv.style.color = cfg.color;
+      roleDiv.style.fontStyle = 'italic';
+      roleDiv.textContent = d.role;
+      tooltip.appendChild(roleDiv);
+    }
+
+    if (d.status) {
+      var statusDiv = document.createElement('div');
+      statusDiv.className = 'tt-desc';
+      statusDiv.textContent = 'Status: ' + d.status;
+      tooltip.appendChild(statusDiv);
+    }
+
+    var descDiv = document.createElement('div');
+    descDiv.className = 'tt-desc';
+    descDiv.textContent = d.desc;
+    tooltip.appendChild(descDiv);
+
+    var connDiv = document.createElement('div');
+    connDiv.className = 'tt-connections';
+    connDiv.textContent = connCount + ' connection' + (connCount !== 1 ? 's' : '');
+    tooltip.appendChild(connDiv);
+
+    tooltip.classList.add('visible');
   })
-  .attr('stroke', function(d) { return NODE_TYPES[d.type].color; });
-
-// Name labels below node
-nodeG.append('text')
-  .attr('class', 'node-label')
-  .attr('dy', function(d) { return NODE_TYPES[d.type].radius + 14; })
-  .text(function(d) {
-    var max = d.type === 'thread' ? 16 : 20;
-    return d.name.length > max ? d.name.slice(0, max - 1) + '\u2026' : d.name;
-  });
-
-// Inner type letter
-nodeG.append('text')
-  .attr('class', 'node-label')
-  .attr('font-size', function(d) {
-    if (d.type === 'player') return '14px';
-    if (d.type === 'npc') return '11px';
-    if (d.type === 'location') return '10px';
-    return '8px';
+  .on('mousemove', function(e) {
+    var rect = container.getBoundingClientRect();
+    var x = e.clientX - rect.left + 16;
+    var y = e.clientY - rect.top - 10;
+    if (x + 340 > rect.width) x = e.clientX - rect.left - 350;
+    if (y + 200 > rect.height) y = rect.height - 210;
+    tooltip.style.left = x + 'px';
+    tooltip.style.top = y + 'px';
   })
-  .attr('fill', function(d) { return NODE_TYPES[d.type].color; })
-  .attr('opacity', 0.7)
-  .text(function(d) {
-    if (d.type === 'player') return 'P';
-    if (d.type === 'npc') return 'N';
-    if (d.type === 'location') return 'L';
-    return 'T';
+  .on('mouseleave', function() {
+    tooltip.classList.remove('visible');
   });
 
-// ---- HOVER TOOLTIP ---------------------------------------------------
+  // ---- CLICK TO SELECT -------------------------------------------------
 
-nodeG.on('mouseenter', function(e, d) {
-  var cfg = NODE_TYPES[d.type];
-  var connCount = 0;
-  graphEdges.forEach(function(ed) {
-    if (getSourceId(ed) === d.id || getTargetId(ed) === d.id) connCount++;
+  nodeG.on('click', function(e, d) {
+    e.stopPropagation();
+    selectedNode = d;
+    highlightNode(d);
+    openSidebar(d);
   });
 
-  // Build tooltip using DOM methods
-  tooltip.textContent = '';
-  var nameDiv = document.createElement('div');
-  nameDiv.className = 'tt-name';
-  nameDiv.textContent = d.name;
-  tooltip.appendChild(nameDiv);
+  function highlightNode(d) {
+    var connectedNodes = {};
+    connectedNodes[d.id] = true;
+    var connectedEdgeIndices = {};
 
-  var catDiv = document.createElement('div');
-  catDiv.className = 'tt-cat';
-  catDiv.style.background = cfg.color + '22';
-  catDiv.style.color = cfg.color;
-  catDiv.textContent = cfg.label;
-  tooltip.appendChild(catDiv);
-
-  if (d.role) {
-    var roleDiv = document.createElement('div');
-    roleDiv.className = 'tt-desc';
-    roleDiv.style.color = cfg.color;
-    roleDiv.style.fontStyle = 'italic';
-    roleDiv.textContent = d.role;
-    tooltip.appendChild(roleDiv);
-  }
-
-  if (d.status) {
-    var statusDiv = document.createElement('div');
-    statusDiv.className = 'tt-desc';
-    statusDiv.textContent = 'Status: ' + d.status;
-    tooltip.appendChild(statusDiv);
-  }
-
-  var descDiv = document.createElement('div');
-  descDiv.className = 'tt-desc';
-  descDiv.textContent = d.desc;
-  tooltip.appendChild(descDiv);
-
-  var connDiv = document.createElement('div');
-  connDiv.className = 'tt-connections';
-  connDiv.textContent = connCount + ' connection' + (connCount !== 1 ? 's' : '');
-  tooltip.appendChild(connDiv);
-
-  tooltip.classList.add('visible');
-})
-.on('mousemove', function(e) {
-  var rect = container.getBoundingClientRect();
-  var x = e.clientX - rect.left + 16;
-  var y = e.clientY - rect.top - 10;
-  if (x + 340 > rect.width) x = e.clientX - rect.left - 350;
-  if (y + 200 > rect.height) y = rect.height - 210;
-  tooltip.style.left = x + 'px';
-  tooltip.style.top = y + 'px';
-})
-.on('mouseleave', function() {
-  tooltip.classList.remove('visible');
-});
-
-// ---- CLICK TO SELECT -------------------------------------------------
-
-nodeG.on('click', function(e, d) {
-  e.stopPropagation();
-  selectedNode = d;
-  highlightNode(d);
-  openSidebar(d);
-});
-
-function highlightNode(d) {
-  var connectedNodes = {};
-  connectedNodes[d.id] = true;
-  var connectedEdgeIndices = {};
-
-  graphEdges.forEach(function(e, i) {
-    var sid = getSourceId(e), tid = getTargetId(e);
-    if (sid === d.id || tid === d.id) {
-      connectedNodes[sid] = true;
-      connectedNodes[tid] = true;
-      connectedEdgeIndices[i] = true;
-    }
-  });
-
-  nodeG.select('.node-circle')
-    .classed('dimmed', function(n) { return !connectedNodes[n.id]; })
-    .classed('selected', function(n) { return n.id === d.id; });
-  nodeG.selectAll('.node-label')
-    .classed('dimmed', function(n) { return !connectedNodes[n.id]; });
-  linkG
-    .classed('highlighted', function(_, i) { return !!connectedEdgeIndices[i]; })
-    .classed('dimmed', function(_, i) { return !connectedEdgeIndices[i]; });
-}
-
-function clearHighlight() {
-  nodeG.select('.node-circle').classed('dimmed', false).classed('selected', false);
-  nodeG.selectAll('.node-label').classed('dimmed', false);
-  linkG.classed('highlighted', false).classed('dimmed', false);
-}
-
-// ---- SIDEBAR ---------------------------------------------------------
-
-var TYPE_COLORS = {
-  bond: '#c4a35a', tension: '#c45a5a', presence: '#6a7a8a',
-  secret: '#5a6a7a', 'thread-link': '#8b7bb5'
-};
-
-function openSidebar(d) {
-  var cfg = NODE_TYPES[d.type];
-
-  // Gather connections
-  var conns = [];
-  graphEdges.forEach(function(e) {
-    var sid = getSourceId(e), tid = getTargetId(e);
-    if (sid === d.id || tid === d.id) {
-      var otherId = sid === d.id ? tid : sid;
-      var other = graphNodes.find(function(n) { return n.id === otherId; });
-      conns.push({ edge: e, other: other });
-    }
-  });
-
-  // Build sidebar using DOM methods
-  sidebar.textContent = '';
-  var content = document.createElement('div');
-  content.className = 'sidebar-content';
-
-  // Header
-  var header = document.createElement('div');
-  header.className = 'sb-header';
-  var nameEl = document.createElement('div');
-  nameEl.className = 'sb-name';
-  nameEl.textContent = d.name;
-  header.appendChild(nameEl);
-  var closeBtn = document.createElement('button');
-  closeBtn.className = 'sb-close';
-  closeBtn.textContent = '\u00d7';
-  closeBtn.addEventListener('click', function() { closeSidebar(); clearHighlight(); });
-  header.appendChild(closeBtn);
-  content.appendChild(header);
-
-  // Badge
-  var badge = document.createElement('div');
-  badge.className = 'sb-badge';
-  badge.style.background = cfg.color + '22';
-  badge.style.color = cfg.color;
-  badge.textContent = cfg.label;
-  content.appendChild(badge);
-
-  // Role (NPCs)
-  if (d.role) {
-    var roleSec = document.createElement('div');
-    roleSec.className = 'sb-section';
-    var roleTitle = document.createElement('div');
-    roleTitle.className = 'sb-section-title';
-    roleTitle.textContent = 'Role';
-    roleSec.appendChild(roleTitle);
-    var roleDesc = document.createElement('div');
-    roleDesc.className = 'sb-desc';
-    roleDesc.textContent = d.role;
-    roleSec.appendChild(roleDesc);
-    content.appendChild(roleSec);
-  }
-
-  // Thread status
-  if (d.status) {
-    var threadSec = document.createElement('div');
-    threadSec.className = 'sb-section';
-    var threadTitle = document.createElement('div');
-    threadTitle.className = 'sb-section-title';
-    threadTitle.textContent = 'Thread Status';
-    threadSec.appendChild(threadTitle);
-    var threadStatus = document.createElement('div');
-    threadStatus.className = 'sb-desc';
-    threadStatus.style.color = cfg.color;
-    threadStatus.textContent = d.status.toUpperCase();
-    threadSec.appendChild(threadStatus);
-    if (d.planted) {
-      var plantedEl = document.createElement('div');
-      plantedEl.className = 'sb-thread-status';
-      plantedEl.textContent = 'Planted: ' + d.planted;
-      threadSec.appendChild(plantedEl);
-    }
-    if (d.payoff) {
-      var payoffEl = document.createElement('div');
-      payoffEl.className = 'sb-thread-status';
-      payoffEl.textContent = 'Payoff: ' + d.payoff;
-      threadSec.appendChild(payoffEl);
-    }
-    content.appendChild(threadSec);
-  }
-
-  // Description
-  var descSec = document.createElement('div');
-  descSec.className = 'sb-section';
-  var descTitle = document.createElement('div');
-  descTitle.className = 'sb-section-title';
-  descTitle.textContent = 'Description';
-  descSec.appendChild(descTitle);
-  var descText = document.createElement('div');
-  descText.className = 'sb-desc';
-  descText.textContent = d.desc;
-  descSec.appendChild(descText);
-  content.appendChild(descSec);
-
-  // Connections
-  var connSec = document.createElement('div');
-  connSec.className = 'sb-section';
-  var connTitle = document.createElement('div');
-  connTitle.className = 'sb-section-title';
-  connTitle.textContent = 'Connections (' + conns.length + ')';
-  connSec.appendChild(connTitle);
-  var connList = document.createElement('ul');
-  connList.className = 'sb-conn-list';
-  conns.forEach(function(c) {
-    var tc = TYPE_COLORS[c.edge.type] || '#6a7a8a';
-    var li = document.createElement('li');
-    li.setAttribute('data-node-id', c.other.id);
-    var typeSpan = document.createElement('span');
-    typeSpan.className = 'sb-conn-type';
-    typeSpan.style.background = tc + '22';
-    typeSpan.style.color = tc;
-    typeSpan.textContent = EDGE_TYPES[c.edge.type].label;
-    li.appendChild(typeSpan);
-    var nameSpan = document.createElement('span');
-    nameSpan.textContent = c.other.name;
-    li.appendChild(nameSpan);
-    li.addEventListener('click', function() {
-      var targetNode = graphNodes.find(function(n) { return n.id === c.other.id; });
-      if (targetNode) {
-        selectedNode = targetNode;
-        highlightNode(targetNode);
-        openSidebar(targetNode);
-        svgEl.transition().duration(500).call(
-          zoom.translateTo, targetNode.x, targetNode.y
-        );
+    graphEdges.forEach(function(e, i) {
+      var sid = getSourceId(e), tid = getTargetId(e);
+      if (sid === d.id || tid === d.id) {
+        connectedNodes[sid] = true;
+        connectedNodes[tid] = true;
+        connectedEdgeIndices[i] = true;
       }
     });
-    connList.appendChild(li);
+
+    nodeG.select('.node-circle')
+      .classed('dimmed', function(n) { return !connectedNodes[n.id]; })
+      .classed('selected', function(n) { return n.id === d.id; });
+    nodeG.selectAll('.node-label')
+      .classed('dimmed', function(n) { return !connectedNodes[n.id]; });
+    linkG
+      .classed('highlighted', function(_, i) { return !!connectedEdgeIndices[i]; })
+      .classed('dimmed', function(_, i) { return !connectedEdgeIndices[i]; });
+  }
+
+  function clearHighlight() {
+    nodeG.select('.node-circle').classed('dimmed', false).classed('selected', false);
+    nodeG.selectAll('.node-label').classed('dimmed', false);
+    linkG.classed('highlighted', false).classed('dimmed', false);
+  }
+
+  // ---- SIDEBAR ---------------------------------------------------------
+
+  var TYPE_COLORS = {
+    bond: '#c4a35a', tension: '#c45a5a', presence: '#6a7a8a',
+    secret: '#5a6a7a', 'thread-link': '#8b7bb5'
+  };
+
+  function openSidebar(d) {
+    var cfg = NODE_TYPES[d.type];
+
+    // Gather connections
+    var conns = [];
+    graphEdges.forEach(function(e) {
+      var sid = getSourceId(e), tid = getTargetId(e);
+      if (sid === d.id || tid === d.id) {
+        var otherId = sid === d.id ? tid : sid;
+        var other = graphNodes.find(function(n) { return n.id === otherId; });
+        conns.push({ edge: e, other: other });
+      }
+    });
+
+    // Build sidebar using DOM methods
+    sidebar.textContent = '';
+    var content = document.createElement('div');
+    content.className = 'sidebar-content';
+
+    // Header
+    var header = document.createElement('div');
+    header.className = 'sb-header';
+    var nameEl = document.createElement('div');
+    nameEl.className = 'sb-name';
+    nameEl.textContent = d.name;
+    header.appendChild(nameEl);
+    var closeBtn = document.createElement('button');
+    closeBtn.className = 'sb-close';
+    closeBtn.textContent = '\u00d7';
+    closeBtn.addEventListener('click', function() { closeSidebar(); clearHighlight(); });
+    header.appendChild(closeBtn);
+    content.appendChild(header);
+
+    // Badge
+    var badge = document.createElement('div');
+    badge.className = 'sb-badge';
+    badge.style.background = cfg.color + '22';
+    badge.style.color = cfg.color;
+    badge.textContent = cfg.label;
+    content.appendChild(badge);
+
+    // Role (NPCs)
+    if (d.role) {
+      var roleSec = document.createElement('div');
+      roleSec.className = 'sb-section';
+      var roleTitle = document.createElement('div');
+      roleTitle.className = 'sb-section-title';
+      roleTitle.textContent = 'Role';
+      roleSec.appendChild(roleTitle);
+      var roleDesc = document.createElement('div');
+      roleDesc.className = 'sb-desc';
+      roleDesc.textContent = d.role;
+      roleSec.appendChild(roleDesc);
+      content.appendChild(roleSec);
+    }
+
+    // Thread status
+    if (d.status) {
+      var threadSec = document.createElement('div');
+      threadSec.className = 'sb-section';
+      var threadTitle = document.createElement('div');
+      threadTitle.className = 'sb-section-title';
+      threadTitle.textContent = 'Thread Status';
+      threadSec.appendChild(threadTitle);
+      var threadStatus = document.createElement('div');
+      threadStatus.className = 'sb-desc';
+      threadStatus.style.color = cfg.color;
+      threadStatus.textContent = d.status.toUpperCase();
+      threadSec.appendChild(threadStatus);
+      if (d.planted) {
+        var plantedEl = document.createElement('div');
+        plantedEl.className = 'sb-thread-status';
+        plantedEl.textContent = 'Planted: ' + d.planted;
+        threadSec.appendChild(plantedEl);
+      }
+      if (d.payoff) {
+        var payoffEl = document.createElement('div');
+        payoffEl.className = 'sb-thread-status';
+        payoffEl.textContent = 'Payoff: ' + d.payoff;
+        threadSec.appendChild(payoffEl);
+      }
+      content.appendChild(threadSec);
+    }
+
+    // Description
+    var descSec = document.createElement('div');
+    descSec.className = 'sb-section';
+    var descTitle = document.createElement('div');
+    descTitle.className = 'sb-section-title';
+    descTitle.textContent = 'Description';
+    descSec.appendChild(descTitle);
+    var descText = document.createElement('div');
+    descText.className = 'sb-desc';
+    descText.textContent = d.desc;
+    descSec.appendChild(descText);
+    content.appendChild(descSec);
+
+    // Connections
+    var connSec = document.createElement('div');
+    connSec.className = 'sb-section';
+    var connTitle = document.createElement('div');
+    connTitle.className = 'sb-section-title';
+    connTitle.textContent = 'Connections (' + conns.length + ')';
+    connSec.appendChild(connTitle);
+    var connList = document.createElement('ul');
+    connList.className = 'sb-conn-list';
+    conns.forEach(function(c) {
+      var tc = TYPE_COLORS[c.edge.type] || '#6a7a8a';
+      var li = document.createElement('li');
+      li.setAttribute('data-node-id', c.other.id);
+      var typeSpan = document.createElement('span');
+      typeSpan.className = 'sb-conn-type';
+      typeSpan.style.background = tc + '22';
+      typeSpan.style.color = tc;
+      typeSpan.textContent = EDGE_TYPES[c.edge.type].label;
+      li.appendChild(typeSpan);
+      var nameSpan = document.createElement('span');
+      nameSpan.textContent = c.other.name;
+      li.appendChild(nameSpan);
+      li.addEventListener('click', function() {
+        var targetNode = graphNodes.find(function(n) { return n.id === c.other.id; });
+        if (targetNode) {
+          selectedNode = targetNode;
+          highlightNode(targetNode);
+          openSidebar(targetNode);
+          svgEl.transition().duration(500).call(
+            zoom.translateTo, targetNode.x, targetNode.y
+          );
+        }
+      });
+      connList.appendChild(li);
+    });
+    connSec.appendChild(connList);
+    content.appendChild(connSec);
+
+    sidebar.appendChild(content);
+  }
+
+  function closeSidebar() {
+    selectedNode = null;
+    sidebar.textContent = '';
+    var empty = document.createElement('div');
+    empty.className = 'sidebar-empty';
+    var line1 = document.createTextNode('Click a node to inspect its');
+    empty.appendChild(line1);
+    empty.appendChild(document.createElement('br'));
+    var line2 = document.createTextNode('connections and details.');
+    empty.appendChild(line2);
+    empty.appendChild(document.createElement('br'));
+    empty.appendChild(document.createElement('br'));
+    var hint1 = document.createElement('span');
+    hint1.style.color = '#2a3a54';
+    hint1.textContent = 'Drag nodes to rearrange.';
+    empty.appendChild(hint1);
+    empty.appendChild(document.createElement('br'));
+    var hint2 = document.createElement('span');
+    hint2.style.color = '#2a3a54';
+    hint2.textContent = 'Scroll to zoom. Click background to reset.';
+    empty.appendChild(hint2);
+    sidebar.appendChild(empty);
+  }
+
+  // ---- DRAG ------------------------------------------------------------
+
+  function dragStarted(e, d) {
+    if (!e.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+  }
+
+  function dragged(e, d) {
+    d.fx = e.x;
+    d.fy = e.y;
+  }
+
+  function dragEnded(e, d) {
+    if (!e.active) simulation.alphaTarget(0);
+    d.fx = null;
+    d.fy = null;
+  }
+
+  // ---- TICK ------------------------------------------------------------
+
+  simulation.on('tick', function() {
+    linkG
+      .attr('x1', function(d) { return d.source.x; })
+      .attr('y1', function(d) { return d.source.y; })
+      .attr('x2', function(d) { return d.target.x; })
+      .attr('y2', function(d) { return d.target.y; });
+
+    nodeG.attr('transform', function(d) { return 'translate(' + d.x + ',' + d.y + ')'; });
   });
-  connSec.appendChild(connList);
-  content.appendChild(connSec);
 
-  sidebar.appendChild(content);
-}
+  // Initial stats
+  updateStats();
 
-function closeSidebar() {
-  selectedNode = null;
-  sidebar.textContent = '';
-  var empty = document.createElement('div');
-  empty.className = 'sidebar-empty';
-  var line1 = document.createTextNode('Click a node to inspect its');
-  empty.appendChild(line1);
-  empty.appendChild(document.createElement('br'));
-  var line2 = document.createTextNode('connections and details.');
-  empty.appendChild(line2);
-  empty.appendChild(document.createElement('br'));
-  empty.appendChild(document.createElement('br'));
-  var hint1 = document.createElement('span');
-  hint1.style.color = '#2a3a54';
-  hint1.textContent = 'Drag nodes to rearrange.';
-  empty.appendChild(hint1);
-  empty.appendChild(document.createElement('br'));
-  var hint2 = document.createElement('span');
-  hint2.style.color = '#2a3a54';
-  hint2.textContent = 'Scroll to zoom. Click background to reset.';
-  empty.appendChild(hint2);
-  sidebar.appendChild(empty);
-}
-
-// ---- DRAG ------------------------------------------------------------
-
-function dragStarted(e, d) {
-  if (!e.active) simulation.alphaTarget(0.3).restart();
-  d.fx = d.x;
-  d.fy = d.y;
-}
-
-function dragged(e, d) {
-  d.fx = e.x;
-  d.fy = e.y;
-}
-
-function dragEnded(e, d) {
-  if (!e.active) simulation.alphaTarget(0);
-  d.fx = null;
-  d.fy = null;
-}
-
-// ---- TICK ------------------------------------------------------------
-
-simulation.on('tick', function() {
-  linkG
-    .attr('x1', function(d) { return d.source.x; })
-    .attr('y1', function(d) { return d.source.y; })
-    .attr('x2', function(d) { return d.target.x; })
-    .attr('y2', function(d) { return d.target.y; });
-
-  nodeG.attr('transform', function(d) { return 'translate(' + d.x + ',' + d.y + ')'; });
+  // Zoom to fit after layout stabilizes
+  setTimeout(function() {
+    var pad = 60;
+    var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    graphNodes.forEach(function(d) {
+      var r = NODE_TYPES[d.type].radius;
+      if (d.x - r < x0) x0 = d.x - r;
+      if (d.y - r < y0) y0 = d.y - r;
+      if (d.x + r > x1) x1 = d.x + r;
+      if (d.y + r > y1) y1 = d.y + r;
+    });
+    var bw = x1 - x0 + pad * 2;
+    var bh = y1 - y0 + pad * 2;
+    var scale = Math.min(width / bw, height / bh, 1.5);
+    var cx = (x0 + x1) / 2;
+    var cy = (y0 + y1) / 2;
+    svgEl.transition().duration(800).call(
+      zoom.transform,
+      d3.zoomIdentity.translate(width / 2, height / 2).scale(scale).translate(-cx, -cy)
+    );
+  }, 2500);
 });
 
-// Initial stats
-updateStats();
-
-// Zoom to fit after layout stabilizes
-setTimeout(function() {
-  var pad = 60;
-  var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  graphNodes.forEach(function(d) {
-    var r = NODE_TYPES[d.type].radius;
-    if (d.x - r < x0) x0 = d.x - r;
-    if (d.y - r < y0) y0 = d.y - r;
-    if (d.x + r > x1) x1 = d.x + r;
-    if (d.y + r > y1) y1 = d.y + r;
+CeremonyData.subscribe(function(graph) {
+  var oldPositions = {};
+  nodes.forEach(function(n) {
+    oldPositions[n.id] = { x: n.x, y: n.y, vx: n.vx, vy: n.vy };
   });
-  var bw = x1 - x0 + pad * 2;
-  var bh = y1 - y0 + pad * 2;
-  var scale = Math.min(width / bw, height / bh, 1.5);
-  var cx = (x0 + x1) / 2;
-  var cy = (y0 + y1) / 2;
-  svgEl.transition().duration(800).call(
-    zoom.transform,
-    d3.zoomIdentity.translate(width / 2, height / 2).scale(scale).translate(-cx, -cy)
-  );
-}, 2500);
+
+  nodes = graph.nodes.map(function(n) {
+    var cfg = NODE_TYPES[n.type] || NODE_TYPES.npc;
+    var pos = oldPositions[n.id] || {};
+    return {
+      id: n.id, name: n.name, type: n.type, desc: n.desc,
+      role: n.role || '', status: n.status || '',
+      radius: cfg.radius, x: pos.x, y: pos.y, vx: pos.vx || 0, vy: pos.vy || 0
+    };
+  });
+
+  edges = graph.edges.map(function(e) {
+    return { source: e.source, target: e.target, type: e.type, desc: e.desc };
+  });
+
+  var nodeIds = new Set(nodes.map(function(n) { return n.id; }));
+  edges = edges.filter(function(e) {
+    return nodeIds.has(typeof e.source === 'object' ? e.source.id : e.source)
+        && nodeIds.has(typeof e.target === 'object' ? e.target.id : e.target);
+  });
+
+  if (typeof simulation !== 'undefined' && simulation) {
+    simulation.nodes(nodes);
+    simulation.force('link').links(edges);
+    simulation.alpha(0.3).restart();
+  }
+
+  // Flash update badge
+  var badge = document.getElementById('update-badge');
+  badge.style.opacity = '1';
+  setTimeout(function() { badge.style.opacity = '0'; }, 2000);
+});
 
 </script>
 </body>

@@ -11,6 +11,7 @@ import StoryLog from "@/components/StoryLog";
 import MessageInput from "@/components/MessageInput";
 import ChannelTabs from "@/components/ChannelTabs";
 import PlayerPanelShelf from "@/components/PlayerPanelShelf";
+import type { Archetype } from "@/components/CharacterCreation";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import { CornerFrame, Flourish, MeanderStrip } from "@/components/Ornaments";
 
@@ -206,6 +207,7 @@ function PlayPageInner() {
   const [streamingText, setStreamingText] = useState<string | null>(null);
   const [characterPool, setCharacterPool] = useState<PresetCharacter[]>([]);
   const [claimedCharacterIds, setClaimedCharacterIds] = useState<string[]>([]);
+  const [archetypes, setArchetypes] = useState<Archetype[]>([]);
 
   // Reconnect from localStorage on mount
   useEffect(() => {
@@ -247,6 +249,9 @@ function PlayPageInner() {
           if (Array.isArray(currentSession.characterClaims)) {
             setClaimedCharacterIds(currentSession.characterClaims);
           }
+          if (Array.isArray(currentSession.archetypes)) {
+            setArchetypes(currentSession.archetypes);
+          }
         } else {
           localStorage.removeItem("ceremony_player");
           clearStoredToken();
@@ -286,6 +291,9 @@ function PlayPageInner() {
     }
     if (Array.isArray(data.characterClaims)) {
       setClaimedCharacterIds(data.characterClaims);
+    }
+    if (Array.isArray(data.archetypes)) {
+      setArchetypes(data.archetypes);
     }
   }, []);
 
@@ -594,6 +602,7 @@ function PlayPageInner() {
               player={player}
               session={session!}
               widgets={widgets}
+              archetypes={archetypes}
               onCharacterUpdate={handleCharacterUpdate}
               onCharacterSubmit={handleCharacterSubmit}
             />
@@ -607,6 +616,7 @@ function PlayPageInner() {
             player={player}
             session={session!}
             widgets={widgets}
+            archetypes={archetypes}
             onCharacterUpdate={handleCharacterUpdate}
             onCharacterSubmit={handleCharacterSubmit}
           />
@@ -620,6 +630,7 @@ function PlayPageInner() {
           player={player}
           session={session!}
           widgets={widgets}
+          archetypes={archetypes}
           onCharacterUpdate={handleCharacterUpdate}
           onCharacterSubmit={handleCharacterSubmit}
         />

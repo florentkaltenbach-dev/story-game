@@ -1,0 +1,895 @@
+<!-- VIZ-META {"title":"Story Matrix","description":"Character status across sessions and acts","category":"visualization"} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Ceremony — Story Matrix</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0e17;
+    color: #e8dcc8;
+    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: #0d1220;
+    border-bottom: 1px solid #1e2d44;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    z-index: 10;
+    flex-shrink: 0;
+  }
+
+  header h1 {
+    font-family: 'Crimson Text', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #c4a35a;
+    letter-spacing: 1px;
+  }
+
+  header h1 span {
+    color: #6a6a7a;
+    font-weight: 400;
+    font-size: 16px;
+    margin-left: 12px;
+  }
+
+  #main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  #matrix-container {
+    flex: 1;
+    overflow: auto;
+    padding: 20px 20px 20px 0;
+  }
+
+  /* Detail panel */
+  #detail-panel {
+    width: 0;
+    overflow: hidden;
+    background: #0d1220;
+    border-left: 1px solid #1e2d44;
+    flex-shrink: 0;
+    transition: width 0.25s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #detail-panel.open { width: 340px; }
+
+  .detail-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid #1e2d44;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .detail-header h2 {
+    font-family: 'Crimson Text', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #c4a35a;
+    line-height: 1.3;
+  }
+
+  .detail-header .label {
+    font-size: 11px;
+    color: #6a7a8a;
+    margin-top: 2px;
+  }
+
+  .detail-close {
+    background: none;
+    border: none;
+    color: #6a7a8a;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+  }
+
+  .detail-close:hover { color: #e8dcc8; }
+
+  .detail-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+  }
+
+  .d-section { margin-bottom: 16px; }
+
+  .d-title {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #4a5a6a;
+    margin-bottom: 6px;
+  }
+
+  .d-value {
+    font-size: 12px;
+    color: #e8dcc8;
+    line-height: 1.5;
+  }
+
+  .d-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    margin: 2px 4px 2px 0;
+    border: 1px solid #1e2d44;
+    background: #131a2b;
+    color: #8a9aaa;
+  }
+
+  .d-tag-thread {
+    background: #1a1228;
+    border-color: #2a1538;
+    color: #b87adb;
+  }
+
+  .d-tag-know {
+    border-color: #1e2d44;
+    color: #7ba4c7;
+  }
+
+  .d-mc {
+    background: #1a1228;
+    border: 1px solid #3a1e4a;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #b87adb;
+  }
+
+  .d-npc {
+    background: #1a2218;
+    border: 1px solid #2a4a2a;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #8abf8a;
+    font-style: italic;
+  }
+
+  .d-arc {
+    border-top: 1px solid #1e2d44;
+    padding-top: 16px;
+  }
+
+  .d-throughline {
+    font-family: 'Crimson Text', serif;
+    font-size: 14px;
+    color: #e8dcc8;
+    font-style: italic;
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+
+  .d-arc-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 11px;
+  }
+
+  .d-arc-label {
+    color: #6a7a8a;
+    min-width: 44px;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    padding-top: 1px;
+    flex-shrink: 0;
+  }
+
+  .d-arc-val {
+    color: #c8bca8;
+    line-height: 1.5;
+  }
+
+  .act-card {
+    margin-bottom: 8px;
+    padding: 8px 10px;
+    background: #0a0e17;
+    border-radius: 4px;
+    border-left: 3px solid #1e2d44;
+  }
+
+  .act-card-name {
+    font-size: 12px;
+    color: #c4a35a;
+    font-weight: 500;
+  }
+
+  .act-card-meta {
+    font-size: 10px;
+    color: #6a7a8a;
+    margin-top: 2px;
+  }
+
+  .act-card-note {
+    font-size: 11px;
+    color: #c8bca8;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  /* Legend */
+  #legend {
+    background: #0d1220;
+    border-top: 1px solid #1e2d44;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+    z-index: 10;
+    flex-wrap: wrap;
+  }
+
+  .legend-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .ctrl-label {
+    font-size: 10px;
+    color: #4a5a6a;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #6a7a8a;
+  }
+
+  .legend-swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1px solid #1e2d44;
+  }
+
+  .phase-label {
+    font-size: 10px;
+    color: #4a5a6a;
+    margin-left: auto;
+    font-style: italic;
+    font-family: 'Crimson Text', serif;
+  }
+
+  /* Tooltip */
+  #tooltip {
+    position: fixed;
+    pointer-events: none;
+    background: #0d1220;
+    border: 1px solid #1e2d44;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 11px;
+    line-height: 1.6;
+    color: #e8dcc8;
+    z-index: 100;
+    max-width: 320px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  #tooltip.visible { opacity: 1; }
+
+  /* SVG styles */
+  .session-label {
+    font-family: 'Crimson Text', serif;
+    fill: #c4a35a;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .phase-text {
+    font-family: 'Crimson Text', serif;
+    fill: #4a5a6a;
+    font-size: 10px;
+    font-style: italic;
+  }
+
+  .act-col-label {
+    font-family: 'JetBrains Mono', monospace;
+    fill: #7ba4c7;
+    font-size: 9px;
+    cursor: pointer;
+  }
+
+  .act-col-label:hover { fill: #c4a35a; }
+
+  .category-label {
+    font-family: 'Crimson Text', serif;
+    fill: #c4a35a;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .row-label {
+    font-family: 'JetBrains Mono', monospace;
+    fill: #8a9aaa;
+    font-size: 11px;
+    cursor: pointer;
+    transition: fill 0.2s;
+  }
+
+  .row-label:hover, .row-label.hl { fill: #c4a35a; }
+
+  .cell {
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .cell:hover {
+    stroke: #e8dcc8;
+    stroke-width: 2;
+  }
+
+  .cell.sel {
+    stroke: #c4a35a;
+    stroke-width: 2;
+  }
+
+  .cell.dim { opacity: 0.15; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>The Ceremony <span>Character arcs across the narrative</span></h1>
+  <div style="font-size:12px;color:#6a7a8a;" id="stats"></div>
+</header>
+
+<div id="main">
+  <div id="matrix-container">
+    <svg id="matrix-svg"></svg>
+  </div>
+  <div id="detail-panel">
+    <div class="detail-header">
+      <div>
+        <h2 id="dp-title"></h2>
+        <div class="label" id="dp-sub"></div>
+      </div>
+      <button class="detail-close" onclick="clearSel()">&times;</button>
+    </div>
+    <div class="detail-body" id="dp-body"></div>
+  </div>
+</div>
+
+<div id="legend">
+  <span class="ctrl-label">Danger</span>
+  <div class="legend-group">
+    <div class="legend-item"><div class="legend-swatch" style="background:#131a2b;"></div>0 Safe</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#6b5a2a;"></div>1 Uneasy</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#c4a35a;"></div>2 Peril</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#e06f6f;"></div>3 Mortal</div>
+  </div>
+  <span class="ctrl-label" style="margin-left:16px;">Markers</span>
+  <div class="legend-group">
+    <div class="legend-item"><span style="color:#b87adb;font-size:10px;">&#9679;</span> MC note</div>
+    <div class="legend-item"><span style="font-size:9px;color:#8a9aaa;">~</span> Shaken</div>
+    <div class="legend-item"><span style="font-size:9px;color:#3a3a4a;">&#8211;</span> Absent</div>
+  </div>
+  <span class="phase-label">Preparation &#8594; Transit &#8594; Discovery &#8594; Revelation &#8594; Confrontation &#8594; Flight</span>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+// ─── INLINE DATA (generated by build-viz.js) ───
+var STORY_MATRIX_S0 = {"id":0,"name":"The Circle","acts":[{"name":"The World","index":0},{"name":"The Characters","index":1},{"name":"The Briefing","index":2},{"name":"The Departure","index":3}],"beats":[{"characterId":"scientist-pabodie","session":0,"act":0,"location":"Miskatonic University","status":"healthy","emotional":"eager","knowledge":[],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Referenced as designer of the boring apparatus"},{"characterId":"scientist-pabodie","session":0,"act":1,"location":"Briefing room","status":"healthy","emotional":"methodical","knowledge":[],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Player co-creation — Pabodie available as PC choice"},{"characterId":"scientist-pabodie","session":0,"act":2,"location":"Briefing room","status":"healthy","emotional":"focused","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Evaluates technical aspects of the briefing"},{"characterId":"scientist-pabodie","session":0,"act":3,"location":"Arkham docks","status":"healthy","emotional":"determined","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Departs — motivated by unexplained core samples","mcNote":"Pabodie grounds technical exposition. His confidence in his equipment is dramatic irony.","npcBehavior":"Checks drill crate lashings. 'The core samples from '30 contained formations that shouldn't exist. This time, we go deeper.'"},{"characterId":"scientist-bryce","session":0,"act":0,"location":"Cambridge","status":"healthy","emotional":"intrigued","knowledge":[],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Referenced as marine biologist recruited by Moore"},{"characterId":"scientist-bryce","session":0,"act":1,"location":"Briefing room","status":"healthy","emotional":"analytical","knowledge":[],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Available as PC choice — first woman on Antarctic geological survey"},{"characterId":"scientist-bryce","session":0,"act":2,"location":"Briefing room","status":"healthy","emotional":"skeptical","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Notes biological claims in the briefing that defy classification"},{"characterId":"scientist-bryce","session":0,"act":3,"location":"Arkham docks","status":"healthy","emotional":"resolute","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Departs — intends to classify what Dyer could not","mcNote":"Bryce represents the scientific establishment daring to look. Her gender on a 1933 expedition is tension.","npcBehavior":"Carries specimen jars packed in straw. 'If Dyer's specimens are real, every taxonomy textbook needs rewriting.'"},{"characterId":"veteran-rourke","session":0,"act":0,"location":"Undisclosed","status":"healthy","emotional":"neutral","knowledge":[],"narrativeRole":"absent","threadsActive":[],"danger":0,"activity":"Not yet introduced"},{"characterId":"veteran-rourke","session":0,"act":1,"location":"Briefing room","status":"healthy","emotional":"watchful","knowledge":[],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Available as PC choice — hired security, Gallipoli veteran"},{"characterId":"veteran-rourke","session":0,"act":2,"location":"Briefing room","status":"healthy","emotional":"assessing","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Evaluates the briefing for tactical concerns"},{"characterId":"veteran-rourke","session":0,"act":3,"location":"Arkham docks","status":"healthy","emotional":"professional","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Departs — the contract is simple: keep them alive","mcNote":"Rourke is the experienced soldier who read the briefing and priced the risk. His calm is unsettling.","npcBehavior":"Checks sightlines from the deck. 'Two others read the briefing and declined. I read it and named my price.'"},{"characterId":"journalist-caldwell","session":0,"act":0,"location":"Arkham Gazette","status":"healthy","emotional":"neutral","knowledge":[],"narrativeRole":"absent","threadsActive":[],"danger":0,"activity":"Not yet introduced"},{"characterId":"journalist-caldwell","session":0,"act":1,"location":"Briefing room","status":"healthy","emotional":"eager","knowledge":[],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Available as PC choice — cheap reporter, signed the waiver"},{"characterId":"journalist-caldwell","session":0,"act":2,"location":"Briefing room","status":"healthy","emotional":"suspicious","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Notes what's missing from the briefing. Already looking for the story"},{"characterId":"journalist-caldwell","session":0,"act":3,"location":"Arkham docks","status":"healthy","emotional":"ambitious","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Departs — front-page stories don't bury themselves","mcNote":"Caldwell's ambition and Innsmouth experience make her a wildcard. She'll take risks for the story.","npcBehavior":"Photographs the crew from the gangplank. 'The Gazette sent their cheapest reporter. They'll regret that.'"},{"characterId":"mechanic-gedney","session":0,"act":0,"location":"Gardiner, Maine","status":"healthy","emotional":"neutral","knowledge":[],"narrativeRole":"absent","threadsActive":[],"danger":0,"activity":"Not yet introduced"},{"characterId":"mechanic-gedney","session":0,"act":1,"location":"Briefing room","status":"healthy","emotional":"practical","knowledge":[],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Available as PC — aircraft mechanic, keeps the Fairchilds flying"},{"characterId":"mechanic-gedney","session":0,"act":2,"location":"Briefing room","status":"healthy","emotional":"unconcerned","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Half-listens to briefing. Already thinking about cold-weather engine mods"},{"characterId":"mechanic-gedney","session":0,"act":3,"location":"Arkham docks","status":"healthy","emotional":"eager","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Departs — the machines need him","mcNote":"Gedney is the anti-intellectual — machines are his language. His breakdown hits hardest because he's the most grounded.","npcBehavior":"Strokes the Fairchild's fuselage. 'She'll fly. She always flies.' Doesn't look back at the dock."},{"characterId":"mechanic-webb","session":0,"act":0,"location":"Maine coast","status":"healthy","emotional":"neutral","knowledge":[],"narrativeRole":"absent","threadsActive":[],"danger":0,"activity":"Not yet introduced"},{"characterId":"mechanic-webb","session":0,"act":1,"location":"Briefing room","status":"healthy","emotional":"quiet","knowledge":[],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Available as PC — radio operator, lighthouse kid"},{"characterId":"mechanic-webb","session":0,"act":2,"location":"Briefing room","status":"healthy","emotional":"attentive","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Listens carefully. Taps Morse on his knee"},{"characterId":"mechanic-webb","session":0,"act":3,"location":"Arkham docks","status":"healthy","emotional":"resolute","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Departs — as long as the radio works, they're not alone","mcNote":"Webb's lighthouse childhood means silence = danger. When his radio goes quiet, the players should feel it.","npcBehavior":"Tests the Marconi one last time. 'Signal clear. Moore confirms departure. We are not alone.' Yet."},{"characterId":"agent-price","session":0,"act":0,"location":"New York","status":"healthy","emotional":"neutral","knowledge":[],"narrativeRole":"absent","threadsActive":[],"danger":0,"activity":"Not yet introduced"},{"characterId":"agent-price","session":0,"act":1,"location":"Briefing room","status":"healthy","emotional":"calculating","knowledge":[],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Available as PC — Starkweather's money man"},{"characterId":"agent-price","session":0,"act":2,"location":"Briefing room","status":"healthy","emotional":"evaluating","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Assesses cost-benefit of every claim in the briefing"},{"characterId":"agent-price","session":0,"act":3,"location":"Arkham docks","status":"healthy","emotional":"professional","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Departs — protecting Starkweather's investment","mcNote":"Price represents the money. His two ledgers are a slow-burn mystery — what's in the second one?","npcBehavior":"Ticks items off the manifest with a gold pen. 'Starkweather's investment is protected. For now.'"},{"characterId":"agent-ainsworth","session":0,"act":0,"location":"University office","status":"healthy","emotional":"neutral","knowledge":[],"narrativeRole":"absent","threadsActive":[],"danger":0,"activity":"Not yet introduced"},{"characterId":"agent-ainsworth","session":0,"act":1,"location":"Briefing room","status":"healthy","emotional":"observant","knowledge":[],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Available as PC — Moore's scientific observer, coded radio"},{"characterId":"agent-ainsworth","session":0,"act":2,"location":"Briefing room","status":"healthy","emotional":"critical","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Notes every unsupported claim. Reports to Moore via coded frequency"},{"characterId":"agent-ainsworth","session":0,"act":3,"location":"Arkham docks","status":"healthy","emotional":"dutiful","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Departs — the science must be clean","mcNote":"Ainsworth's dual loyalty (science + Moore's oversight) creates tension with Starkweather's faction.","npcBehavior":"Pockets a codebook. 'The science must be clean. Whatever we find, the data will be rigorous.'"},{"characterId":"expert-sorensen","session":0,"act":0,"location":"Sandefjord, Norway","status":"healthy","emotional":"neutral","knowledge":[],"narrativeRole":"absent","threadsActive":[],"danger":0,"activity":"Not yet introduced"},{"characterId":"expert-sorensen","session":0,"act":1,"location":"Briefing room","status":"healthy","emotional":"stoic","knowledge":[],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Available as PC — Norwegian ice pilot, 20 years Antarctic waters"},{"characterId":"expert-sorensen","session":0,"act":2,"location":"Briefing room","status":"healthy","emotional":"wary","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Knows the ice. Smells trouble in the briefing. Old sailors' stories"},{"characterId":"expert-sorensen","session":0,"act":3,"location":"Arkham docks","status":"healthy","emotional":"resigned","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Departs — the ice is the only country he has left","mcNote":"Sørensen carries folk knowledge that proves true. His 'superstition' is actually prescience.","npcBehavior":"Sniffs the wind. 'The ice will tell us what books cannot. It always does.'"},{"characterId":"expert-mcready","session":0,"act":0,"location":"Antarctica (Byrd expedition)","status":"healthy","emotional":"neutral","knowledge":[],"narrativeRole":"absent","threadsActive":[],"danger":0,"activity":"Not yet introduced"},{"characterId":"expert-mcready","session":0,"act":1,"location":"Briefing room","status":"healthy","emotional":"guarded","knowledge":[],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Available as PC — dog handler, Byrd expedition veteran"},{"characterId":"expert-mcready","session":0,"act":2,"location":"Briefing room","status":"healthy","emotional":"interested","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Dogs from the 1930 expedition were never right again. He wants to know why"},{"characterId":"expert-mcready","session":0,"act":3,"location":"Arkham docks","status":"healthy","emotional":"determined","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Departs — the dogs came back wrong, and he intends to find out why","mcNote":"McReady's dogs are the early warning system. When they won't go, the players should listen.","npcBehavior":"The dogs are calm now. They won't be for long. 'Good boys. We'll see what you see.'"},{"characterId":"believer-angell","session":0,"act":0,"location":"Brown University","status":"healthy","emotional":"neutral","knowledge":[],"narrativeRole":"absent","threadsActive":[],"danger":0,"activity":"Not yet introduced"},{"characterId":"believer-angell","session":0,"act":1,"location":"Briefing room","status":"healthy","emotional":"obsessive","knowledge":["pnakotic-fragments","eltdown-shards","necronomicon-marginalia"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Available as PC — already partially broken by what he believes is coming"},{"characterId":"believer-angell","session":0,"act":2,"location":"Briefing room","status":"healthy","emotional":"vindicated","knowledge":["pnakotic-fragments","eltdown-shards","necronomicon-marginalia","briefing-document"],"narrativeRole":"lead","threadsActive":[],"danger":0,"activity":"The briefing confirms correlations he found in the texts"},{"characterId":"believer-angell","session":0,"act":3,"location":"Arkham docks","status":"healthy","emotional":"terrified-eager","knowledge":["pnakotic-fragments","eltdown-shards","necronomicon-marginalia","briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Departs — if the texts and Dyer describe the same thing, the pattern can be understood","mcNote":"Angell is the most fragile — already partially broken by what he believes. His confirmation arc is tragedy.","npcBehavior":"Clutches his satchel. Three notebooks, a monograph, marginalia from the Necronomicon. 'I expect to find exactly what the texts describe.'"},{"characterId":"believer-waverly","session":0,"act":0,"location":"Solomon Islands","status":"healthy","emotional":"neutral","knowledge":[],"narrativeRole":"absent","threadsActive":[],"danger":0,"activity":"Not yet introduced"},{"characterId":"believer-waverly","session":0,"act":1,"location":"Briefing room","status":"healthy","emotional":"calm","knowledge":["oral-traditions","island-warnings"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Available as PC — CMS nurse, recognized Dyer's descriptions from oral traditions"},{"characterId":"believer-waverly","session":0,"act":2,"location":"Briefing room","status":"healthy","emotional":"grave","knowledge":["oral-traditions","island-warnings","briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"The briefing describes what three island cultures warned against"},{"characterId":"believer-waverly","session":0,"act":3,"location":"Arkham docks","status":"healthy","emotional":"resolute","knowledge":["oral-traditions","island-warnings","briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Departs — the old stories are warnings, not superstition","mcNote":"Waverly heard these warnings in indigenous traditions. She's the most prepared and the most afraid.","npcBehavior":"Touches the silver cross. 'The old stories were not superstition. They were preparation.' Says a quiet prayer."},{"characterId":"patron-starkweather","session":0,"act":0,"location":"Miskatonic University — faculty lounge","status":"healthy","emotional":"fervent","knowledge":["dyer-account"],"narrativeRole":"lead","threadsActive":[],"danger":0,"activity":"Referenced as co-patron who read Dyer's suppressed account and believed every word"},{"characterId":"patron-starkweather","session":0,"act":1,"location":"Briefing room","status":"healthy","emotional":"charismatic","knowledge":["dyer-account"],"narrativeRole":"lead","threadsActive":[],"danger":0,"activity":"Introduces himself. The man who funded this. Shakes every hand. Believes"},{"characterId":"patron-starkweather","session":0,"act":2,"location":"Briefing room","status":"healthy","emotional":"passionate","knowledge":["dyer-account","briefing-document"],"narrativeRole":"lead","threadsActive":[],"danger":0,"activity":"Delivers the briefing with the zeal of a convert. Pushes past every objection","mcNote":"Starkweather's enthusiasm is the red flag no one notices. His certainty should feel infectious — and slightly wrong. He never asks 'what if Dyer was right?' He states it as fact.","npcBehavior":"Dismisses safety concerns with charisma. Invokes his authority as patron to override caution. 'I didn't fund half-measures.' If challenged, pivots to legacy — 'We will be the ones who proved it.'"},{"characterId":"patron-starkweather","session":0,"act":3,"location":"Arkham docks","status":"healthy","emotional":"triumphant","knowledge":["dyer-account","briefing-document"],"narrativeRole":"lead","threadsActive":[],"danger":0,"activity":"Boards the ship himself. This is his expedition, his vindication. He's going all the way"},{"characterId":"patron-moore","session":0,"act":0,"location":"Harvard — geology department","status":"healthy","emotional":"skeptical","knowledge":["dyer-account-redacted"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Referenced as co-patron who read Dyer's account and saw only geological anomalies worth investigating"},{"characterId":"patron-moore","session":0,"act":1,"location":"Briefing room (via radio)","status":"healthy","emotional":"authoritative","knowledge":["dyer-account-redacted"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Present via radio hookup. The skeptic's voice — measured, clinical, demanding evidence for every claim"},{"characterId":"patron-moore","session":0,"act":2,"location":"Briefing room (via radio)","status":"healthy","emotional":"dismissive-precise","knowledge":["dyer-account-redacted","briefing-document"],"narrativeRole":"tension","threadsActive":[],"danger":0,"activity":"Counterbalances Starkweather's zeal. Strips the briefing to verifiable claims. 'Bring me data, not stories'","mcNote":"Moore is the skeptic anchor. Where Starkweather sells the dream, Moore demands the receipts. His radio presence should feel like the adult in the room — but also like someone who doesn't understand what he's sending people into. He'll be wrong about the supernatural, but right about the danger of enthusiasm without caution.","npcBehavior":"Interrupts Starkweather's flourishes with pointed questions. 'What is your evidence for that claim, Harold?' Demands Ainsworth file independent reports. Makes it clear: his money comes with oversight. 'The geology is interesting. Everything else is Dyer's breakdown speaking.'"},{"characterId":"patron-moore","session":0,"act":3,"location":"Harvard (via radio)","status":"healthy","emotional":"measured","knowledge":["dyer-account-redacted","briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Final radio check before departure. 'Regular reports. Coded frequency. I want data, not dramatics'"}]};
+var STORY_MATRIX_S1 = {"id":1,"name":"The Ice","acts":[{"name":"The Crossing","index":0},{"name":"Base Camp","index":1},{"name":"Lake's Camp","index":2}],"beats":[{"characterId":"scientist-pabodie","session":1,"act":0,"location":"Ship — Southern Ocean","status":"healthy","emotional":"restless","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":["equipment-malfunctions"],"danger":0,"activity":"Maintains drilling equipment. Notes instruments behaving oddly"},{"characterId":"scientist-pabodie","session":1,"act":1,"location":"Base camp","status":"healthy","emotional":"concerned","knowledge":["briefing-document","triangular-markings"],"narrativeRole":"lead","threadsActive":["equipment-malfunctions","dogs-refuse-food"],"danger":1,"activity":"Triangular markings in wrong strata. Equipment fails near certain sites"},{"characterId":"scientist-pabodie","session":1,"act":2,"location":"Lake's camp","status":"healthy","emotional":"shaken","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence"],"narrativeRole":"lead","threadsActive":["equipment-malfunctions","dyers-private-journal"],"danger":2,"activity":"Finds Lake's private journal. Recognizes his own drill marks on destroyed equipment","mcNote":"Pabodie recognizes his own drill marks on destroyed equipment — the 1930 expedition was here.","npcBehavior":"Runs fingers over drill marks. 'These are mine. I made these cuts three years ago. But something cut them back.'"},{"characterId":"scientist-bryce","session":1,"act":0,"location":"Ship — Southern Ocean","status":"healthy","emotional":"observant","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":["dogs-refuse-food"],"danger":0,"activity":"Notes dogs' behavior changes as biological anomaly"},{"characterId":"scientist-bryce","session":1,"act":1,"location":"Base camp","status":"healthy","emotional":"excited","knowledge":["briefing-document","triangular-markings"],"narrativeRole":"lead","threadsActive":["dogs-refuse-food","equipment-malfunctions"],"danger":1,"activity":"The triangular markings contain biological material that shouldn't exist"},{"characterId":"scientist-bryce","session":1,"act":2,"location":"Lake's camp","status":"healthy","emotional":"disturbed","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence"],"narrativeRole":"lead","threadsActive":["dyers-private-journal"],"danger":2,"activity":"The surviving specimen defies every taxonomy she knows","mcNote":"The specimen defies every taxonomy. This is where Bryce's confidence begins to crack.","npcBehavior":"Stares at the specimen for a full minute before speaking. 'This isn't wrong. I'm wrong. Everything I know is insufficient.'"},{"characterId":"veteran-rourke","session":1,"act":0,"location":"Ship — Southern Ocean","status":"healthy","emotional":"alert","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":["dogs-refuse-food"],"danger":0,"activity":"Notes dogs' distress. Checks perimeter out of habit"},{"characterId":"veteran-rourke","session":1,"act":1,"location":"Base camp","status":"healthy","emotional":"uneasy","knowledge":["briefing-document","night-sounds"],"narrativeRole":"lead","threadsActive":["dogs-refuse-food","equipment-malfunctions"],"danger":1,"activity":"Night watch — hears sounds the wind doesn't explain"},{"characterId":"veteran-rourke","session":1,"act":2,"location":"Lake's camp","status":"healthy","emotional":"grim","knowledge":["briefing-document","night-sounds","lakes-camp-destruction","specimen-existence"],"narrativeRole":"lead","threadsActive":["dyers-private-journal"],"danger":2,"activity":"Reads the destruction at Lake's camp as combat, not accident","mcNote":"Rourke reads the destruction as a combat scene, not an accident. Military eye sees what civilians miss.","npcBehavior":"Kneels by the wreckage. 'This wasn't weather. This was organized violence. Something fought here and won.'"},{"characterId":"journalist-caldwell","session":1,"act":0,"location":"Ship — Southern Ocean","status":"healthy","emotional":"curious","knowledge":["briefing-document"],"narrativeRole":"lead","threadsActive":["mirage-city"],"danger":0,"activity":"Photographs the mirages. Interviews crew about previous voyages"},{"characterId":"journalist-caldwell","session":1,"act":1,"location":"Base camp","status":"healthy","emotional":"excited","knowledge":["briefing-document","triangular-markings"],"narrativeRole":"lead","threadsActive":["dogs-refuse-food","equipment-malfunctions"],"danger":1,"activity":"Documents everything. This is bigger than the Innsmouth story"},{"characterId":"journalist-caldwell","session":1,"act":2,"location":"Lake's camp","status":"healthy","emotional":"horrified-thrilled","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence"],"narrativeRole":"lead","threadsActive":["dyers-private-journal"],"danger":2,"activity":"Photographs Lake's camp. Reads his journal. The story of a lifetime","mcNote":"This is where Caldwell's journalist instinct becomes dangerous — she wants closer, not safer.","npcBehavior":"Photographs everything twice. 'Lake's journal ends mid-sentence. That's not how scientists write. That's how men interrupted by something write.'"},{"characterId":"mechanic-gedney","session":1,"act":0,"location":"Ship — Southern Ocean","status":"healthy","emotional":"busy","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":["equipment-malfunctions"],"danger":0,"activity":"Preps the planes for Antarctic conditions. First odd readings"},{"characterId":"mechanic-gedney","session":1,"act":1,"location":"Base camp","status":"healthy","emotional":"frustrated","knowledge":["briefing-document","equipment-anomalies"],"narrativeRole":"lead","threadsActive":["equipment-malfunctions"],"danger":1,"activity":"Equipment failures near certain sites. Nothing he fixes stays fixed"},{"characterId":"mechanic-gedney","session":1,"act":2,"location":"Lake's camp","status":"healthy","emotional":"disturbed","knowledge":["briefing-document","equipment-anomalies","lakes-camp-destruction"],"narrativeRole":"lead","threadsActive":["equipment-malfunctions"],"danger":2,"activity":"Recognizes deliberate damage to Lake's equipment. Not weather — intent","mcNote":"Equipment destroyed by something that doesn't use tools. Gedney's rational world takes its first hit.","npcBehavior":"Picks up a shattered gauge. 'This wasn't dropped. It was crushed. But there are no tool marks. What crushes steel without tools?'"},{"characterId":"mechanic-webb","session":1,"act":0,"location":"Ship — Southern Ocean","status":"healthy","emotional":"content","knowledge":["briefing-document"],"narrativeRole":"lead","threadsActive":["radio-degradation"],"danger":0,"activity":"Radio clear. Regular check-ins with Moore. First hints of unusual static"},{"characterId":"mechanic-webb","session":1,"act":1,"location":"Base camp","status":"healthy","emotional":"concerned","knowledge":["briefing-document","unusual-static"],"narrativeRole":"lead","threadsActive":["radio-degradation","equipment-malfunctions"],"danger":1,"activity":"Static patterns that don't match any known interference. The radio 'breathes'"},{"characterId":"mechanic-webb","session":1,"act":2,"location":"Lake's camp","status":"healthy","emotional":"anxious","knowledge":["briefing-document","unusual-static","radio-signal-anomaly"],"narrativeRole":"lead","threadsActive":["radio-degradation"],"danger":2,"activity":"Radio reception degrades near Lake's camp. Something interferes","mcNote":"Radio begins to degrade here. Webb notices the pattern before anyone else.","npcBehavior":"Adjusts the receiver. 'Moore's signal is clear from base camp. Here, it... pulses. Like something is between us and the antenna.'"},{"characterId":"agent-price","session":1,"act":0,"location":"Ship — Southern Ocean","status":"healthy","emotional":"impatient","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":[],"danger":0,"activity":"Tracks expenses. Questions delays. Time is money"},{"characterId":"agent-price","session":1,"act":1,"location":"Base camp","status":"healthy","emotional":"interested","knowledge":["briefing-document","anomaly-value"],"narrativeRole":"lead","threadsActive":[],"danger":1,"activity":"The anomalies have commercial implications. Begins second ledger"},{"characterId":"agent-price","session":1,"act":2,"location":"Lake's camp","status":"healthy","emotional":"excited","knowledge":["briefing-document","anomaly-value","specimen-existence"],"narrativeRole":"lead","threadsActive":[],"danger":2,"activity":"A specimen that defies classification is worth more than the entire expedition","mcNote":"Price sees dollar signs in the specimens. His greed is about to become a plot driver.","npcBehavior":"Makes notes in the second ledger. 'The biological material alone is worth... considerable. Starkweather will want to know.'"},{"characterId":"agent-ainsworth","session":1,"act":0,"location":"Ship — Southern Ocean","status":"healthy","emotional":"methodical","knowledge":["briefing-document"],"narrativeRole":"support","threadsActive":["radio-degradation"],"danger":0,"activity":"Regular coded reports to Moore. Notes anomalies objectively"},{"characterId":"agent-ainsworth","session":1,"act":1,"location":"Base camp","status":"healthy","emotional":"concerned","knowledge":["briefing-document","triangular-markings"],"narrativeRole":"lead","threadsActive":["radio-degradation"],"danger":1,"activity":"Coded report to Moore on the markings. Moore demands caution"},{"characterId":"agent-ainsworth","session":1,"act":2,"location":"Lake's camp","status":"healthy","emotional":"shaken","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence"],"narrativeRole":"lead","threadsActive":["radio-degradation","dyers-private-journal"],"danger":2,"activity":"Tries to report to Moore. Radio increasingly unreliable. Evidence is undeniable","mcNote":"Her geology training says these formations are impossible. Her coded report to Moore says 'anomalous.'","npcBehavior":"Samples the rock face. 'These strata are Pre-Cambrian. Nothing should be in Pre-Cambrian strata. And yet.'"},{"characterId":"expert-sorensen","session":1,"act":0,"location":"Ship — Southern Ocean","status":"healthy","emotional":"uneasy","knowledge":["briefing-document","ice-behavior"],"narrativeRole":"lead","threadsActive":["mirage-city","dogs-refuse-food"],"danger":0,"activity":"The ice is wrong. Mirages persist too long. The dogs know"},{"characterId":"expert-sorensen","session":1,"act":1,"location":"Base camp","status":"healthy","emotional":"afraid","knowledge":["briefing-document","ice-behavior","sailors-stories"],"narrativeRole":"lead","threadsActive":["wind-piping","dogs-refuse-food"],"danger":1,"activity":"Recalls Lars Larsen's crew seeing stone ruins from a crow's nest in 1929"},{"characterId":"expert-sorensen","session":1,"act":2,"location":"Lake's camp","status":"healthy","emotional":"grim","knowledge":["briefing-document","ice-behavior","sailors-stories","lakes-camp-destruction"],"narrativeRole":"lead","threadsActive":[],"danger":2,"activity":"Reads the ice around Lake's camp. Something melted it from below","mcNote":"The old sailor's tales are becoming real. Sørensen is the first to accept what others deny.","npcBehavior":"Goes quiet. Touches the ice wall. 'A man from Lars Larsen's crew told me about stone ruins. I called him a drunk. I owe him an apology.'"},{"characterId":"expert-mcready","session":1,"act":0,"location":"Ship — Southern Ocean","status":"healthy","emotional":"alert","knowledge":["briefing-document","dog-behavior"],"narrativeRole":"lead","threadsActive":["dogs-refuse-food"],"danger":0,"activity":"The dogs are uneasy. Dismissed as weather — but McReady knows dogs"},{"characterId":"expert-mcready","session":1,"act":1,"location":"Base camp","status":"healthy","emotional":"alarmed","knowledge":["briefing-document","dog-behavior","dogs-facing-away"],"narrativeRole":"lead","threadsActive":["dogs-refuse-food"],"danger":1,"activity":"Dogs refuse food. Won't face south. They know something is there"},{"characterId":"expert-mcready","session":1,"act":2,"location":"Lake's camp","status":"healthy","emotional":"grim","knowledge":["briefing-document","dog-behavior","dogs-facing-away","lakes-camp-destruction"],"narrativeRole":"lead","threadsActive":["dogs-refuse-food"],"danger":2,"activity":"No dog remains at Lake's camp. The dogs either fled or were taken","mcNote":"The dogs won't approach the camp. McReady knows their instincts are better than his instruments.","npcBehavior":"Holds the lead dog back. 'She won't go closer. Last time I saw dogs this scared was when a glacier calved. They knew before anyone.'"},{"characterId":"believer-angell","session":1,"act":0,"location":"Ship — Southern Ocean","status":"healthy","emotional":"excited","knowledge":["pnakotic-fragments","eltdown-shards","necronomicon-marginalia","briefing-document"],"narrativeRole":"lead","threadsActive":["mirage-city","wind-piping"],"danger":0,"activity":"The mirages match descriptions in the Pnakotic Manuscripts. The wind piping matches too"},{"characterId":"believer-angell","session":1,"act":1,"location":"Base camp","status":"healthy","emotional":"manic","knowledge":["pnakotic-fragments","eltdown-shards","necronomicon-marginalia","briefing-document","triangular-markings"],"narrativeRole":"lead","threadsActive":["wind-piping","equipment-malfunctions"],"danger":1,"activity":"The markings correlate with Eltdown Shards. Three notebooks filling fast"},{"characterId":"believer-angell","session":1,"act":2,"location":"Lake's camp","status":"healthy","emotional":"ecstatic-terrified","knowledge":["pnakotic-fragments","eltdown-shards","necronomicon-marginalia","briefing-document","triangular-markings","lakes-journal","specimen-existence"],"narrativeRole":"lead","threadsActive":["dyers-private-journal"],"danger":2,"activity":"Lake's journal confirms Dyer's private account. The pattern is real","mcNote":"Angell's texts are being confirmed in real time. This should feel vindicating but feels like doom.","npcBehavior":"Hands trembling, cross-references a notebook. 'This matches the Pnakotic fragments. Word for word. I was right. God help me, I was right.'"},{"characterId":"believer-waverly","session":1,"act":0,"location":"Ship — Southern Ocean","status":"healthy","emotional":"watchful","knowledge":["oral-traditions","island-warnings","briefing-document"],"narrativeRole":"lead","threadsActive":["dogs-refuse-food"],"danger":0,"activity":"The dogs sense it. In the islands, the animals always knew first"},{"characterId":"believer-waverly","session":1,"act":1,"location":"Base camp","status":"healthy","emotional":"concerned","knowledge":["oral-traditions","island-warnings","briefing-document","triangular-markings"],"narrativeRole":"lead","threadsActive":["dogs-refuse-food","wind-piping"],"danger":1,"activity":"The wind piping matches descriptions from Solomon Islands elders"},{"characterId":"believer-waverly","session":1,"act":2,"location":"Lake's camp","status":"healthy","emotional":"grieving","knowledge":["oral-traditions","island-warnings","briefing-document","triangular-markings","lakes-journal","specimen-existence"],"narrativeRole":"lead","threadsActive":["dyers-private-journal"],"danger":2,"activity":"These people died because they didn't listen to the warnings. As always","mcNote":"The indigenous warnings Waverly heard in the Solomons described this exact scenario.","npcBehavior":"Closes her eyes. 'In the Solomons, they told me about a place where the old things sleep. They said: do not wake them. We have woken them.'"},{"characterId":"patron-starkweather","session":1,"act":0,"location":"Ship — Southern Ocean","status":"healthy","emotional":"impatient","knowledge":["dyer-account","briefing-document"],"narrativeRole":"lead","threadsActive":["mirage-city"],"danger":0,"activity":"Paces the deck. Points at the mirages as proof. 'Dyer described exactly this'"},{"characterId":"patron-starkweather","session":1,"act":1,"location":"Base camp","status":"healthy","emotional":"vindicated","knowledge":["dyer-account","briefing-document","triangular-markings"],"narrativeRole":"lead","threadsActive":["equipment-malfunctions"],"danger":1,"activity":"The markings confirm Dyer. Starkweather is electric — 'I told you. I told all of you'"},{"characterId":"patron-starkweather","session":1,"act":2,"location":"Lake's camp","status":"healthy","emotional":"vindication-turning-to-fear","knowledge":["dyer-account","briefing-document","triangular-markings","lakes-journal","specimen-existence"],"narrativeRole":"lead","threadsActive":["dyers-private-journal"],"danger":2,"activity":"Lake's camp is exactly as Dyer described. The vindication tastes different now — because Dyer also described what came next","mcNote":"This is the hinge. Starkweather wanted to be right. Now he IS right — and the implications are landing. His emotional shift from vindication to unease should be visible but not yet acknowledged by him. He's still pushing forward, but the swagger has a crack in it.","npcBehavior":"Still asserting authority but the orders come faster, with less patience. Snaps at Price when questioned about costs. Insists on examining the specimen personally. Doesn't sleep."},{"characterId":"patron-moore","session":1,"act":0,"location":"Harvard (via radio)","status":"healthy","emotional":"impatient","knowledge":["dyer-account-redacted","briefing-document"],"narrativeRole":"support","threadsActive":["radio-degradation"],"danger":0,"activity":"Regular radio check-ins. Demands progress reports. Dismisses mirage sightings as atmospheric refraction"},{"characterId":"patron-moore","session":1,"act":1,"location":"Harvard (via radio)","status":"healthy","emotional":"interested-skeptical","knowledge":["dyer-account-redacted","briefing-document","triangular-markings-reported"],"narrativeRole":"lead","threadsActive":["radio-degradation"],"danger":1,"activity":"Last clear radio contact with full context. The markings intrigue him. Demands samples, measurements, photographs. 'Interesting if verified'","mcNote":"This is the last time Moore's voice comes through clearly. The full weight of scientific authority, 10,000 miles away. He's genuinely interested in the triangular markings but frames everything as geology. Make his voice clear and strong here — it will fade.","npcBehavior":"Rapid-fire questions through the radio. Cross-references with known geological formations. Instructs Ainsworth to take independent measurements. 'Don't let Starkweather's enthusiasm contaminate the data.' Ends with: 'Good work. Report again at 0600.'"},{"characterId":"patron-moore","session":1,"act":2,"location":"Harvard (via radio — degraded)","status":"healthy","emotional":"demanding-frustrated","knowledge":["dyer-account-redacted","briefing-document","triangular-markings-reported"],"narrativeRole":"tension","threadsActive":["radio-degradation"],"danger":2,"activity":"Radio degrades. Catches fragments of Lake's camp report. Demands data through static. 'Say again — specimen? What specimen?'","mcNote":"Moore's voice breaks up here. He catches enough to be alarmed but not enough to understand. The skeptic is losing his primary tool — information. His frustration should carry through the static. He's used to controlling this from afar, and the control is slipping.","npcBehavior":"Repeats 'say again' through static. When he catches the word 'specimen,' his tone changes — sharper, more urgent. 'Do NOT touch anything until Ainsworth confirms— [static].' The connection dies mid-sentence."}]};
+var STORY_MATRIX_S2 = {"id":2,"name":"The Mountains","acts":[{"name":"The Approach","index":0},{"name":"The City","index":1},{"name":"The Threshold","index":2}],"beats":[{"characterId":"scientist-pabodie","session":2,"act":0,"location":"Mountain approach","status":"healthy","emotional":"awestruck","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale"],"narrativeRole":"lead","threadsActive":["mirage-city","wind-piping","equipment-malfunctions"],"danger":2,"activity":"Instruments fail completely. The mountains exceed all expectations"},{"characterId":"scientist-pabodie","session":2,"act":1,"location":"The cyclopean city","status":"healthy","emotional":"overwhelmed","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization"],"narrativeRole":"lead","threadsActive":["crude-carvings","dyers-private-journal"],"danger":2,"activity":"Engineering mind struggles with impossible architecture"},{"characterId":"scientist-pabodie","session":2,"act":2,"location":"City threshold","status":"healthy","emotional":"dread","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below"],"narrativeRole":"support","threadsActive":["violet-mountains","nameless-scent"],"danger":2,"activity":"Warm air from below. Temperature readings impossible for Antarctica"},{"characterId":"scientist-bryce","session":2,"act":0,"location":"Mountain approach","status":"healthy","emotional":"conflicted","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale"],"narrativeRole":"lead","threadsActive":["mirage-city","equipment-malfunctions"],"danger":2,"activity":"Scientific rigor demands investigation. Self-preservation says stop"},{"characterId":"scientist-bryce","session":2,"act":1,"location":"The cyclopean city","status":"healthy","emotional":"awe-horror","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","shoggoth-creation"],"narrativeRole":"lead","threadsActive":["crude-carvings"],"danger":2,"activity":"The murals showing Shoggoth creation rewrites the definition of life"},{"characterId":"scientist-bryce","session":2,"act":2,"location":"City threshold","status":"healthy","emotional":"dread","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","shoggoth-creation","warm-air-below"],"narrativeRole":"support","threadsActive":["violet-mountains","nameless-scent"],"danger":2,"activity":"Underground ecosystem implies life forms adapted to conditions she cannot model"},{"characterId":"veteran-rourke","session":2,"act":0,"location":"Mountain approach","status":"healthy","emotional":"on-guard","knowledge":["briefing-document","night-sounds","lakes-camp-destruction","specimen-existence","mountain-scale"],"narrativeRole":"lead","threadsActive":["mirage-city","wind-piping"],"danger":2,"activity":"Scans terrain for threats. The scale offers no cover, no retreat"},{"characterId":"veteran-rourke","session":2,"act":1,"location":"The cyclopean city","status":"healthy","emotional":"controlled-fear","knowledge":["briefing-document","night-sounds","lakes-camp-destruction","specimen-existence","mountain-scale","elder-thing-murals"],"narrativeRole":"lead","threadsActive":["crude-carvings"],"danger":2,"activity":"Treats the city as hostile territory. Marks exit routes"},{"characterId":"veteran-rourke","session":2,"act":2,"location":"City threshold","status":"healthy","emotional":"tense","knowledge":["briefing-document","night-sounds","lakes-camp-destruction","specimen-existence","mountain-scale","elder-thing-murals","warm-air-below"],"narrativeRole":"lead","threadsActive":["violet-mountains","nameless-scent"],"danger":2,"activity":"Advises against going deeper. Overruled or convinced"},{"characterId":"journalist-caldwell","session":2,"act":0,"location":"Mountain approach","status":"healthy","emotional":"driven","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale"],"narrativeRole":"lead","threadsActive":["mirage-city","wind-piping"],"danger":2,"activity":"Insists on going further. No story without the payoff"},{"characterId":"journalist-caldwell","session":2,"act":1,"location":"The cyclopean city","status":"healthy","emotional":"overwhelmed","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization"],"narrativeRole":"lead","threadsActive":["crude-carvings"],"danger":2,"activity":"Photographs the murals. Fills three notebooks. No editor will believe this"},{"characterId":"journalist-caldwell","session":2,"act":2,"location":"City threshold","status":"healthy","emotional":"fear-ambition","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below"],"narrativeRole":"support","threadsActive":["nameless-scent"],"danger":2,"activity":"The story behind the story. Warm air = something still alive down there"},{"characterId":"mechanic-gedney","session":2,"act":0,"location":"Mountain approach","status":"healthy","emotional":"worried","knowledge":["briefing-document","equipment-anomalies","lakes-camp-destruction","fuel-calculation"],"narrativeRole":"lead","threadsActive":["equipment-malfunctions"],"danger":2,"activity":"Calculates fuel margins. Crossing means limited return options"},{"characterId":"mechanic-gedney","session":2,"act":1,"location":"The cyclopean city","status":"healthy","emotional":"disbelief","knowledge":["briefing-document","equipment-anomalies","lakes-camp-destruction","fuel-calculation","impossible-architecture"],"narrativeRole":"support","threadsActive":[],"danger":2,"activity":"The architecture has no joints, no mortar. His mechanical mind can't process it"},{"characterId":"mechanic-gedney","session":2,"act":2,"location":"City threshold","status":"healthy","emotional":"dread","knowledge":["briefing-document","equipment-anomalies","lakes-camp-destruction","fuel-calculation","impossible-architecture","warm-air-below"],"narrativeRole":"support","threadsActive":["nameless-scent"],"danger":2,"activity":"Warm air from below. Thermodynamically impossible"},{"characterId":"mechanic-webb","session":2,"act":0,"location":"Mountain approach","status":"healthy","emotional":"worried","knowledge":["briefing-document","unusual-static","radio-signal-anomaly"],"narrativeRole":"lead","threadsActive":["radio-degradation","wind-piping"],"danger":2,"activity":"Radio contact with Moore fading. The wind sounds like it's trying to form words"},{"characterId":"mechanic-webb","session":2,"act":1,"location":"The cyclopean city","status":"healthy","emotional":"disturbed","knowledge":["briefing-document","unusual-static","radio-signal-anomaly","elder-thing-murals"],"narrativeRole":"support","threadsActive":["radio-degradation"],"danger":2,"activity":"Radio dead in the city. Silence for the first time. They are alone"},{"characterId":"mechanic-webb","session":2,"act":2,"location":"City threshold","status":"healthy","emotional":"dread","knowledge":["briefing-document","unusual-static","radio-signal-anomaly","elder-thing-murals","warm-air-below"],"narrativeRole":"support","threadsActive":["radio-degradation","nameless-scent"],"danger":2,"activity":"No signal. No connection. The link to civilization is severed"},{"characterId":"agent-price","session":2,"act":0,"location":"Mountain approach","status":"healthy","emotional":"ambitious","knowledge":["briefing-document","anomaly-value","specimen-existence","mountain-scale"],"narrativeRole":"lead","threadsActive":["mirage-city"],"danger":2,"activity":"Pushes to continue. The discovery value justifies any fuel risk"},{"characterId":"agent-price","session":2,"act":1,"location":"The cyclopean city","status":"healthy","emotional":"overwhelmed-greedy","knowledge":["briefing-document","anomaly-value","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization"],"narrativeRole":"lead","threadsActive":[],"danger":2,"activity":"An alien city. The discovery of the millennium. Starkweather was right"},{"characterId":"agent-price","session":2,"act":2,"location":"City threshold","status":"healthy","emotional":"conflicted","knowledge":["briefing-document","anomaly-value","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below"],"narrativeRole":"support","threadsActive":["nameless-scent"],"danger":2,"activity":"Value vs. risk calculation breaks down. What's down there may be worth more — or worthless"},{"characterId":"agent-ainsworth","session":2,"act":0,"location":"Mountain approach","status":"healthy","emotional":"torn","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale"],"narrativeRole":"lead","threadsActive":["radio-degradation","mirage-city"],"danger":2,"activity":"Moore's last clear message: 'Do not cross the mountains.' Radio dies"},{"characterId":"agent-ainsworth","session":2,"act":1,"location":"The cyclopean city","status":"healthy","emotional":"awe-discipline","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization"],"narrativeRole":"lead","threadsActive":["crude-carvings"],"danger":2,"activity":"Documents everything with geological rigor. The evidence is real. Moore must know"},{"characterId":"agent-ainsworth","session":2,"act":2,"location":"City threshold","status":"healthy","emotional":"conflicted","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below"],"narrativeRole":"support","threadsActive":["nameless-scent"],"danger":2,"activity":"No way to report. Alone with evidence that rewrites geology"},{"characterId":"expert-sorensen","session":2,"act":0,"location":"Mountain approach","status":"healthy","emotional":"fatalistic","knowledge":["briefing-document","ice-behavior","sailors-stories","lakes-camp-destruction","mountain-scale"],"narrativeRole":"lead","threadsActive":["mirage-city","wind-piping"],"danger":2,"activity":"Warns against crossing. The old stories said these mountains are forbidden"},{"characterId":"expert-sorensen","session":2,"act":1,"location":"The cyclopean city","status":"healthy","emotional":"vindicated-terrified","knowledge":["briefing-document","ice-behavior","sailors-stories","lakes-camp-destruction","mountain-scale","elder-thing-murals"],"narrativeRole":"support","threadsActive":["crude-carvings"],"danger":2,"activity":"The old stories were true. He always knew. Wishes he hadn't been right"},{"characterId":"expert-sorensen","session":2,"act":2,"location":"City threshold","status":"healthy","emotional":"dread","knowledge":["briefing-document","ice-behavior","sailors-stories","lakes-camp-destruction","mountain-scale","elder-thing-murals","warm-air-below"],"narrativeRole":"support","threadsActive":["nameless-scent"],"danger":2,"activity":"Refuses to go below. May be convinced or overruled"},{"characterId":"expert-mcready","session":2,"act":0,"location":"Mountain approach","status":"healthy","emotional":"resistant","knowledge":["briefing-document","dog-behavior","dogs-facing-away","lakes-camp-destruction","mountain-scale"],"narrativeRole":"lead","threadsActive":["dogs-refuse-food","wind-piping"],"danger":2,"activity":"Dogs refuse to approach the mountains. McReady trusts them over orders"},{"characterId":"expert-mcready","session":2,"act":1,"location":"The cyclopean city","status":"healthy","emotional":"haunted","knowledge":["briefing-document","dog-behavior","dogs-facing-away","lakes-camp-destruction","mountain-scale","elder-thing-murals"],"narrativeRole":"support","threadsActive":[],"danger":2,"activity":"No dogs in the city. Left them at the plane. They wouldn't enter"},{"characterId":"expert-mcready","session":2,"act":2,"location":"City threshold","status":"healthy","emotional":"dread","knowledge":["briefing-document","dog-behavior","dogs-facing-away","lakes-camp-destruction","mountain-scale","elder-thing-murals","warm-air-below"],"narrativeRole":"support","threadsActive":["nameless-scent"],"danger":2,"activity":"The dogs knew. They always know first"},{"characterId":"believer-angell","session":2,"act":0,"location":"Mountain approach","status":"healthy","emotional":"rapture","knowledge":["pnakotic-fragments","eltdown-shards","necronomicon-marginalia","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale"],"narrativeRole":"lead","threadsActive":["mirage-city","wind-piping"],"danger":2,"activity":"The mountains of the Pnakotic texts. They're real. Everything is real"},{"characterId":"believer-angell","session":2,"act":1,"location":"The cyclopean city","status":"healthy","emotional":"transcendent-breaking","knowledge":["pnakotic-fragments","eltdown-shards","necronomicon-marginalia","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization"],"narrativeRole":"lead","threadsActive":["crude-carvings"],"danger":2,"activity":"The murals confirm every text. He was right. Understanding the pattern does not make it less terrible"},{"characterId":"believer-angell","session":2,"act":2,"location":"City threshold","status":"healthy","emotional":"dread-certainty","knowledge":["pnakotic-fragments","eltdown-shards","necronomicon-marginalia","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below"],"narrativeRole":"lead","threadsActive":["violet-mountains","nameless-scent"],"danger":2,"activity":"The texts describe what's below. He knows what they'll find. He goes anyway"},{"characterId":"believer-waverly","session":2,"act":0,"location":"Mountain approach","status":"healthy","emotional":"accepting","knowledge":["oral-traditions","island-warnings","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale"],"narrativeRole":"lead","threadsActive":["mirage-city"],"danger":2,"activity":"The forbidden mountains. Every culture has them. Every warning is the same: do not pass"},{"characterId":"believer-waverly","session":2,"act":1,"location":"The cyclopean city","status":"healthy","emotional":"recognition","knowledge":["oral-traditions","island-warnings","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization"],"narrativeRole":"lead","threadsActive":["crude-carvings"],"danger":2,"activity":"The murals tell the same story the elders told. Different medium, same truth preserved across millennia"},{"characterId":"believer-waverly","session":2,"act":2,"location":"City threshold","status":"healthy","emotional":"duty","knowledge":["oral-traditions","island-warnings","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below"],"narrativeRole":"lead","threadsActive":["nameless-scent"],"danger":2,"activity":"The warnings were not to prevent this. They were to prepare the survivors"},{"characterId":"patron-starkweather","session":2,"act":0,"location":"Mountain approach","status":"healthy","emotional":"obsessed","knowledge":["dyer-account","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale"],"narrativeRole":"lead","threadsActive":["mirage-city","wind-piping"],"danger":2,"activity":"Insists they cross the mountains. 'This is what I funded. This is what we came for'","mcNote":"Starkweather invokes patron authority here. He's the money, and he knows it. Anyone who objects gets reminded who signs the checks. The True Believer has become something more dangerous — a True Believer with authority and nothing left to prove except the worst part.","npcBehavior":"Overrides Sorensen's warnings. Overrides Rourke's tactical concerns. 'I didn't bring you here to turn back.' If Gedney raises fuel concerns, Starkweather calculates the risk aloud and accepts it — for everyone."},{"characterId":"patron-starkweather","session":2,"act":1,"location":"The cyclopean city","status":"healthy","emotional":"vindication-becoming-terror","knowledge":["dyer-account","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization"],"narrativeRole":"pivot","threadsActive":["crude-carvings"],"danger":2,"activity":"Stands in the city Dyer described. He was right about everything. Including the parts Dyer begged people to believe","mcNote":"Peak Starkweather moment. The vindication is total — and so is the horror. He funded a journey to prove something real that should have stayed buried. The murals show him a civilization a billion years old. His face should show a man watching his greatest triumph become his greatest mistake. He cannot turn back because he already won.","npcBehavior":"Goes quiet for the first time. Touches the walls. Reads the murals like a man reading his own obituary. If spoken to, responds with fragments: 'Dyer was... he wasn't... this is...' Then snaps back to authority: 'Document everything. All of it.'"},{"characterId":"patron-starkweather","session":2,"act":2,"location":"City threshold","status":"healthy","emotional":"denial-drive","knowledge":["dyer-account","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below"],"narrativeRole":"lead","threadsActive":["nameless-scent"],"danger":2,"activity":"Warm air from below. He should stop. He doesn't. The patron has become the thing that pushes them deeper"},{"characterId":"patron-moore","session":2,"act":0,"location":"Harvard (via radio — intermittent)","status":"healthy","emotional":"alarmed","knowledge":["dyer-account-redacted","briefing-document","triangular-markings-reported"],"narrativeRole":"tension","threadsActive":["radio-degradation"],"danger":2,"activity":"One last fragmented transmission gets through: 'Do not cross the mountains.' Then static","mcNote":"Moore's final directive. The skeptic, who dismissed Dyer's supernatural claims, is now telling them not to cross — but is it scientific caution or something more? His reasons are lost in static. The expedition only hears the command, not the reasoning. Starkweather overrides it.","npcBehavior":"The radio crackles. Moore's voice, distorted: '...readings are... anomalous... do NOT cross the mountains... Ainsworth, report immed—' Static. Silence. If anyone tries to respond, only dead air."},{"characterId":"patron-moore","session":2,"act":1,"location":"Radio silence — Harvard","status":"healthy","emotional":"absent","knowledge":["dyer-account-redacted","briefing-document","triangular-markings-reported"],"narrativeRole":"absent","threadsActive":[],"danger":2,"activity":"Radio silence. Moore's voice is gone. The skeptic cannot see the city that proves him wrong"},{"characterId":"patron-moore","session":2,"act":2,"location":"Radio silence — Harvard","status":"healthy","emotional":"absent","knowledge":["dyer-account-redacted","briefing-document","triangular-markings-reported"],"narrativeRole":"absent","threadsActive":[],"danger":2,"activity":"No contact. Somewhere in Harvard, Moore is trying to reach them. The silence is mutual"}]};
+var STORY_MATRIX_S3 = {"id":3,"name":"The Descent","acts":[{"name":"Down","index":0},{"name":"The Empathy Turn","index":1},{"name":"Tekeli-li","index":2},{"name":"Escape","index":3}],"beats":[{"characterId":"scientist-pabodie","session":3,"act":0,"location":"Upper tunnels","status":"healthy","emotional":"grim","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","tunnel-carvings"],"narrativeRole":"lead","threadsActive":["crude-carvings","nameless-scent"],"danger":2,"activity":"Recognizes tool marks in the tunnel walls — not geological, engineered"},{"characterId":"scientist-pabodie","session":3,"act":1,"location":"Deep tunnels","status":"healthy","emotional":"horror-pity","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","tunnel-carvings","elder-things-were-men"],"narrativeRole":"lead","threadsActive":["crude-carvings"],"danger":2,"activity":"The empathy turn — headless Elder Things killed by something worse"},{"characterId":"scientist-pabodie","session":3,"act":2,"location":"Deep tunnels","status":"healthy","emotional":"terror","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","tunnel-carvings","elder-things-were-men","shoggoth-existence"],"narrativeRole":"lead","threadsActive":["tekeli-li"],"danger":3,"activity":"Witnesses the Shoggoth. Everything rational shatters","mcNote":"Everything rational shatters. The engineer's instruments are worthless.","npcBehavior":"Drops his instruments. Runs. Does not speak for an hour afterward."},{"characterId":"scientist-pabodie","session":3,"act":3,"location":"City → surface","status":"healthy","emotional":"flight","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","tunnel-carvings","elder-things-were-men","shoggoth-existence"],"narrativeRole":"lead","threadsActive":[],"danger":3,"activity":"Pure flight. Back through tunnels and city to surface"},{"characterId":"scientist-bryce","session":3,"act":0,"location":"Upper tunnels","status":"healthy","emotional":"fascinated-horrified","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","shoggoth-creation","warm-air-below","blind-penguins"],"narrativeRole":"lead","threadsActive":["nameless-scent"],"danger":2,"activity":"Giant blind albino penguins — an underground ecosystem proven real"},{"characterId":"scientist-bryce","session":3,"act":1,"location":"Deep tunnels","status":"healthy","emotional":"grief","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","shoggoth-creation","warm-air-below","blind-penguins","elder-things-were-men"],"narrativeRole":"lead","threadsActive":[],"danger":2,"activity":"Headless Elder Things. They were scientists too. 'Whatever they had been, they were men'"},{"characterId":"scientist-bryce","session":3,"act":2,"location":"Deep tunnels","status":"healthy","emotional":"terror","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","shoggoth-creation","warm-air-below","blind-penguins","elder-things-were-men","shoggoth-existence"],"narrativeRole":"lead","threadsActive":["tekeli-li"],"danger":3,"activity":"The Shoggoth. Life that has outgrown its creators","mcNote":"The Shoggoth is life that has outgrown its creators. Her worst fear realized.","npcBehavior":"Whispers 'It's alive. It's not supposed to be alive. Life doesn't work like this.' Then runs."},{"characterId":"scientist-bryce","session":3,"act":3,"location":"City → surface","status":"healthy","emotional":"flight","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","shoggoth-creation","warm-air-below","blind-penguins","elder-things-were-men","shoggoth-existence"],"narrativeRole":"lead","threadsActive":[],"danger":3,"activity":"Escape. Carries biological samples she wishes she didn't have"},{"characterId":"veteran-rourke","session":3,"act":0,"location":"Upper tunnels","status":"healthy","emotional":"hyper-vigilant","knowledge":["briefing-document","night-sounds","lakes-camp-destruction","specimen-existence","mountain-scale","elder-thing-murals","warm-air-below"],"narrativeRole":"lead","threadsActive":["nameless-scent"],"danger":2,"activity":"Takes point. Every tunnel is Gallipoli again but worse"},{"characterId":"veteran-rourke","session":3,"act":1,"location":"Deep tunnels","status":"healthy","emotional":"soldier-grief","knowledge":["briefing-document","night-sounds","lakes-camp-destruction","specimen-existence","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men"],"narrativeRole":"lead","threadsActive":[],"danger":2,"activity":"Recognizes the Elder Things' deaths as combat losses. Soldiers' deaths"},{"characterId":"veteran-rourke","session":3,"act":2,"location":"Deep tunnels","status":"healthy","emotional":"primal-fear","knowledge":["briefing-document","night-sounds","lakes-camp-destruction","specimen-existence","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"lead","threadsActive":["tekeli-li"],"danger":3,"activity":"The Shoggoth. Cannot fight it. Cannot flank it. Can only run","mcNote":"Cannot fight it. Cannot flank it. The soldier meets something war didn't prepare him for.","npcBehavior":"Shoves people toward the exit. 'MOVE. Don't look. Don't think. MOVE.' Voice cracking for the first time."},{"characterId":"veteran-rourke","session":3,"act":3,"location":"City → surface","status":"healthy","emotional":"survival-mode","knowledge":["briefing-document","night-sounds","lakes-camp-destruction","specimen-existence","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"lead","threadsActive":[],"danger":3,"activity":"Leads the retreat. This is what he was hired for"},{"characterId":"journalist-caldwell","session":3,"act":0,"location":"Upper tunnels","status":"healthy","emotional":"determined","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","blind-penguins"],"narrativeRole":"lead","threadsActive":["nameless-scent"],"danger":2,"activity":"Still photographing. The flash disturbs the blind penguins"},{"characterId":"journalist-caldwell","session":3,"act":1,"location":"Deep tunnels","status":"healthy","emotional":"shattered","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","blind-penguins","elder-things-were-men"],"narrativeRole":"lead","threadsActive":[],"danger":2,"activity":"The headless Elder Things. This is no longer a story she wants to tell"},{"characterId":"journalist-caldwell","session":3,"act":2,"location":"Deep tunnels","status":"healthy","emotional":"terror","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","blind-penguins","elder-things-were-men","shoggoth-existence"],"narrativeRole":"lead","threadsActive":["tekeli-li"],"danger":3,"activity":"Drops the camera. Doesn't go back for it","mcNote":"Drops the camera. This is the moment the story dies — no evidence, just testimony no one will believe.","npcBehavior":"Camera hits the ground. Doesn't stop running. 'The notebooks. I still have the notebooks.' Clutches them like a lifeline."},{"characterId":"journalist-caldwell","session":3,"act":3,"location":"City → surface","status":"healthy","emotional":"flight","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","blind-penguins","elder-things-were-men","shoggoth-existence"],"narrativeRole":"lead","threadsActive":[],"danger":3,"activity":"Runs. The notebooks are still in her pocket. The camera is not"},{"characterId":"mechanic-gedney","session":3,"act":0,"location":"Upper tunnels","status":"healthy","emotional":"terrified","knowledge":["briefing-document","equipment-anomalies","lakes-camp-destruction","fuel-calculation","impossible-architecture","warm-air-below"],"narrativeRole":"support","threadsActive":["nameless-scent"],"danger":2,"activity":"Nothing to fix down here. Nothing has parts. Out of his element"},{"characterId":"mechanic-gedney","session":3,"act":1,"location":"Deep tunnels","status":"healthy","emotional":"horror","knowledge":["briefing-document","equipment-anomalies","lakes-camp-destruction","fuel-calculation","impossible-architecture","warm-air-below","elder-things-were-men"],"narrativeRole":"support","threadsActive":[],"danger":2,"activity":"The Elder Things' tools are recognizable. They were builders, like him"},{"characterId":"mechanic-gedney","session":3,"act":2,"location":"Deep tunnels","status":"healthy","emotional":"panic","knowledge":["briefing-document","equipment-anomalies","lakes-camp-destruction","fuel-calculation","impossible-architecture","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":["tekeli-li"],"danger":3,"activity":"The Shoggoth has no parts. Cannot be fixed, cannot be understood","mcNote":"Something that exists without mechanism. His worldview doesn't just crack — it collapses.","npcBehavior":"Stares at the Shoggoth for two seconds too long. Gedney speaks to the thing. 'What are you?' Then the others pull him away."},{"characterId":"mechanic-gedney","session":3,"act":3,"location":"City → surface","status":"healthy","emotional":"desperate","knowledge":["briefing-document","equipment-anomalies","lakes-camp-destruction","fuel-calculation","impossible-architecture","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"lead","threadsActive":[],"danger":3,"activity":"Runs for the plane. The plane he can understand. The plane he can fix"},{"characterId":"mechanic-webb","session":3,"act":0,"location":"Upper tunnels","status":"healthy","emotional":"terrified","knowledge":["briefing-document","unusual-static","radio-signal-anomaly","elder-thing-murals","warm-air-below"],"narrativeRole":"support","threadsActive":["nameless-scent"],"danger":2,"activity":"Carries the radio out of habit. It receives nothing but the nameless sound"},{"characterId":"mechanic-webb","session":3,"act":1,"location":"Deep tunnels","status":"healthy","emotional":"horror","knowledge":["briefing-document","unusual-static","radio-signal-anomaly","elder-thing-murals","warm-air-below","elder-things-were-men"],"narrativeRole":"support","threadsActive":[],"danger":2,"activity":"Silence meant danger in the lighthouse. This silence is worse"},{"characterId":"mechanic-webb","session":3,"act":2,"location":"Deep tunnels","status":"healthy","emotional":"primal-terror","knowledge":["briefing-document","unusual-static","radio-signal-anomaly","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":["tekeli-li"],"danger":3,"activity":"The Shoggoth's sound drowns everything. The anti-signal","mcNote":"The sound. Tekeli-li. A signal from no station. His worst fear made audible.","npcBehavior":"Covers his ears. 'That frequency. That's not natural. That's not... that's a signal. Something is signaling.'"},{"characterId":"mechanic-webb","session":3,"act":3,"location":"City → surface","status":"healthy","emotional":"flight","knowledge":["briefing-document","unusual-static","radio-signal-anomaly","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":3,"activity":"Runs. Drops the radio. Doesn't go back"},{"characterId":"agent-price","session":3,"act":0,"location":"Upper tunnels","status":"healthy","emotional":"nervous","knowledge":["briefing-document","anomaly-value","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below"],"narrativeRole":"support","threadsActive":["nameless-scent"],"danger":2,"activity":"Still calculating. Artifacts = profit. But who's the buyer for alien technology?"},{"characterId":"agent-price","session":3,"act":1,"location":"Deep tunnels","status":"healthy","emotional":"fear","knowledge":["briefing-document","anomaly-value","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men"],"narrativeRole":"support","threadsActive":[],"danger":2,"activity":"The ledger stops making sense when the entities are people"},{"characterId":"agent-price","session":3,"act":2,"location":"Deep tunnels","status":"healthy","emotional":"terror","knowledge":["briefing-document","anomaly-value","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":["tekeli-li"],"danger":3,"activity":"No commercial value. Only annihilation. The second ledger closes","mcNote":"The ledgers are meaningless now. Nothing in his financial training prepared him for this.","npcBehavior":"Backs away slowly. The gold pen falls from nerveless fingers. 'This exceeds... this exceeds everything.'"},{"characterId":"agent-price","session":3,"act":3,"location":"City → surface","status":"healthy","emotional":"survival","knowledge":["briefing-document","anomaly-value","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":3,"activity":"Runs. Leaves the second ledger behind"},{"characterId":"agent-ainsworth","session":3,"act":0,"location":"Upper tunnels","status":"healthy","emotional":"determined","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below"],"narrativeRole":"support","threadsActive":["nameless-scent"],"danger":2,"activity":"Takes samples. Labels everything. The discipline holds"},{"characterId":"agent-ainsworth","session":3,"act":1,"location":"Deep tunnels","status":"healthy","emotional":"grief-awe","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men"],"narrativeRole":"support","threadsActive":[],"danger":2,"activity":"Rigor will not be enough to contain what this means"},{"characterId":"agent-ainsworth","session":3,"act":2,"location":"Deep tunnels","status":"healthy","emotional":"terror","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":["tekeli-li"],"danger":3,"activity":"The Shoggoth. No geological framework for this","mcNote":"Objectivity is gone. Her geological report is now a confession.","npcBehavior":"Stops writing mid-sentence. 'I can't... the words aren't... there are no words in my vocabulary for this.'"},{"characterId":"agent-ainsworth","session":3,"act":3,"location":"City → surface","status":"healthy","emotional":"flight","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":3,"activity":"Runs. The samples are in her pocket. The codebook is irrelevant now"},{"characterId":"expert-sorensen","session":3,"act":0,"location":"Upper tunnels","status":"healthy","emotional":"praying","knowledge":["briefing-document","ice-behavior","sailors-stories","lakes-camp-destruction","mountain-scale","elder-thing-murals","warm-air-below"],"narrativeRole":"support","threadsActive":["nameless-scent"],"danger":2,"activity":"If he descends: muttering in Norwegian. The old prayers"},{"characterId":"expert-sorensen","session":3,"act":1,"location":"Deep tunnels","status":"healthy","emotional":"broken-calm","knowledge":["briefing-document","ice-behavior","sailors-stories","lakes-camp-destruction","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men"],"narrativeRole":"support","threadsActive":[],"danger":2,"activity":"The ice knows. It always knew. These things lived under his ice for twenty years"},{"characterId":"expert-sorensen","session":3,"act":2,"location":"Deep tunnels","status":"healthy","emotional":"beyond-fear","knowledge":["briefing-document","ice-behavior","sailors-stories","lakes-camp-destruction","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":["tekeli-li"],"danger":3,"activity":"The Shoggoth. The thing under the ice. The thing the old stories warned about","mcNote":"The old stories were not exaggerated. They were understated.","npcBehavior":"Crosses himself — the only time he's done it on the expedition. 'Tekeli-li. The whalers had a word for it. Now I know why they drank.'"},{"characterId":"expert-sorensen","session":3,"act":3,"location":"City → surface","status":"healthy","emotional":"survival","knowledge":["briefing-document","ice-behavior","sailors-stories","lakes-camp-destruction","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":3,"activity":"Leads through the city. Knows the way out by instinct"},{"characterId":"expert-mcready","session":3,"act":0,"location":"Upper tunnels","status":"healthy","emotional":"instinctual-fear","knowledge":["briefing-document","dog-behavior","dogs-facing-away","lakes-camp-destruction","mountain-scale","elder-thing-murals","warm-air-below"],"narrativeRole":"support","threadsActive":["nameless-scent"],"danger":2,"activity":"Moves like his dogs — low, cautious, sniffing the air"},{"characterId":"expert-mcready","session":3,"act":1,"location":"Deep tunnels","status":"healthy","emotional":"understanding","knowledge":["briefing-document","dog-behavior","dogs-facing-away","lakes-camp-destruction","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men"],"narrativeRole":"support","threadsActive":[],"danger":2,"activity":"Now he knows why the 1930 dogs were never right again. They saw this"},{"characterId":"expert-mcready","session":3,"act":2,"location":"Deep tunnels","status":"healthy","emotional":"primal-terror","knowledge":["briefing-document","dog-behavior","dogs-facing-away","lakes-camp-destruction","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":["tekeli-li"],"danger":3,"activity":"The Shoggoth. This is what the dogs smelled. This is what they refused to face","mcNote":"He understands why the dogs wouldn't come. He wishes he'd listened.","npcBehavior":"Doesn't run immediately. Looks at the Shoggoth with something like recognition. 'The dogs knew. They always knew.' Then runs."},{"characterId":"expert-mcready","session":3,"act":3,"location":"City → surface","status":"healthy","emotional":"animal-flight","knowledge":["briefing-document","dog-behavior","dogs-facing-away","lakes-camp-destruction","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":3,"activity":"Runs like the dogs would. Straight for the exit. No looking back"},{"characterId":"believer-angell","session":3,"act":0,"location":"Upper tunnels","status":"healthy","emotional":"fragile-determined","knowledge":["pnakotic-fragments","eltdown-shards","necronomicon-marginalia","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below"],"narrativeRole":"lead","threadsActive":["crude-carvings","nameless-scent"],"danger":2,"activity":"Recognizes the crude spiral carvings from Eltdown Shard descriptions"},{"characterId":"believer-angell","session":3,"act":1,"location":"Deep tunnels","status":"healthy","emotional":"shattered","knowledge":["pnakotic-fragments","eltdown-shards","necronomicon-marginalia","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men"],"narrativeRole":"lead","threadsActive":[],"danger":2,"activity":"The texts never said the Elder Things were men. This was not in the pattern"},{"characterId":"believer-angell","session":3,"act":2,"location":"Deep tunnels","status":"healthy","emotional":"beyond-sanity","knowledge":["pnakotic-fragments","eltdown-shards","necronomicon-marginalia","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"lead","threadsActive":["tekeli-li"],"danger":3,"activity":"Tekeli-li. The word from the texts. He's been reading about this thing his entire career","mcNote":"Being right is worse than being wrong. The texts didn't prepare him for the reality.","npcBehavior":"Falls to his knees. 'The Pnakotic manuscripts mention these. They call them... they call them mistakes.' Has to be physically lifted."},{"characterId":"believer-angell","session":3,"act":3,"location":"City → surface","status":"healthy","emotional":"broken","knowledge":["pnakotic-fragments","eltdown-shards","necronomicon-marginalia","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":3,"activity":"Others have to help him run. The pattern is complete but it destroyed him"},{"characterId":"believer-waverly","session":3,"act":0,"location":"Upper tunnels","status":"healthy","emotional":"steady","knowledge":["oral-traditions","island-warnings","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below"],"narrativeRole":"lead","threadsActive":["nameless-scent"],"danger":2,"activity":"Tends to others' fear. The nurse in her never stops. Compassion as armor"},{"characterId":"believer-waverly","session":3,"act":1,"location":"Deep tunnels","status":"healthy","emotional":"profound-grief","knowledge":["oral-traditions","island-warnings","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men"],"narrativeRole":"lead","threadsActive":[],"danger":2,"activity":"They were men. The oral traditions called them 'the first gardeners.' Now she understands"},{"characterId":"believer-waverly","session":3,"act":2,"location":"Deep tunnels","status":"healthy","emotional":"terror-faith","knowledge":["oral-traditions","island-warnings","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"lead","threadsActive":["tekeli-li"],"danger":3,"activity":"The Shoggoth. The thing the stories warned about. Her cross is cold against her skin","mcNote":"The warnings were preparation, not prevention. She always knew this was coming.","npcBehavior":"The only one not screaming. Guides others toward the exit. 'I was warned. I came anyway. Move. Move now.'"},{"characterId":"believer-waverly","session":3,"act":3,"location":"City → surface","status":"healthy","emotional":"helping-others","knowledge":["oral-traditions","island-warnings","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"lead","threadsActive":[],"danger":3,"activity":"Supports Angell, who is barely functioning. The nurse endures"},{"characterId":"patron-starkweather","session":3,"act":0,"location":"Upper tunnels","status":"healthy","emotional":"grim-determination","knowledge":["dyer-account","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","tunnel-carvings"],"narrativeRole":"lead","threadsActive":["crude-carvings","nameless-scent"],"danger":2,"activity":"Still leading from the front. The patron who won't let his investment go. 'We're already here. We see it through'"},{"characterId":"patron-starkweather","session":3,"act":1,"location":"Deep tunnels","status":"healthy","emotional":"horror-guilt","knowledge":["dyer-account","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","tunnel-carvings","elder-things-were-men"],"narrativeRole":"pivot","threadsActive":["crude-carvings"],"danger":2,"activity":"The headless Elder Things. They were men. And he funded the expedition that disturbed their grave"},{"characterId":"patron-starkweather","session":3,"act":2,"location":"Deep tunnels","status":"shaken","emotional":"broken-authority","knowledge":["dyer-account","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","tunnel-carvings","elder-things-were-men","shoggoth-existence"],"narrativeRole":"danger","threadsActive":["tekeli-li"],"danger":3,"activity":"The Shoggoth. Dyer described this too. Starkweather funded proof of the one thing that should never have been proven","mcNote":"Starkweather's authority shatters here. The patron, the True Believer, the man who pushed them all forward — he sees the Shoggoth and understands what he's done. His status shifts to 'shaken' because the man who was certain about everything is now certain of only one thing: he was wrong to come here.","npcBehavior":"Freezes. For the first time, does not give orders. Others have to pull him. If he speaks, it's Dyer's words: 'Dyer tried to warn us. He tried.' The patron becomes dead weight that must be dragged to safety."},{"characterId":"patron-starkweather","session":3,"act":3,"location":"City → surface","status":"shaken","emotional":"broken","knowledge":["dyer-account","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","tunnel-carvings","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":3,"activity":"Others lead him out. The patron follows. The man who funded everything has nothing left to fund"},{"characterId":"patron-moore","session":3,"act":0,"location":"Radio silence — US","status":"healthy","emotional":"absent","knowledge":["dyer-account-redacted","briefing-document","triangular-markings-reported"],"narrativeRole":"absent","threadsActive":[],"danger":2,"activity":"Fully absent. His absence is felt most by Ainsworth, who has no one to report to. The oversight has ended"},{"characterId":"patron-moore","session":3,"act":1,"location":"Radio silence — US","status":"healthy","emotional":"absent","knowledge":["dyer-account-redacted","briefing-document","triangular-markings-reported"],"narrativeRole":"absent","threadsActive":[],"danger":2,"activity":"No voice of reason to hear that the Elder Things were men. The empiricist misses the empathy"},{"characterId":"patron-moore","session":3,"act":2,"location":"Radio silence — US","status":"healthy","emotional":"absent","knowledge":["dyer-account-redacted","briefing-document","triangular-markings-reported"],"narrativeRole":"absent","threadsActive":[],"danger":3,"activity":"The Shoggoth exists and Moore will never know. The skeptic's framework cannot contain what he cannot see"},{"characterId":"patron-moore","session":3,"act":3,"location":"Radio silence — US","status":"healthy","emotional":"absent","knowledge":["dyer-account-redacted","briefing-document","triangular-markings-reported"],"narrativeRole":"absent","threadsActive":[],"danger":3,"activity":"They run toward a world where Moore is waiting for data. He will get something far worse than data"}]};
+var STORY_MATRIX_S4 = {"id":4,"name":"The Return","acts":[{"name":"The Crossing","index":0},{"name":"The Vision","index":1},{"name":"The Return to Base","index":2},{"name":"The Choice","index":3}],"beats":[{"characterId":"scientist-pabodie","session":4,"act":0,"location":"Plane — mountain crossing","status":"healthy","emotional":"numb","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","tunnel-carvings","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":["wind-piping"],"danger":2,"activity":"Engine sounds wrong. Looks back — the city extends endlessly"},{"characterId":"scientist-pabodie","session":4,"act":1,"location":"Plane — above violet mountains","status":"healthy","emotional":"dissociated","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","tunnel-carvings","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"support","threadsActive":["violet-mountains"],"danger":1,"activity":"The clouds above the violet mountains. Fragments of something worse"},{"characterId":"scientist-pabodie","session":4,"act":2,"location":"McMurdo Sound","status":"healthy","emotional":"exhausted","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","tunnel-carvings","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"support","threadsActive":[],"danger":1,"activity":"The ship. The radio. The world wants an explanation"},{"characterId":"scientist-pabodie","session":4,"act":3,"location":"McMurdo Sound","status":"healthy","emotional":"conflicted","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","tunnel-carvings","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"lead","threadsActive":[],"danger":1,"activity":"The Choice. His engineering mind wants to document. His survival instinct says burn it all","mcNote":"Engineering mind wants to document. Survival instinct says burn it all.","npcBehavior":"Stares at his instrument case. 'I could write a paper. The measurements alone would... No. Some things should not be measured.'"},{"characterId":"scientist-bryce","session":4,"act":0,"location":"Plane — mountain crossing","status":"healthy","emotional":"numb","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","shoggoth-creation","warm-air-below","blind-penguins","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":2,"activity":"The crossing back. She cannot stop cataloguing what she saw"},{"characterId":"scientist-bryce","session":4,"act":1,"location":"Plane — above violet mountains","status":"healthy","emotional":"dissociated","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","shoggoth-creation","warm-air-below","blind-penguins","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"support","threadsActive":["violet-mountains"],"danger":1,"activity":"The vision above the violet mountains"},{"characterId":"scientist-bryce","session":4,"act":2,"location":"McMurdo Sound","status":"healthy","emotional":"exhausted","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","shoggoth-creation","warm-air-below","blind-penguins","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"support","threadsActive":[],"danger":1,"activity":"The world wants an explanation. Moore wants data"},{"characterId":"scientist-bryce","session":4,"act":3,"location":"McMurdo Sound","status":"healthy","emotional":"torn","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","shoggoth-creation","warm-air-below","blind-penguins","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"lead","threadsActive":[],"danger":1,"activity":"The Choice. Her samples are proof. Publishing rewrites biology. But also invites a third expedition","mcNote":"Her samples are proof. Publishing rewrites biology. But it also invites a third expedition.","npcBehavior":"Holds a specimen jar up to the light. 'This changes everything. Publishing it changes everything. Including who comes back.'"},{"characterId":"veteran-rourke","session":4,"act":0,"location":"Plane — mountain crossing","status":"healthy","emotional":"hollow","knowledge":["briefing-document","night-sounds","lakes-camp-destruction","specimen-existence","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":2,"activity":"Kept them alive. The contract is fulfilled. But at what cost"},{"characterId":"veteran-rourke","session":4,"act":1,"location":"Plane — above violet mountains","status":"healthy","emotional":"numb","knowledge":["briefing-document","night-sounds","lakes-camp-destruction","specimen-existence","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":["violet-mountains"],"danger":1,"activity":"Stares straight ahead during the vision. Refuses to look"},{"characterId":"veteran-rourke","session":4,"act":2,"location":"McMurdo Sound","status":"healthy","emotional":"guarded","knowledge":["briefing-document","night-sounds","lakes-camp-destruction","specimen-existence","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":1,"activity":"Says nothing to anyone. Waits for the ship"},{"characterId":"veteran-rourke","session":4,"act":3,"location":"McMurdo Sound","status":"healthy","emotional":"resigned","knowledge":["briefing-document","night-sounds","lakes-camp-destruction","specimen-existence","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"lead","threadsActive":[],"danger":1,"activity":"The Choice. A soldier's perspective — some things shouldn't be known","mcNote":"A soldier's perspective — some truths are weapons, and weapons must be controlled.","npcBehavior":"'I've seen classified operations. This is beyond classification. Burn the notes, sink the specimens, go home.'"},{"characterId":"journalist-caldwell","session":4,"act":0,"location":"Plane — mountain crossing","status":"healthy","emotional":"shocked","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","blind-penguins","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":2,"activity":"Stares at her notebooks. Words but no photographs"},{"characterId":"journalist-caldwell","session":4,"act":1,"location":"Plane — above violet mountains","status":"healthy","emotional":"dazed","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","blind-penguins","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"support","threadsActive":["violet-mountains"],"danger":1,"activity":"The vision. She writes it down automatically. Reporter's instinct"},{"characterId":"journalist-caldwell","session":4,"act":2,"location":"McMurdo Sound","status":"healthy","emotional":"conflicted","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","blind-penguins","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"support","threadsActive":[],"danger":1,"activity":"The Gazette wants a story. She has one. But should she file it?"},{"characterId":"journalist-caldwell","session":4,"act":3,"location":"McMurdo Sound","status":"healthy","emotional":"anguished","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","blind-penguins","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"lead","threadsActive":[],"danger":1,"activity":"The Choice. Publish = fame + third expedition. Burn the notebooks = safety + obscurity. Dyer tried publishing. Nobody believed him","mcNote":"Publish = fame + third expedition. Burn = safety + obscurity. Dyer tried publishing and nobody believed him.","npcBehavior":"Holds her notebooks over a stove. 'Dyer told the truth. Nobody believed him. Why would they believe me?' Hesitates."},{"characterId":"mechanic-gedney","session":4,"act":0,"location":"Plane — mountain crossing","status":"healthy","emotional":"focused","knowledge":["briefing-document","equipment-anomalies","lakes-camp-destruction","fuel-calculation","impossible-architecture","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"lead","threadsActive":[],"danger":2,"activity":"In his element again. Engine sounds wrong but he nurses it through"},{"characterId":"mechanic-gedney","session":4,"act":1,"location":"Plane — above violet mountains","status":"healthy","emotional":"avoidant","knowledge":["briefing-document","equipment-anomalies","lakes-camp-destruction","fuel-calculation","impossible-architecture","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":["violet-mountains"],"danger":1,"activity":"Keeps eyes on gauges during the vision. Won't look out the window"},{"characterId":"mechanic-gedney","session":4,"act":2,"location":"McMurdo Sound","status":"healthy","emotional":"relieved","knowledge":["briefing-document","equipment-anomalies","lakes-camp-destruction","fuel-calculation","impossible-architecture","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":1,"activity":"Lands the plane. That's his job done. The rest is someone else's problem"},{"characterId":"mechanic-gedney","session":4,"act":3,"location":"McMurdo Sound","status":"healthy","emotional":"quiet","knowledge":["briefing-document","equipment-anomalies","lakes-camp-destruction","fuel-calculation","impossible-architecture","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":1,"activity":"The Choice. Machines don't lie. What he saw was real. But who'd believe a mechanic?","mcNote":"The simplest perspective: some doors should stay closed.","npcBehavior":"'I don't understand what we saw. I know I can't fix it. Let's go home and never come back.'"},{"characterId":"mechanic-webb","session":4,"act":0,"location":"Plane — mountain crossing","status":"healthy","emotional":"fragile","knowledge":["briefing-document","unusual-static","radio-signal-anomaly","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":["wind-piping"],"danger":2,"activity":"Without the radio, he is adrift. The wind still sounds like words"},{"characterId":"mechanic-webb","session":4,"act":1,"location":"Plane — above violet mountains","status":"healthy","emotional":"shattered","knowledge":["briefing-document","unusual-static","radio-signal-anomaly","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"support","threadsActive":["violet-mountains"],"danger":1,"activity":"The vision. He hears something on a frequency that doesn't exist"},{"characterId":"mechanic-webb","session":4,"act":2,"location":"McMurdo Sound","status":"healthy","emotional":"broken","knowledge":["briefing-document","unusual-static","radio-signal-anomaly","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"support","threadsActive":[],"danger":1,"activity":"The ship has a working radio. He can hear Moore again. But is it really Moore?"},{"characterId":"mechanic-webb","session":4,"act":3,"location":"McMurdo Sound","status":"healthy","emotional":"haunted","knowledge":["briefing-document","unusual-static","radio-signal-anomaly","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"support","threadsActive":[],"danger":1,"activity":"The Choice. The silence was the worst part. Telling someone means the silence might end","mcNote":"The silence haunts him. Maintaining the radio link is now about preventing others from finding this.","npcBehavior":"'Moore will want a full report. If I send it, he'll fund another expedition. If I don't... the silence protects everyone.'"},{"characterId":"agent-price","session":4,"act":0,"location":"Plane — mountain crossing","status":"healthy","emotional":"shaken","knowledge":["briefing-document","anomaly-value","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":2,"activity":"Silent. For once, not calculating"},{"characterId":"agent-price","session":4,"act":1,"location":"Plane — above violet mountains","status":"healthy","emotional":"numb","knowledge":["briefing-document","anomaly-value","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":["violet-mountains"],"danger":1,"activity":"Doesn't look at the vision. Stares at his hands"},{"characterId":"agent-price","session":4,"act":2,"location":"McMurdo Sound","status":"healthy","emotional":"calculating-again","knowledge":["briefing-document","anomaly-value","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":1,"activity":"Old habits return. Starkweather will want a report. The investment..."},{"characterId":"agent-price","session":4,"act":3,"location":"McMurdo Sound","status":"healthy","emotional":"torn","knowledge":["briefing-document","anomaly-value","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"lead","threadsActive":[],"danger":1,"activity":"The Choice. Tell Starkweather the truth = third expedition. Lie = protect the world but betray his employer","mcNote":"The patron's agent faces the ultimate cost-benefit analysis.","npcBehavior":"Closes both ledgers. 'Starkweather's investment is a total loss. The best outcome is that no one ever profits from this.'"},{"characterId":"agent-ainsworth","session":4,"act":0,"location":"Plane — mountain crossing","status":"healthy","emotional":"numb","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":2,"activity":"Writes a report no one will read on a frequency no one monitors"},{"characterId":"agent-ainsworth","session":4,"act":1,"location":"Plane — above violet mountains","status":"healthy","emotional":"overwhelmed","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"support","threadsActive":["violet-mountains"],"danger":1,"activity":"The vision. Science has no vocabulary for this"},{"characterId":"agent-ainsworth","session":4,"act":2,"location":"McMurdo Sound","status":"healthy","emotional":"conflicted","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"support","threadsActive":[],"danger":1,"activity":"Moore is on the radio. Demanding data. She has the data. All of it"},{"characterId":"agent-ainsworth","session":4,"act":3,"location":"McMurdo Sound","status":"healthy","emotional":"divided","knowledge":["briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"lead","threadsActive":[],"danger":1,"activity":"The Choice. Send the data to Moore = enables third expedition. Destroy the samples = betray science. She was sent to keep it honest","mcNote":"The objective observer must decide what objectivity means when truth is dangerous.","npcBehavior":"'My report to Moore is overdue. If I send it accurately, he will act on it. If I edit it... I become a liar, but a protective one.'"},{"characterId":"expert-sorensen","session":4,"act":0,"location":"Plane — mountain crossing","status":"healthy","emotional":"numb","knowledge":["briefing-document","ice-behavior","sailors-stories","lakes-camp-destruction","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":2,"activity":"Stares at the ice below. It will never look the same"},{"characterId":"expert-sorensen","session":4,"act":1,"location":"Plane — above violet mountains","status":"healthy","emotional":"resigned","knowledge":["briefing-document","ice-behavior","sailors-stories","lakes-camp-destruction","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":["violet-mountains"],"danger":1,"activity":"The violet mountains. He looks. He's seen enough that one more horror doesn't matter"},{"characterId":"expert-sorensen","session":4,"act":2,"location":"McMurdo Sound","status":"healthy","emotional":"silent","knowledge":["briefing-document","ice-behavior","sailors-stories","lakes-camp-destruction","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":1,"activity":"Back on water. Says nothing. Smokes his pipe"},{"characterId":"expert-sorensen","session":4,"act":3,"location":"McMurdo Sound","status":"healthy","emotional":"certain","knowledge":["briefing-document","ice-behavior","sailors-stories","lakes-camp-destruction","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":1,"activity":"The Choice. The ice should keep its secrets. It's done so for millions of years. Leave it alone","mcNote":"Twenty years on the ice taught him to respect what he doesn't understand.","npcBehavior":"'The ice keeps secrets. It has for millions of years. We should let it keep these.' Lights his pipe with steady hands."},{"characterId":"expert-mcready","session":4,"act":0,"location":"Plane — mountain crossing","status":"healthy","emotional":"shaking","knowledge":["briefing-document","dog-behavior","dogs-facing-away","lakes-camp-destruction","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":2,"activity":"Back at the plane. The dogs are frantic but alive. They fly"},{"characterId":"expert-mcready","session":4,"act":1,"location":"Plane — above violet mountains","status":"healthy","emotional":"numb","knowledge":["briefing-document","dog-behavior","dogs-facing-away","lakes-camp-destruction","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":["violet-mountains"],"danger":1,"activity":"Holds one of the dogs during the vision. The dog whimpers"},{"characterId":"expert-mcready","session":4,"act":2,"location":"McMurdo Sound","status":"healthy","emotional":"quiet","knowledge":["briefing-document","dog-behavior","dogs-facing-away","lakes-camp-destruction","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":1,"activity":"Takes care of the dogs. They're all that matters now"},{"characterId":"expert-mcready","session":4,"act":3,"location":"McMurdo Sound","status":"healthy","emotional":"resolved","knowledge":["briefing-document","dog-behavior","dogs-facing-away","lakes-camp-destruction","mountain-scale","elder-thing-murals","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":1,"activity":"The Choice. The ice doesn't lie. But people do. Keep it simple — say nothing","mcNote":"The dogs survived the first expedition. The question is what they carried back.","npcBehavior":"'The dogs from Dyer's expedition were never the same. If we bring specimens back, what follows them home?'"},{"characterId":"believer-angell","session":4,"act":0,"location":"Plane — mountain crossing","status":"healthy","emotional":"catatonic","knowledge":["pnakotic-fragments","eltdown-shards","necronomicon-marginalia","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":2,"activity":"Barely responsive. Clutches his notebooks. Whispers correlations"},{"characterId":"believer-angell","session":4,"act":1,"location":"Plane — above violet mountains","status":"healthy","emotional":"recognition","knowledge":["pnakotic-fragments","eltdown-shards","necronomicon-marginalia","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"lead","threadsActive":["violet-mountains"],"danger":1,"activity":"The vision. He recognizes it. This was in the texts too. All of it was true"},{"characterId":"believer-angell","session":4,"act":2,"location":"McMurdo Sound","status":"healthy","emotional":"fragile","knowledge":["pnakotic-fragments","eltdown-shards","necronomicon-marginalia","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"support","threadsActive":[],"danger":1,"activity":"Back among people. Slowly returning to himself. The monograph he'll never publish"},{"characterId":"believer-angell","session":4,"act":3,"location":"McMurdo Sound","status":"healthy","emotional":"resigned","knowledge":["pnakotic-fragments","eltdown-shards","necronomicon-marginalia","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"lead","threadsActive":[],"danger":1,"activity":"The Choice. His cousin died trying to warn people. Dyer was ignored. The pattern repeats. Telling or silence — neither changes what's under the ice","mcNote":"The scholar who confirmed the texts must decide if knowledge itself is the threat.","npcBehavior":"'I spent three years proving the Pnakotic manuscripts were real. I succeeded. I wish I hadn't.' Closes the satchel."},{"characterId":"believer-waverly","session":4,"act":0,"location":"Plane — mountain crossing","status":"healthy","emotional":"exhausted","knowledge":["oral-traditions","island-warnings","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":2,"activity":"Tends to injuries. The practical work keeps her grounded"},{"characterId":"believer-waverly","session":4,"act":1,"location":"Plane — above violet mountains","status":"healthy","emotional":"acceptance","knowledge":["oral-traditions","island-warnings","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"lead","threadsActive":["violet-mountains"],"danger":1,"activity":"The vision. She prays. Not for deliverance — for understanding"},{"characterId":"believer-waverly","session":4,"act":2,"location":"McMurdo Sound","status":"healthy","emotional":"weary-strong","knowledge":["oral-traditions","island-warnings","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"support","threadsActive":[],"danger":1,"activity":"Checks on everyone. Some are broken. Some are numb. All are changed"},{"characterId":"believer-waverly","session":4,"act":3,"location":"McMurdo Sound","status":"healthy","emotional":"clear","knowledge":["oral-traditions","island-warnings","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"lead","threadsActive":[],"danger":1,"activity":"The Choice. The warnings survived millennia in human memory. The story must be told — but in a way people can carry. Not science. Story. The oral tradition continues","mcNote":"The warnings she heard were meant to prepare survivors. She is now one of them.","npcBehavior":"'The old stories survive because people chose to remember them. The question is: what do we choose to remember?'"},{"characterId":"patron-starkweather","session":4,"act":0,"location":"Plane — mountain crossing","status":"shaken","emotional":"hollow","knowledge":["dyer-account","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","tunnel-carvings","elder-things-were-men","shoggoth-existence"],"narrativeRole":"support","threadsActive":[],"danger":2,"activity":"Sits in the plane. Stares at nothing. The man who believed everything now believes nothing"},{"characterId":"patron-starkweather","session":4,"act":1,"location":"Plane — above violet mountains","status":"shaken","emotional":"numb","knowledge":["dyer-account","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","tunnel-carvings","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"support","threadsActive":["violet-mountains"],"danger":1,"activity":"The vision above the violet mountains. He doesn't look away. He owes it that much"},{"characterId":"patron-starkweather","session":4,"act":2,"location":"McMurdo Sound","status":"shaken","emotional":"guilt","knowledge":["dyer-account","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","tunnel-carvings","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"support","threadsActive":[],"danger":1,"activity":"The world wants answers. Moore wants data. Starkweather wants to undo what he funded"},{"characterId":"patron-starkweather","session":4,"act":3,"location":"McMurdo Sound","status":"shaken","emotional":"devastated-lucid","knowledge":["dyer-account","briefing-document","triangular-markings","lakes-journal","specimen-existence","mountain-scale","elder-thing-murals","billion-year-civilization","warm-air-below","tunnel-carvings","elder-things-were-men","shoggoth-existence","violet-mountains-vision"],"narrativeRole":"pivot","threadsActive":[],"danger":1,"activity":"The Choice. What he funded exceeds imagination. A third expedition would be his fault too. The True Believer must decide whether belief itself was the mistake","mcNote":"Starkweather's arc resolves here. The man who believed Dyer and funded the proof now holds the weight of that proof. His choice is the patron's choice: fund silence (betray his own belief) or fund truth (risk a third expedition). Either way, he funded something beyond human control. The True Believer's arc: vindication sought → vindication achieved → vindication as horror.","npcBehavior":"Speaks slowly. Makes eye contact for the first time since the tunnels. 'I believed Dyer. I was right to believe him. And I was wrong to come here.' If Price pushes for a report to send to investors, Starkweather looks at him like a stranger."},{"characterId":"patron-moore","session":4,"act":0,"location":"Radio silence — US","status":"healthy","emotional":"absent","knowledge":["dyer-account-redacted","briefing-document","triangular-markings-reported"],"narrativeRole":"absent","threadsActive":[],"danger":2,"activity":"Still no contact. Moore has been trying to reach them for days. His cables to McMurdo go unanswered"},{"characterId":"patron-moore","session":4,"act":1,"location":"Radio silence — US","status":"healthy","emotional":"absent","knowledge":["dyer-account-redacted","briefing-document","triangular-markings-reported"],"narrativeRole":"absent","threadsActive":[],"danger":1,"activity":"The vision above the violet mountains. Moore cannot see it. His empiricism is irrelevant here"},{"characterId":"patron-moore","session":4,"act":2,"location":"Harvard (via radio — restored)","status":"healthy","emotional":"frantic","knowledge":["dyer-account-redacted","briefing-document","triangular-markings-reported"],"narrativeRole":"tension","threadsActive":[],"danger":1,"activity":"Radio restored at McMurdo. Moore's voice floods back — days of unanswered calls compressed into frantic demands. 'What happened? Where have you been? Report!'","mcNote":"Moore's voice returning should feel like re-entry into civilization. He's been in the dark for days and he's furious. But his questions are about data — he doesn't know to ask about the Shoggoth, the Elder Things, the city. The gap between what he knows and what they know is now an abyss."},{"characterId":"patron-moore","session":4,"act":3,"location":"Harvard (via radio — restored)","status":"healthy","emotional":"demanding","knowledge":["dyer-account-redacted","briefing-document","triangular-markings-reported"],"narrativeRole":"tension","threadsActive":[],"danger":1,"activity":"The Choice, from afar. Moore demands the full report. Ainsworth holds the data. The skeptic wants proof — but proof of what they found is proof that a third expedition is warranted. Moore's empiricism becomes the very thing that could send more people to die","mcNote":"Moore's arc resolves in absentia. The skeptic who demanded data will receive data that destroys his skepticism — or be lied to and remain safe in his ignorance. His voice on the radio is the voice of the world that doesn't know yet. Every player must decide: do they tell Moore the truth? His knowledge array never grew because he was never there. The gap between his knowledge and theirs IS the choice.","npcBehavior":"Crisp, professional, relentless on the radio. 'I want Ainsworth's samples catalogued and transmitted. I want Starkweather's account on record. I want geological data, not ghost stories.' If given fragments of truth: long silence, then — 'Say that again. Slowly.' If lied to: 'Good. File the report. We'll debrief when you return.' Either way, he's already planning what comes next."}]};
+var STORY_MATRIX_ARCS = {"scientist-pabodie":{"throughline":"An engineer whose faith in instruments and methodology is dismantled by a world that was built without either.","peak":"S2-A0: Drill hits unhewn stone","break":"S3-A0: Tunnels defy geometry","ifPlayer":"Journal entries begin precise — measurements, schematics, margin calculations. The player feels competence as identity: Pabodie knows what he built, knows what it can do. When the drill strikes something it cannot cut, the journal voice stutters. Measurements acquire question marks. Diagrams trail off mid-line. By the tunnels, the player must reckon with the fact that understanding was never the same thing as control. The internal conflict is between the man who fixes things and the man who must accept that some things were never broken — they were built this way, by hands that understood forces his education never named. The player's arc is the grief of mastery made irrelevant.","ifNpc":"Pabodie's hands are his tell. Early on he is always touching something — adjusting a bolt, tapping a pressure gauge, running a thumb along a weld seam. He speaks in specifications and tolerances. After the drill fails, he goes quiet for hours, then talks too fast about recalibration. In the tunnels he stops touching the walls. His dialogue shifts from declarative to interrogative. The MC should portray a man whose body language becomes progressively less certain — a mechanic standing in a cathedral, tools useless in his belt. He does not panic. He simply stops volunteering solutions."},"scientist-bryce":{"throughline":"A biologist who came to classify the impossible discovers that classification is a cage she built around herself.","peak":"S1-A2: Specimen examination","break":"S3-A1: Living biology redefines 'alive'","ifPlayer":"The journal voice is clinical, precise, annotated — the voice of someone who learned early that emotion is unprofessional and wonder is a liability. The player experiences mastery through naming: genus, phylum, cellular structure, metabolic pathway. The specimen examination is exhilarating because the organism is new but still classifiable. The break comes when the biology stops being classifiable at all — when the organism is alive in ways that make the word 'alive' a lie told to children. The player's internal conflict is between the woman who finds safety in taxonomy and the woman who must admit that the categories were always hers, never nature's. Her journal entries should become longer, more desperate in their precision, as though enough Latin nomenclature could hold back the dark.","ifNpc":"Bryce speaks in the clipped cadence of someone defending a thesis she knows is under attack. She corrects terminology — sharply, reflexively, even when no one asked. Her specimen notes are meticulous, and the MC should let other characters see her working late, bent over samples, muttering classifications. After the break, her corrections stop. She stares at slides without writing. When asked what she sees, she says 'I don't have the vocabulary yet,' and the 'yet' is doing all the work. The MC should show her hands shaking — not from fear, but from the effort of not writing down what she actually observes."},"veteran-rourke":{"throughline":"A soldier who survived one hell discovers that survival skills are not transferable between hells.","peak":"S1-A2: Perimeter breached at Lake's camp","break":"S3-A0: Gallipoli flashback in tunnels","ifPlayer":"The journal voice is terse, operational, stripped of adjectives — a soldier's after-action report written for no commanding officer. The player feels competence differently from the scientists: not through understanding, but through readiness. Rourke has seen men die and knows how to stop it. The perimeter breach at Lake's camp is the peak because it is the last time his training maps onto reality — there is a threat, there is a perimeter, there is a response. The break in the tunnels is not fear of the alien. It is the smell of mud, the confined space, the sound of something moving in the dark — and suddenly he is twenty-three and the walls are Gallipoli and the men beside him are already dead. The player's arc is the discovery that trauma does not make you stronger. It makes you breakable in specific, precise ways that you cannot predict and cannot train away.","ifNpc":"Rourke is the quietest person in any room and the first person everyone looks at when something goes wrong. He positions himself near exits. He counts heads without being asked. His dialogue is monosyllabic until danger arrives, at which point he becomes terrifyingly articulate — clear orders, precise distances, no wasted breath. After the tunnels, the MC should show the cracks: a hand that won't stop gripping his rifle strap, eyes that track movement no one else sees, a flinch at sounds that are not gunfire but remind him of gunfire. He never explains. If asked, he says 'I'm fine,' and everyone knows he is lying, and no one pushes."},"journalist-caldwell":{"throughline":"A reporter chasing the story of a lifetime learns that some truths destroy the vessel that carries them.","peak":"S2-A1: Photographs the murals","break":"S3-A2: Drops the camera, doesn't go back","ifPlayer":"The journal is a reporter's notebook — shorthand, observations, overheard quotes, half-formed ledes. The player experiences the world through the lens of narrative: everything is a story, everyone is a source, every moment is either above or below the fold. Photographing the murals is ecstasy — visual proof, physical evidence, the front page made manifest. The break is not a single horror but an accumulation: the moment the player realizes they have stopped composing shots and started simply staring. The camera falls and the player does not go back for it because going back means turning around, and turning around means looking again, and looking again means the story is no longer out there to be reported — it is in here, in the journalist, rewriting her. The internal conflict is between the woman who records and the woman who has become the record.","ifNpc":"Caldwell is always scribbling. She asks the questions no one else will ask, at the moments no one else would choose. She is irritating, persistent, and occasionally brilliant. The MC should show her darting into situations she shouldn't be in, camera raised like a shield. Her dialogue is questions — she deflects personal inquiries by asking three more. After the break, the notebook closes. She stops asking questions. The MC's most powerful tool with NPC Caldwell is silence: the reporter who stops reporting is the loudest alarm the expedition has. If someone asks her what she saw, she says 'I need to think about how to describe it,' and then she never describes it."},"mechanic-gedney":{"throughline":"A man whose identity is his hands discovers a world that was not built by hands.","peak":"S1-A1: Plane engine sounds wrong","break":"S2-A1: Something breaks with no mechanism","ifPlayer":"The journal voice is blunt, physical, full of sensory detail — sounds, textures, temperatures, the specific resistance of a bolt at three-quarter turn. The player experiences mastery through the body: Gedney knows the planes the way a pianist knows a keyboard, by touch and by ear. When the engine sounds wrong, the player enters the peak as a puzzle — diagnosis, troubleshooting, the satisfaction of the competent hand. The break comes when something mechanical fails and there is no mechanical reason. No worn part, no metal fatigue, no ice in the fuel line. It simply stopped. The player's internal conflict is between a man who believes all problems are physical and a man confronting the possibility that some forces do not care about physics. His journal entries become lists — parts checked, tolerances verified, tests run — growing longer and more frantic, a litany against the incomprehensible.","ifNpc":"Gedney is always fixing something. His hands are never still. He talks to machines — not in the cute way, in the way a man talks to the only things that have never let him down. His dialogue with people is simple, direct, slightly awkward; his dialogue about machines is lyrical and precise. After the break, the MC should show him standing in front of an open engine cowling, tools laid out, not touching anything. If another character asks what is wrong, he says 'Nothing. That's the problem. There's nothing wrong with it and it doesn't work.' He returns to base camp and sits with his hands in his lap, and that stillness is the most frightening thing about him."},"mechanic-webb":{"throughline":"A radio operator who defined himself by connection watches every frequency go silent.","peak":"S1-A1: Last clear signal from Moore","break":"S2-A0: Signal from no station","ifPlayer":"The journal voice is precise and auditory — Webb describes the world in terms of signals, frequencies, the quality of static. Silence is the enemy. The player experiences the peak as bittersweet clarity: Moore's voice comes through clean, every word distinct, and the player knows this is the last time the link will be this strong. The journal records the exact time, frequency, signal strength — preserving the moment like a pressed flower. The break comes when a signal arrives from a frequency no station uses, carrying patterns that are not Morse, not voice, not anything Webb has heard in twenty years of listening. The player's internal conflict is between the man who believes connection equals safety and the man who must accept that some connections are not rescue — they are contact, from something that has been listening longer than anyone has been transmitting. Webb's journal becomes a log: frequencies scanned, signals absent, the growing catalogue of silence.","ifNpc":"Webb is the man with the headphones. He is always half-listening to something else, head cocked, one ear free. His dialogue trails off when he hears a frequency shift no one else notices. He reports signal conditions the way a doctor reports vitals: 'Signal strength three, atmospheric noise heavy, Moore's next scheduled contact in four hours.' After the break, the MC should show Webb at the radio set at odd hours, scanning frequencies methodically, writing nothing down. If asked what he is listening for, he says 'I'm not sure it matters. Something is listening for us.' He begins sleeping near the radio. He stops taking off the headphones."},"agent-price":{"throughline":"A man who measures everything in value discovers something that bankrupts the concept.","peak":"S1-A2: Specimens have commercial value","break":"S2-A1: Exceeds any ledger","ifPlayer":"The journal is the second ledger — the one no one has seen. The player experiences Price's mind as a constant valuation engine: every discovery is an asset, every risk is a liability, every person is a resource with a calculable return. The specimens at the peak represent the moment investment becomes justified — here is something worth more than the expedition cost, something Starkweather will weep over with gratitude. The journal entries are sharp, satisfied, the prose of a man who has been right about a bet. The break comes when the scale of what they have found exceeds any framework of ownership. You cannot put a price on something that predates currency, predates civilization, predates the species that invented the concept of price. The player's internal conflict is between the man who controls through accounting and the man who realizes that control was always an illusion maintained by the smallness of what he had previously measured. The ledger stays open. The pen does not move.","ifNpc":"Price is the man in the pressed collar at sixty below. He is always taking notes, always calculating, always watching what others carry and where they put it down. His dialogue is transactional — favours offered, debts noted, costs cited. He makes himself useful through logistics: he knows where everything is, how much it weighs, what it cost. After the break, the MC should show Price standing very still in front of something vast, ledger open, pen poised, writing nothing. His composure does not crack — it empties. He continues to function, but his calculations become circular, his supply reports increasingly irrelevant. He begins giving things away — food, equipment, warm clothing — as though disbursing the assets of a venture that has already been liquidated."},"agent-ainsworth":{"throughline":"A scientist sent to ensure objectivity discovers that objectivity requires a stable observer.","peak":"S1-A2: Geological evidence defies rigor","break":"S3-A1: Reports become confessions","ifPlayer":"The journal is two documents interleaved: the official field report (coded, precise, formatted for Moore's files) and the private observations she cannot send. The player experiences the peak as professional crisis — the geological evidence is real, measurable, reproducible, and it contradicts everything her discipline considers possible. The journal voice remains controlled, but the margin notes begin to diverge from the main text. By the break, the official reports have become confessions. The player must navigate the moment when the observer admits she is no longer separate from what she observes. The internal conflict is between the woman Moore sent — the impartial eye, the clean data — and the woman who has seen too much to pretend that impartiality is possible. Her coded transmissions to Moore grow shorter. Her private journal grows longer. The player must decide which document is the real one.","ifNpc":"Ainsworth is the composed woman with the geological hammer and the codebook. She takes measurements others don't think to take. She asks clarifying questions in a tone that suggests she already knows the answer. Her dialogue is careful, qualified, full of 'the data suggests' and 'pending verification.' The MC should show her coding messages late at night, transmitting on a frequency Price doesn't know about. After the break, the codes stop. She begins writing in plain English. Her reports to Moore — if the radio still works — lose their professional distance. 'James, I need you to understand what I am telling you. This is not a geological formation. I don't know what it is. I don't think I'm the right person to determine that. I don't think there is a right person.' The MC should portray a woman whose competence is fully intact but whose framework for deploying it has collapsed."},"expert-sorensen":{"throughline":"An ice pilot who dismissed the old stories as superstition learns that superstition is what you call knowledge that predates your education.","peak":"S1-A1: Ice groans at wrong frequency","break":"S2-A0: Old stories were true","ifPlayer":"The journal voice is sparse, physical, rooted in the body's knowledge of ice — sounds, pressures, the way a shelf groans before it calves, the smell of open water three miles off. The player experiences the peak as wrongness felt in the bones: the ice is making sounds it should not make, at frequencies that belong to deeper, older pressures than any glacier produces. The journal records these sounds phonetically, haltingly, a man trying to write what his ears know and his vocabulary cannot hold. The break comes when the old sailors' stories — the ones he told at mess to get a laugh, the ones his grandfather told with dead-serious eyes — prove to be accurate descriptions of what lies beneath the deep ice. The player's internal conflict is between the professional who dismissed folklore and the grandson who should have listened. His journal entries shift from technical ice observations to fragments of remembered stories, written down now with the urgency of a man transcribing a language he almost forgot.","ifNpc":"Sorensen is the man who smells the wind and tells you the weather for the next three days. He speaks rarely, and when he does, it is in short declarative sentences that other men learn not to argue with. He smokes a pipe. He watches the ice the way Rourke watches doorways — not casually, but as a professional assessment of threat. The MC should let Sorensen be the expedition's early warning system: he says 'The ice is wrong today' and no one laughs, because the last time he said that, they lost a supply cache. After the break, the MC should show Sorensen doing something he has never done before: sitting down when he should be standing watch, staring south with an expression that is not fear but recognition. If asked what he sees, he tells one of the old stories — but this time, he is not smiling."},"expert-mcready":{"throughline":"A dog handler who trusts animals over people follows them to the threshold of understanding and then past it.","peak":"S2-A0: Dogs refuse to face mountains","break":"S3-A0: He understands why","ifPlayer":"The journal voice is observational, intimate, centered on the dogs — their behavior, their moods, the specific quality of a whine versus a growl, the way a lead dog's ears flatten before a storm. The player experiences the world through animal intermediaries: the dogs know things first, and McReady translates. At the peak, the dogs refuse. Not fear-refuse — they have been afraid before and pushed through. This is something else. They will not face the mountains. They pull against the traces, they dig in, they look at McReady with an expression he has never seen in twenty years of handling. The journal records their behavior with clinical detail and growing dread. The break comes in the tunnels, when McReady stops translating the dogs' fear and begins feeling it himself — not as empathy, but as direct knowledge. He understands why they refused. The player's internal conflict is between the man who trusted instinct over intellect and the man who now possesses an instinct he desperately wishes he could intellectualize away.","ifNpc":"McReady is always with the dogs. He feeds them, checks their paws, sleeps near them. His dialogue with people is gruff and minimal; his dialogue with dogs is a continuous low murmur that other characters find either comforting or unsettling. The MC should use McReady as a barometer: when he is relaxed, the dogs are relaxed, and the scene is safe. When he goes quiet and the dogs go quiet, something is coming. After the break, the MC should show McReady without the dogs — either because they have been left behind or because they will no longer go where the expedition goes. He is diminished without them, a translator without a language. He stands at the edge of the group, watching the direction the dogs would not face, and he does not explain what he knows. If pressed, he says only: 'They were right.'"},"believer-angell":{"throughline":"A scholar who spent years hoping to be right spends the rest of the expedition wishing he had been wrong.","peak":"S2-A1: Pnakotic fragments match murals","break":"S3-A1: Being right is worse than being wrong","ifPlayer":"The journal voice is dense, allusive, layered with cross-references — a scholar's marginalia grown into a narrative. The player experiences the peak as intellectual rapture: the mural patterns match the Pnakotic fragments, the proportions correspond to the Eltdown calculations, the confirmation is total and overwhelming. Three years of correlation, two ruined friendships, a career spent on the margins — all vindicated in a single moment of terrible proof. The journal entry for this scene should be the longest and most exhilarated the player has written. The break comes when vindication curdles. The player must reckon with the fact that being right means the rest of the texts are also right — including the parts about what happens next. The internal conflict is between the scholar who wanted confirmation and the human being who must now live inside a confirmed nightmare. His journal voice fragments: cross-references become frantic, annotations pile up in margins of margins, and somewhere in the density, the player finds Angell writing not as a scholar but as a frightened man asking the texts for guidance they were never designed to give.","ifNpc":"Angell is the man with the satchel, the three notebooks, the ink-stained cuffs. He quotes sources no one else has read. He is alternately brilliant and insufferable — he sees connections others miss, but he sees them loudly and at length. His dialogue is peppered with 'as the Pnakotic manuscripts suggest' and 'consistent with Eltdown's third theorem,' and most of the expedition has learned to tune him out. The MC should make the peak a moment of public vindication: Angell stands before the murals and translates them fluently, and for the first time, everyone is listening. After the break, the MC should show a man who has stopped quoting sources. He closes the satchel. He does not open the notebooks. If another character asks him what comes next according to his texts, he says: 'I would prefer not to discuss that.' He becomes protective of others in a way he never was before — urging caution, suggesting retreat — because he knows what the texts describe, and he knows they are no longer texts."},"believer-waverly":{"throughline":"A woman who carried other cultures' warnings across the ocean learns they were not warnings at all — they were instructions for the survivors.","peak":"S2-A1: Indigenous traditions confirmed","break":"S3-A1: Warnings were preparation, not prevention","ifPlayer":"The journal voice is layered — clinical nursing notes alongside fragments of oral tradition, remembered in the languages she learned them in. The player experiences the world through a double lens: the medical professional assessing frostbite, rationing supplies, monitoring morale; and the woman who has heard these exact descriptions before, in longhouses and on beaches ten thousand miles from here. The peak is confirmation without triumph — the oral traditions describe the geometry, the biology, the cold intelligence of what lives here, and they describe it accurately. The player feels the weight of cultures who knew and preserved the knowledge and were called primitive for it. The break reframes everything: the warnings were not meant to stop the expedition. They could never stop it. The warnings were instructions for after — how to endure, how to remember, how to carry the knowledge forward without being destroyed by it. The player's internal conflict is between the nurse who heals bodies and the witness who must now decide what kind of healing is possible for minds that have seen what she has seen.","ifNpc":"Waverly is calm in emergencies and unsettling in quiet moments. She treats injuries with practiced efficiency and asks patients questions about what they saw — not medically, but as a collector of testimony. Her dialogue is warm but slightly formal, the cadence of a woman who has lived in many languages and settled fully into none. She hums hymns while working but occasionally shifts into melodies that are older and stranger. The MC should use Waverly as the expedition's moral compass: she does not tell people what to do, but her quiet attention to their suffering makes cowardice and cruelty harder to sustain. After the break, the MC should show Waverly doing something no one expects: she stops treating the crisis as a medical emergency and begins treating it as a ritual. She arranges things. She marks thresholds. She tells people where to stand. If asked what she is doing, she says: 'The women of Rennell Island told me what to do if I ever found myself here. I did not believe them. I believe them now.'"},"patron-starkweather":{"throughline":"A patron whose faith drove the expedition south watches that faith become the instrument of everyone's unmaking.","peak":"S2-A1: Vindication becomes terror","break":"S3-A2: What he funded exceeds imagination","ifPlayer":"The journal voice is expansive, visionary, full of the rhetoric of a man who has staked everything on being right — fortune, reputation, the lives of everyone aboard. The player experiences Session 1 as triumph: every discovery validates the expense, every mile south proves Dyer was not mad and Starkweather was not a fool. The peak is the hinge — vindication arrives, and in the same breath, the player realizes that vindication and terror are the same thing. Dyer was right, which means what Dyer saw was real, which means what Dyer fled from is here. The journal voice shifts from visionary to desperate: the player must reckon with the moral weight of having funded this, having insisted on this, having overruled every cautious voice. The break is total: what Starkweather's money bought access to exceeds anything money can contain, control, or survive. The player's internal conflict is between the patron who believed and the man who must now live with the consequences of belief. His journal becomes a letter — to Moore, to Dyer's memory, to God — asking whether faith is still a virtue when the thing you had faith in turns out to be an abyss.","ifNpc":"Starkweather is the loudest man in any room and the most dangerous, because his enthusiasm is genuine and his authority is absolute. He quotes Dyer with the fervor of a convert. He overrules caution with the confidence of a man spending his own money. His dialogue is commands disguised as inspiration: 'We didn't come this far to stop now.' The MC should make Starkweather magnetic — players should want to follow him, should feel the pull of his certainty, even as they sense the cliff edge ahead. After the break, the MC should show the collapse of that magnetism. Starkweather goes quiet. He stops giving orders. He stands at the edge of what his money opened and says nothing, because for the first time in his life, he has encountered something that his will and his wealth cannot shape, cannot own, and cannot undo. If a player asks him what to do, he says: 'I don't know. I thought I would know.' The MC should make that admission the most frightening thing any NPC has said."},"patron-moore":{"throughline":"A skeptic's rational voice fades to static, and the silence it leaves behind is louder than anything it said.","peak":"S1-A2: Last coherent exchange","break":"S2-A1: Silence from the other end","ifPlayer":"Moore is unique — the player experiences the arc entirely through radio, through mediated distance. The journal is composed at a desk in Massachusetts, not on the ice, and the player must convey growing helplessness through the gap between what Moore demands and what the expedition can deliver. The peak is the last coherent exchange: Moore's voice comes through clear, asking for data, issuing instructions, maintaining the fiction that this is a scientific expedition under rational control. The player knows this is the last time the words will reach. The break is silence — not dramatic silence, but the ordinary silence of a radio that no longer connects. The player sits at the desk, turns the dials, hears static, and must write in the journal knowing that no one on the ice will read it. The internal conflict is between the empiricist who demanded evidence and the man who now has evidence he cannot reach, cannot verify, and cannot help. Moore's arc is the horror of distance: knowing something terrible is happening to people you sent there, and being unable to do anything except listen to the frequency where their voices used to be.","ifNpc":"Moore is a voice on the radio — clipped, skeptical, slightly impatient. He asks for measurements. He questions methodology. He reminds the expedition that extraordinary claims require extraordinary evidence. His dialogue is always mediated: Webb relays it, or the radio crackles, or the transmission cuts mid-sentence. The MC should establish Moore as the voice of the rational world — the tether to universities, newspapers, the daylit hemisphere where ice is just ice and mountains are just mountains. The peak is the last clean transmission: Moore's voice is clear, and everything he says is sensible, and the expedition will never hear anything sensible from that frequency again. After the break, Moore is absence. The MC should use that absence aggressively — characters reaching for the radio, forgetting, then remembering. Webb scanning Moore's frequency and finding nothing. If another NPC mentions Moore, the room goes quiet. He becomes the symbol of everything the expedition has left behind and cannot return to."}};
+// ─── END INLINE DATA ───
+
+// ─── CONSTANTS ───────────────────────────────────────────────────
+var CW = 44, CH = 30, CP = 2, CR = 3;
+var ROW_W = 170, COL_H = 72, CAT_H = 22, SESS_H = 24;
+
+var DANGER = {
+  0: { bg: '#131a2b', border: '#1e2d44', tx: '#3a4a5a' },
+  1: { bg: '#6b5a2a', border: '#8a7a3a', tx: '#c4a35a' },
+  2: { bg: '#c4a35a', border: '#d4b36a', tx: '#0a0e17' },
+  3: { bg: '#e06f6f', border: '#e88a8a', tx: '#1a0808' }
+};
+
+var STATUS_MARK = { healthy:'', shaken:'~', injured:'!', critical:'!!', incapacitated:'X', dead:'\u2020' };
+
+var GROUPS = [
+  { label: 'Scientists', ids: ['scientist-pabodie','scientist-bryce'] },
+  { label: 'Veterans',   ids: ['veteran-rourke'] },
+  { label: 'Journalists',ids: ['journalist-caldwell'] },
+  { label: 'Mechanics',  ids: ['mechanic-gedney','mechanic-webb'] },
+  { label: 'Agents',     ids: ['agent-price','agent-ainsworth'] },
+  { label: 'Experts',    ids: ['expert-sorensen','expert-mcready'] },
+  { label: 'Believers',  ids: ['believer-angell','believer-waverly'] },
+  { label: 'Patrons',    ids: ['patron-starkweather','patron-moore'] }
+];
+
+var NAMES = {
+  'scientist-pabodie':'Dr. Pabodie','scientist-bryce':'Dr. Bryce',
+  'veteran-rourke':'Sgt. Rourke','journalist-caldwell':'Caldwell',
+  'mechanic-gedney':'Gedney','mechanic-webb':'Webb',
+  'agent-price':'Price','agent-ainsworth':'Dr. Ainsworth',
+  'expert-sorensen':'S\u00f8rensen','expert-mcready':'McReady',
+  'believer-angell':'Prof. Angell','believer-waverly':'Sr. Waverly',
+  'patron-starkweather':'Starkweather','patron-moore':'Prof. Moore'
+};
+
+var PHASES = { 0:'Preparation', 1:'Transit \u2192 Discovery', 2:'Revelation', 3:'Confrontation \u2192 Flight', 4:'The Return' };
+
+// ─── STATE ───────────────────────────────────────────────────────
+var sessions = [], arcs = {}, bmap = {};
+var selChar = null, selCol = null;
+
+// ─── DOM HELPERS ─────────────────────────────────────────────────
+function el(tag, cls, text) {
+  var e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function clearChildren(node) {
+  while (node.firstChild) node.removeChild(node.firstChild);
+}
+
+// ─── LOAD ────────────────────────────────────────────────────────
+// Data is loaded either inline (via build script) or fetched from config/
+(function load() {
+  // Check if data was embedded by the build script
+  if (typeof STORY_MATRIX_S0 !== 'undefined') {
+    sessions = [STORY_MATRIX_S0, STORY_MATRIX_S1, STORY_MATRIX_S2, STORY_MATRIX_S3, STORY_MATRIX_S4];
+    arcs = STORY_MATRIX_ARCS;
+    initAndRender();
+    return;
+  }
+
+  // Fallback: fetch from server
+  var base = '';
+  var p = window.location.pathname;
+  if (p.indexOf('/the-ceremony') === 0) base = '/the-ceremony';
+
+  Promise.all([
+    fetch(base+'/config/story-matrix/s0.json').then(function(r){return r.json();}),
+    fetch(base+'/config/story-matrix/s1.json').then(function(r){return r.json();}),
+    fetch(base+'/config/story-matrix/s2.json').then(function(r){return r.json();}),
+    fetch(base+'/config/story-matrix/s3.json').then(function(r){return r.json();}),
+    fetch(base+'/config/story-matrix/s4.json').then(function(r){return r.json();}),
+    fetch(base+'/config/story-matrix/arcs.json').then(function(r){return r.json();})
+  ]).then(function(res) {
+    sessions = res.slice(0,5);
+    arcs = res[5];
+    initAndRender();
+  }).catch(function(e) {
+    console.error('Load error:', e);
+    document.getElementById('stats').textContent = 'Error loading data — run: node config/story-matrix/build-viz.js';
+  });
+})();
+
+function initAndRender() {
+  sessions.forEach(function(s) {
+    s.beats.forEach(function(b) { bmap[b.characterId+'-'+b.session+'-'+b.act] = b; });
+  });
+  var n = sessions.reduce(function(s,x){return s+x.beats.length;},0);
+  document.getElementById('stats').textContent = n+' beats \u00b7 14 characters \u00b7 18 acts';
+  render();
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────
+function render() {
+  var svg = d3.select('#matrix-svg');
+  svg.selectAll('*').remove();
+
+  var cols = [];
+  sessions.forEach(function(s) {
+    s.acts.forEach(function(a) {
+      cols.push({ s:s.id, sn:s.name, a:a.index, an:a.name });
+    });
+  });
+
+  var rows = [];
+  GROUPS.forEach(function(g) {
+    rows.push({ t:'cat', label:g.label });
+    g.ids.forEach(function(id) { rows.push({ t:'char', id:id, name:NAMES[id]||id }); });
+  });
+
+  var y = COL_H;
+  rows.forEach(function(r) { r.y = y; y += (r.t==='cat' ? CAT_H : CH+CP); });
+
+  var W = ROW_W + cols.length*(CW+CP) + 16;
+  var H = y + 12;
+  svg.attr('width', W).attr('height', H);
+
+  var g = svg.append('g');
+
+  // Row highlight
+  if (selChar) {
+    var cr = rows.find(function(r){return r.t==='char'&&r.id===selChar;});
+    if (cr) g.append('rect').attr('x',0).attr('y',cr.y-1).attr('width',W).attr('height',CH+2).attr('fill','#c4a35a').attr('opacity',0.04);
+  }
+
+  // Col highlight
+  if (selCol) {
+    var ci = cols.findIndex(function(c){return c.s===selCol.s&&c.a===selCol.a;});
+    if (ci>=0) g.append('rect').attr('x',ROW_W+ci*(CW+CP)-1).attr('y',COL_H-4).attr('width',CW+2).attr('height',H-COL_H).attr('fill','#c4a35a').attr('opacity',0.06);
+  }
+
+  // Session headers
+  var prev = -1, starts = [];
+  cols.forEach(function(c,i) {
+    if (c.s!==prev) { starts.push({i:i,s:c.s,n:c.sn,cnt:0}); prev=c.s; }
+    starts[starts.length-1].cnt++;
+  });
+
+  var hg = g.append('g');
+  starts.forEach(function(sh) {
+    var x = ROW_W + sh.i*(CW+CP), w = sh.cnt*(CW+CP)-CP;
+    hg.append('rect').attr('x',x).attr('y',2).attr('width',w).attr('height',SESS_H).attr('fill','#0d1220').attr('rx',4);
+    hg.append('text').attr('class','session-label').attr('x',x+w/2).attr('y',16).attr('text-anchor','middle').text('S'+sh.s+': '+sh.n);
+    hg.append('text').attr('class','phase-text').attr('x',x+w/2).attr('y',30).attr('text-anchor','middle').text(PHASES[sh.s]||'');
+    if (sh.i>0) hg.append('line').attr('x1',x-1).attr('x2',x-1).attr('y1',2).attr('y2',H).attr('stroke','#1e2d44').attr('stroke-dasharray','4,4').attr('opacity',0.4);
+  });
+
+  // Act labels
+  cols.forEach(function(c,i) {
+    var x = ROW_W + i*(CW+CP) + CW/2;
+    var lbl = c.an.length > 8 ? c.an.slice(0,7)+'\u2026' : c.an;
+    hg.append('text').attr('class','act-col-label').attr('x',x).attr('y',COL_H-10).attr('text-anchor','middle').text(lbl)
+      .on('click', (function(col){return function(){clickCol(col);};})(c));
+  });
+
+  // Rows
+  var rg = g.append('g');
+  rows.forEach(function(row) {
+    if (row.t==='cat') {
+      var cg = rg.append('g').attr('transform','translate(0,'+row.y+')');
+      cg.append('line').attr('x1',10).attr('x2',ROW_W-8).attr('y1',CAT_H-1).attr('y2',CAT_H-1).attr('stroke','#c4a35a').attr('stroke-opacity',0.2);
+      cg.append('text').attr('class','category-label').attr('x',10).attr('y',CAT_H/2+1).attr('dy','0.35em').text(row.label);
+    } else {
+      var ig = rg.append('g').attr('transform','translate(0,'+row.y+')');
+      ig.append('text')
+        .attr('class','row-label'+(selChar===row.id?' hl':''))
+        .attr('x',14).attr('y',CH/2).attr('dy','0.35em').text(row.name)
+        .on('click',(function(id){return function(){clickRow(id);};})(row.id));
+
+      cols.forEach(function(col,ci) {
+        var b = bmap[row.id+'-'+col.s+'-'+col.a];
+        if (!b) return;
+        var d = b.danger||0, clr = DANGER[d];
+        var absent = b.narrativeRole==='absent';
+        var dim = (selChar && selChar!==row.id) || (selCol && (selCol.s!==col.s||selCol.a!==col.a));
+        var isSel = selChar===row.id && selCol && selCol.s===col.s && selCol.a===col.a;
+        var cx = ROW_W + ci*(CW+CP);
+
+        var cell = ig.append('rect')
+          .attr('class','cell'+(dim?' dim':'')+(isSel?' sel':''))
+          .attr('x',cx).attr('y',0).attr('width',CW).attr('height',CH).attr('rx',CR).attr('ry',CR)
+          .attr('fill',absent?'#0a0e17':clr.bg)
+          .attr('stroke',absent?'#1a1a2a':(isSel?'#c4a35a':clr.border))
+          .attr('stroke-width',isSel?2:0.5);
+
+        if (!absent && b.status!=='healthy' && STATUS_MARK[b.status]) {
+          ig.append('text').attr('x',cx+CW/2).attr('y',CH/2).attr('dy','0.35em')
+            .attr('text-anchor','middle').attr('fill',clr.tx).attr('font-size','10px').attr('font-weight','500')
+            .attr('pointer-events','none').attr('opacity',dim?0.15:1).text(STATUS_MARK[b.status]);
+        }
+
+        if (absent) {
+          ig.append('text').attr('x',cx+CW/2).attr('y',CH/2).attr('dy','0.35em')
+            .attr('text-anchor','middle').attr('fill','#2a2a3a').attr('font-size','12px')
+            .attr('pointer-events','none').text('\u2013');
+        }
+
+        if (b.mcNote) {
+          ig.append('circle').attr('cx',cx+5).attr('cy',CH-5).attr('r',2)
+            .attr('fill','#b87adb').attr('pointer-events','none').attr('opacity',dim?0.08:0.7);
+        }
+
+        (function(beat,col) {
+          cell.on('mouseover',function(ev){showTip(ev,beat,col);})
+            .on('mousemove',function(ev){moveTip(ev);})
+            .on('mouseout',hideTip)
+            .on('click',function(){clickCell(beat);});
+        })(b,col);
+      });
+    }
+  });
+}
+
+// ─── INTERACTIONS ────────────────────────────────────────────────
+function clickRow(id) {
+  if (selChar===id && !selCol) { selChar=null; } else { selChar=id; selCol=null; }
+  render(); updatePanel();
+}
+
+function clickCol(col) {
+  if (selCol && selCol.s===col.s && selCol.a===col.a && !selChar) { selCol=null; } else { selCol={s:col.s,a:col.a}; selChar=null; }
+  render(); updatePanel();
+}
+
+function clickCell(beat) {
+  selChar=beat.characterId; selCol={s:beat.session,a:beat.act};
+  render(); showBeat(beat);
+}
+
+function clearSel() {
+  selChar=null; selCol=null;
+  document.getElementById('detail-panel').classList.remove('open');
+  render();
+}
+
+// ─── DETAIL PANEL (DOM-based) ────────────────────────────────────
+function updatePanel() {
+  if (!selChar && !selCol) { document.getElementById('detail-panel').classList.remove('open'); return; }
+  document.getElementById('detail-panel').classList.add('open');
+  if (selChar && !selCol) showCharPanel(selChar);
+  else if (selCol && !selChar) showColPanel(selCol);
+}
+
+function showCharPanel(id) {
+  var panel = document.getElementById('detail-panel'); panel.classList.add('open');
+  document.getElementById('dp-title').textContent = NAMES[id]||id;
+  document.getElementById('dp-sub').textContent = id;
+  var body = document.getElementById('dp-body');
+  clearChildren(body);
+
+  var arc = arcs[id];
+  if (arc) {
+    var ad = el('div','d-arc');
+    ad.appendChild(el('div','d-throughline','\u201c'+arc.throughline+'\u201d'));
+    [['Peak',arc.peak],['Break',arc['break']],['Player',arc.ifPlayer],['NPC',arc.ifNpc]].forEach(function(pair) {
+      var row = el('div','d-arc-row');
+      row.appendChild(el('span','d-arc-label',pair[0]));
+      row.appendChild(el('span','d-arc-val',pair[1]));
+      ad.appendChild(row);
+    });
+    body.appendChild(ad);
+  }
+
+  // Danger sparkline
+  var sec = el('div','d-section');
+  sec.style.marginTop = '16px';
+  sec.appendChild(el('div','d-title','Danger trajectory'));
+  var bar = el('div');
+  bar.style.cssText = 'display:flex;gap:2px;align-items:end;height:40px;';
+  sessions.forEach(function(s) {
+    s.acts.forEach(function(a) {
+      var b = bmap[id+'-'+s.id+'-'+a.index];
+      var d = b ? b.danger : 0;
+      var c = DANGER[d];
+      var pip = el('div');
+      pip.style.cssText = 'width:14px;height:'+(6+d*10)+'px;background:'+c.bg+';border-radius:2px;border:1px solid '+c.border+';';
+      bar.appendChild(pip);
+    });
+  });
+  sec.appendChild(bar);
+  body.appendChild(sec);
+
+  // Final knowledge
+  var lastBeat = null;
+  sessions.forEach(function(s) {
+    s.acts.forEach(function(a) {
+      var b = bmap[id+'-'+s.id+'-'+a.index];
+      if (b && b.knowledge && b.knowledge.length>0) lastBeat = b;
+    });
+  });
+  if (lastBeat && lastBeat.knowledge.length>0) {
+    var ks = el('div','d-section');
+    ks.appendChild(el('div','d-title','Final knowledge ('+lastBeat.knowledge.length+')'));
+    var kd = el('div');
+    lastBeat.knowledge.forEach(function(k) { kd.appendChild(el('span','d-tag d-tag-know',k)); });
+    ks.appendChild(kd);
+    body.appendChild(ks);
+  }
+}
+
+function showColPanel(col) {
+  var panel = document.getElementById('detail-panel'); panel.classList.add('open');
+  var sess = sessions.find(function(s){return s.id===col.s;});
+  var act = sess?sess.acts.find(function(a){return a.index===col.a;}):null;
+  document.getElementById('dp-title').textContent = 'S'+col.s+'-A'+col.a;
+  document.getElementById('dp-sub').textContent = (act?act.name:'')+' \u00b7 '+(sess?sess.name:'');
+  var body = document.getElementById('dp-body');
+  clearChildren(body);
+
+  GROUPS.forEach(function(group) {
+    group.ids.forEach(function(id) {
+      var b = bmap[id+'-'+col.s+'-'+col.a];
+      if (!b) return;
+      var absent = b.narrativeRole==='absent';
+      var c = DANGER[b.danger||0];
+
+      var card = el('div','act-card');
+      card.style.borderLeftColor = absent ? '#1a1a2a' : c.bg;
+      var nm = el('div','act-card-name', NAMES[id]);
+      nm.style.color = absent ? '#3a3a4a' : '#c4a35a';
+      card.appendChild(nm);
+      card.appendChild(el('div','act-card-meta', b.location+' \u00b7 '+b.status+(absent?'':' \u00b7 danger '+b.danger)));
+      if (!absent) card.appendChild(el('div','act-card-note', b.activity));
+      body.appendChild(card);
+    });
+  });
+}
+
+function showBeat(beat) {
+  var panel = document.getElementById('detail-panel'); panel.classList.add('open');
+  var name = NAMES[beat.characterId]||beat.characterId;
+  var sess = sessions.find(function(s){return s.id===beat.session;});
+  var act = sess?sess.acts.find(function(a){return a.index===beat.act;}):null;
+  var c = DANGER[beat.danger||0];
+
+  document.getElementById('dp-title').textContent = name;
+  document.getElementById('dp-sub').textContent = 'S'+beat.session+'-A'+beat.act+': '+(act?act.name:'');
+
+  var body = document.getElementById('dp-body');
+  clearChildren(body);
+
+  // Tags row
+  var tags = el('div');
+  tags.style.cssText = 'display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;';
+  var dt = el('span','d-tag','Danger '+beat.danger);
+  dt.style.cssText = 'border-color:'+c.border+';background:'+c.bg+';color:'+c.tx+';';
+  tags.appendChild(dt);
+  tags.appendChild(el('span','d-tag',beat.status));
+  tags.appendChild(el('span','d-tag',beat.narrativeRole));
+  body.appendChild(tags);
+
+  // Sections
+  function addSection(title, text, style) {
+    var s = el('div','d-section');
+    s.appendChild(el('div','d-title',title));
+    var v = el('div','d-value',text);
+    if (style) v.style.cssText = style;
+    s.appendChild(v);
+    body.appendChild(s);
+  }
+
+  addSection('Location', beat.location);
+  addSection('Emotional', beat.emotional, 'color:#b87adb;font-style:italic;');
+  addSection('Activity', beat.activity);
+
+  // Knowledge
+  if (beat.knowledge && beat.knowledge.length>0) {
+    var ks = el('div','d-section');
+    ks.appendChild(el('div','d-title','Knowledge ('+beat.knowledge.length+')'));
+    var kd = el('div');
+    beat.knowledge.forEach(function(k) { kd.appendChild(el('span','d-tag d-tag-know',k)); });
+    ks.appendChild(kd);
+    body.appendChild(ks);
+  }
+
+  // Threads
+  if (beat.threadsActive && beat.threadsActive.length>0) {
+    var ts = el('div','d-section');
+    ts.appendChild(el('div','d-title','Active threads'));
+    var td = el('div');
+    beat.threadsActive.forEach(function(t) { td.appendChild(el('span','d-tag d-tag-thread',t)); });
+    ts.appendChild(td);
+    body.appendChild(ts);
+  }
+
+  // MC Note
+  if (beat.mcNote) {
+    var ms = el('div','d-section');
+    ms.appendChild(el('div','d-title','MC Note'));
+    ms.appendChild(el('div','d-mc',beat.mcNote));
+    body.appendChild(ms);
+  }
+
+  // NPC Behavior
+  if (beat.npcBehavior) {
+    var ns = el('div','d-section');
+    ns.appendChild(el('div','d-title','NPC Behavior'));
+    ns.appendChild(el('div','d-npc',beat.npcBehavior));
+    body.appendChild(ns);
+  }
+
+  // Arc
+  var arc = arcs[beat.characterId];
+  if (arc) {
+    var ad = el('div','d-arc');
+    ad.appendChild(el('div','d-title','Character arc'));
+    ad.appendChild(el('div','d-throughline',arc.throughline));
+    [['Peak',arc.peak],['Break',arc['break']]].forEach(function(pair) {
+      var row = el('div','d-arc-row');
+      row.appendChild(el('span','d-arc-label',pair[0]));
+      row.appendChild(el('span','d-arc-val',pair[1]));
+      ad.appendChild(row);
+    });
+    body.appendChild(ad);
+  }
+}
+
+// ─── TOOLTIP (DOM-based) ─────────────────────────────────────────
+function showTip(ev,b,col) {
+  var tt = document.getElementById('tooltip');
+  clearChildren(tt);
+
+  var absent = b.narrativeRole==='absent';
+
+  var charDiv = el('div','','');
+  charDiv.style.cssText = 'color:#c4a35a;font-weight:500;';
+  charDiv.textContent = NAMES[b.characterId]||b.characterId;
+  tt.appendChild(charDiv);
+
+  var actDiv = el('div','','S'+b.session+'-A'+b.act+': '+col.an);
+  actDiv.style.cssText = 'color:#7ba4c7;font-size:10px;margin-bottom:4px;';
+  tt.appendChild(actDiv);
+
+  var locDiv = el('div','',b.location);
+  locDiv.style.cssText = 'color:#6a7a8a;font-size:10px;';
+  tt.appendChild(locDiv);
+
+  if (!absent) {
+    var activityDiv = el('div','',b.activity);
+    activityDiv.style.cssText = 'margin-top:6px;color:#c8bca8;';
+    tt.appendChild(activityDiv);
+
+    var emoDiv = el('div','',b.emotional);
+    emoDiv.style.cssText = 'color:#b87adb;font-style:italic;margin-top:4px;';
+    tt.appendChild(emoDiv);
+  } else {
+    var abDiv = el('div','','Not present');
+    abDiv.style.cssText = 'color:#3a3a4a;margin-top:4px;font-style:italic;';
+    tt.appendChild(abDiv);
+  }
+
+  var hintDiv = el('div','','Click for details');
+  hintDiv.style.cssText = 'margin-top:6px;color:#3a4a5a;font-size:9px;';
+  tt.appendChild(hintDiv);
+
+  tt.classList.add('visible');
+  moveTip(ev);
+}
+
+function moveTip(ev) {
+  var tt = document.getElementById('tooltip');
+  var r = tt.getBoundingClientRect();
+  var x = ev.clientX+14, y = ev.clientY-10;
+  if (x+r.width>window.innerWidth-10) x = ev.clientX-r.width-14;
+  if (y+r.height>window.innerHeight-10) y = ev.clientY-r.height+10;
+  if (y<10) y=10;
+  tt.style.left = x+'px';
+  tt.style.top = y+'px';
+}
+
+function hideTip() { document.getElementById('tooltip').classList.remove('visible'); }
+</script>
+</body>
+</html>

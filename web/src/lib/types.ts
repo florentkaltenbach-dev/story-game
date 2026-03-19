@@ -99,7 +99,7 @@ export interface KeeperInput {
   };
   recentHistory?: Array<{ role: string; name: string; content: string }>;
   players?: Array<{ name: string; characterName: string; journal: string; notes: string }>;
-  playerKnowledge?: string[];
+  playerKnowledge?: Record<string, "unknown" | "rumored" | "confirmed">;
 }
 
 export interface KeeperResponse {
@@ -326,6 +326,8 @@ export interface WorldConfig {
   environmentRules: string[];
   timeline: string;
   technology: string[];
+  historicSites?: Record<string, string>;
+  historicContext?: Record<string, string>;
 }
 
 export interface CharactersConfig {
@@ -341,6 +343,13 @@ export interface CharactersConfig {
     description: string;
     agenda: string;
   }>;
+  npcArchetypes?: Array<{
+    name: string;
+    source: string;
+    template: string;
+    useFor: string;
+  }>;
+  pool?: PresetCharacter[];
 }
 
 export interface TechniquesConfig {
@@ -362,6 +371,50 @@ export interface StateChainDef {
   variant: "default" | "danger" | "positive" | "neutral";
 }
 
+// === Story matrix types ===
+
+export type CharacterBeatStatus = "healthy" | "shaken" | "injured" | "critical" | "incapacitated" | "dead";
+
+export type NarrativeRole = "lead" | "support" | "tension" | "danger" | "pivot" | "absent";
+
+export interface CharacterBeat {
+  characterId: string;
+  session: number;
+  act: number;
+  location: string;
+  status: CharacterBeatStatus;
+  emotional: string;
+  knowledge: string[];
+  narrativeRole: NarrativeRole;
+  threadsActive: string[];
+  danger: 0 | 1 | 2 | 3;
+  activity: string;
+  mcNote?: string;
+  npcBehavior?: string;
+}
+
+export interface CharacterArc {
+  throughline: string;
+  peak: string;
+  break: string;
+  ifPlayer: string;
+  ifNpc: string;
+}
+
+export interface StoryMatrixAct {
+  name: string;
+  index: number;
+}
+
+export interface StoryMatrixSession {
+  id: number;
+  name: string;
+  acts: StoryMatrixAct[];
+  beats: CharacterBeat[];
+}
+
+export type StoryMatrixArcs = Record<string, CharacterArc>;
+
 export const STATE_CHAINS: Record<string, StateChainDef> = {
   "npc-disposition-negative": { states: ["neutral", "wary", "suspicious", "hostile"], variant: "danger" },
   "npc-disposition-positive": { states: ["neutral", "curious", "friendly", "allied"], variant: "positive" },
@@ -371,3 +424,68 @@ export const STATE_CHAINS: Record<string, StateChainDef> = {
   "weather": { states: ["calm", "wind", "storm", "whiteout"], variant: "neutral" },
   "narrative-thread": { states: ["dormant", "planted", "growing", "ripe", "resolved"], variant: "default" },
 } as const;
+
+// === Story data graph types (used by /api/story-data and viz pages) ===
+
+export interface StoryNode {
+  id: string;
+  name: string;
+  type: "player" | "npc" | "location" | "thread";
+  desc: string;
+  role?: string;
+  status?: string;
+  session?: number;
+  meta?: Record<string, unknown>;
+}
+
+export interface StoryEdge {
+  source: string;
+  target: string;
+  type: "bond" | "tension" | "secret" | "presence" | "thread-link";
+  desc: string;
+}
+
+export interface SessionDef {
+  id: number;
+  name: string;
+  subtitle: string;
+  color: string;
+  acts: Array<{
+    name: string;
+    beats: string[];
+  }>;
+}
+
+export interface FogEntry {
+  playerId: string;
+  playerName: string;
+  knowledge: Record<string, "unknown" | "rumored" | "confirmed">;
+}
+
+export interface FateSummary {
+  characterId: string;
+  name: string;
+  slot: number;
+  session: number;
+  act: string;
+  escalation: string;
+  manner: string;
+  capabilityLost: string;
+  threadsAdvanced: string[];
+}
+
+export interface StoryDataGraph {
+  nodes: StoryNode[];
+  edges: StoryEdge[];
+  sessions: SessionDef[];
+  fog: FogEntry[];
+  fates: FateSummary[];
+  meta: {
+    presetId: string;
+    genre: string;
+    tone: string[];
+    era: string;
+    updatedAt: string;
+    hash: string;
+  };
+}

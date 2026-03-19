@@ -1,0 +1,1394 @@
+{
+  "id": 3,
+  "name": "The Descent",
+  "acts": [
+    {
+      "name": "Down",
+      "index": 0
+    },
+    {
+      "name": "The Empathy Turn",
+      "index": 1
+    },
+    {
+      "name": "Tekeli-li",
+      "index": 2
+    },
+    {
+      "name": "Escape",
+      "index": 3
+    }
+  ],
+  "beats": [
+    {
+      "characterId": "scientist-pabodie",
+      "session": 3,
+      "act": 0,
+      "location": "Upper tunnels",
+      "status": "healthy",
+      "emotional": "grim",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "tunnel-carvings"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "crude-carvings",
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Recognizes tool marks in the tunnel walls — not geological, engineered"
+    },
+    {
+      "characterId": "scientist-pabodie",
+      "session": 3,
+      "act": 1,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "horror-pity",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "tunnel-carvings",
+        "elder-things-were-men"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "crude-carvings"
+      ],
+      "danger": 2,
+      "activity": "The empathy turn — headless Elder Things killed by something worse"
+    },
+    {
+      "characterId": "scientist-pabodie",
+      "session": 3,
+      "act": 2,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "terror",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "tunnel-carvings",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "tekeli-li"
+      ],
+      "danger": 3,
+      "activity": "Witnesses the Shoggoth. Everything rational shatters",
+      "mcNote": "Everything rational shatters. The engineer's instruments are worthless.",
+      "npcBehavior": "Drops his instruments. Runs. Does not speak for an hour afterward."
+    },
+    {
+      "characterId": "scientist-pabodie",
+      "session": 3,
+      "act": 3,
+      "location": "City → surface",
+      "status": "healthy",
+      "emotional": "flight",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "tunnel-carvings",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 3,
+      "activity": "Pure flight. Back through tunnels and city to surface"
+    },
+    {
+      "characterId": "scientist-bryce",
+      "session": 3,
+      "act": 0,
+      "location": "Upper tunnels",
+      "status": "healthy",
+      "emotional": "fascinated-horrified",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "shoggoth-creation",
+        "warm-air-below",
+        "blind-penguins"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Giant blind albino penguins — an underground ecosystem proven real"
+    },
+    {
+      "characterId": "scientist-bryce",
+      "session": 3,
+      "act": 1,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "grief",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "shoggoth-creation",
+        "warm-air-below",
+        "blind-penguins",
+        "elder-things-were-men"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "Headless Elder Things. They were scientists too. 'Whatever they had been, they were men'"
+    },
+    {
+      "characterId": "scientist-bryce",
+      "session": 3,
+      "act": 2,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "terror",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "shoggoth-creation",
+        "warm-air-below",
+        "blind-penguins",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "tekeli-li"
+      ],
+      "danger": 3,
+      "activity": "The Shoggoth. Life that has outgrown its creators",
+      "mcNote": "The Shoggoth is life that has outgrown its creators. Her worst fear realized.",
+      "npcBehavior": "Whispers 'It's alive. It's not supposed to be alive. Life doesn't work like this.' Then runs."
+    },
+    {
+      "characterId": "scientist-bryce",
+      "session": 3,
+      "act": 3,
+      "location": "City → surface",
+      "status": "healthy",
+      "emotional": "flight",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "shoggoth-creation",
+        "warm-air-below",
+        "blind-penguins",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 3,
+      "activity": "Escape. Carries biological samples she wishes she didn't have"
+    },
+    {
+      "characterId": "veteran-rourke",
+      "session": 3,
+      "act": 0,
+      "location": "Upper tunnels",
+      "status": "healthy",
+      "emotional": "hyper-vigilant",
+      "knowledge": [
+        "briefing-document",
+        "night-sounds",
+        "lakes-camp-destruction",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "warm-air-below"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Takes point. Every tunnel is Gallipoli again but worse"
+    },
+    {
+      "characterId": "veteran-rourke",
+      "session": 3,
+      "act": 1,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "soldier-grief",
+      "knowledge": [
+        "briefing-document",
+        "night-sounds",
+        "lakes-camp-destruction",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "warm-air-below",
+        "elder-things-were-men"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "Recognizes the Elder Things' deaths as combat losses. Soldiers' deaths"
+    },
+    {
+      "characterId": "veteran-rourke",
+      "session": 3,
+      "act": 2,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "primal-fear",
+      "knowledge": [
+        "briefing-document",
+        "night-sounds",
+        "lakes-camp-destruction",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "warm-air-below",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "tekeli-li"
+      ],
+      "danger": 3,
+      "activity": "The Shoggoth. Cannot fight it. Cannot flank it. Can only run",
+      "mcNote": "Cannot fight it. Cannot flank it. The soldier meets something war didn't prepare him for.",
+      "npcBehavior": "Shoves people toward the exit. 'MOVE. Don't look. Don't think. MOVE.' Voice cracking for the first time."
+    },
+    {
+      "characterId": "veteran-rourke",
+      "session": 3,
+      "act": 3,
+      "location": "City → surface",
+      "status": "healthy",
+      "emotional": "survival-mode",
+      "knowledge": [
+        "briefing-document",
+        "night-sounds",
+        "lakes-camp-destruction",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "warm-air-below",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 3,
+      "activity": "Leads the retreat. This is what he was hired for"
+    },
+    {
+      "characterId": "journalist-caldwell",
+      "session": 3,
+      "act": 0,
+      "location": "Upper tunnels",
+      "status": "healthy",
+      "emotional": "determined",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "blind-penguins"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Still photographing. The flash disturbs the blind penguins"
+    },
+    {
+      "characterId": "journalist-caldwell",
+      "session": 3,
+      "act": 1,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "shattered",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "blind-penguins",
+        "elder-things-were-men"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "The headless Elder Things. This is no longer a story she wants to tell"
+    },
+    {
+      "characterId": "journalist-caldwell",
+      "session": 3,
+      "act": 2,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "terror",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "blind-penguins",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "tekeli-li"
+      ],
+      "danger": 3,
+      "activity": "Drops the camera. Doesn't go back for it",
+      "mcNote": "Drops the camera. This is the moment the story dies — no evidence, just testimony no one will believe.",
+      "npcBehavior": "Camera hits the ground. Doesn't stop running. 'The notebooks. I still have the notebooks.' Clutches them like a lifeline."
+    },
+    {
+      "characterId": "journalist-caldwell",
+      "session": 3,
+      "act": 3,
+      "location": "City → surface",
+      "status": "healthy",
+      "emotional": "flight",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "blind-penguins",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 3,
+      "activity": "Runs. The notebooks are still in her pocket. The camera is not"
+    },
+    {
+      "characterId": "mechanic-gedney",
+      "session": 3,
+      "act": 0,
+      "location": "Upper tunnels",
+      "status": "healthy",
+      "emotional": "terrified",
+      "knowledge": [
+        "briefing-document",
+        "equipment-anomalies",
+        "lakes-camp-destruction",
+        "fuel-calculation",
+        "impossible-architecture",
+        "warm-air-below"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Nothing to fix down here. Nothing has parts. Out of his element"
+    },
+    {
+      "characterId": "mechanic-gedney",
+      "session": 3,
+      "act": 1,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "horror",
+      "knowledge": [
+        "briefing-document",
+        "equipment-anomalies",
+        "lakes-camp-destruction",
+        "fuel-calculation",
+        "impossible-architecture",
+        "warm-air-below",
+        "elder-things-were-men"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "The Elder Things' tools are recognizable. They were builders, like him"
+    },
+    {
+      "characterId": "mechanic-gedney",
+      "session": 3,
+      "act": 2,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "panic",
+      "knowledge": [
+        "briefing-document",
+        "equipment-anomalies",
+        "lakes-camp-destruction",
+        "fuel-calculation",
+        "impossible-architecture",
+        "warm-air-below",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "tekeli-li"
+      ],
+      "danger": 3,
+      "activity": "The Shoggoth has no parts. Cannot be fixed, cannot be understood",
+      "mcNote": "Something that exists without mechanism. His worldview doesn't just crack — it collapses.",
+      "npcBehavior": "Stares at the Shoggoth for two seconds too long. Gedney speaks to the thing. 'What are you?' Then the others pull him away."
+    },
+    {
+      "characterId": "mechanic-gedney",
+      "session": 3,
+      "act": 3,
+      "location": "City → surface",
+      "status": "healthy",
+      "emotional": "desperate",
+      "knowledge": [
+        "briefing-document",
+        "equipment-anomalies",
+        "lakes-camp-destruction",
+        "fuel-calculation",
+        "impossible-architecture",
+        "warm-air-below",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 3,
+      "activity": "Runs for the plane. The plane he can understand. The plane he can fix"
+    },
+    {
+      "characterId": "mechanic-webb",
+      "session": 3,
+      "act": 0,
+      "location": "Upper tunnels",
+      "status": "healthy",
+      "emotional": "terrified",
+      "knowledge": [
+        "briefing-document",
+        "unusual-static",
+        "radio-signal-anomaly",
+        "elder-thing-murals",
+        "warm-air-below"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Carries the radio out of habit. It receives nothing but the nameless sound"
+    },
+    {
+      "characterId": "mechanic-webb",
+      "session": 3,
+      "act": 1,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "horror",
+      "knowledge": [
+        "briefing-document",
+        "unusual-static",
+        "radio-signal-anomaly",
+        "elder-thing-murals",
+        "warm-air-below",
+        "elder-things-were-men"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "Silence meant danger in the lighthouse. This silence is worse"
+    },
+    {
+      "characterId": "mechanic-webb",
+      "session": 3,
+      "act": 2,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "primal-terror",
+      "knowledge": [
+        "briefing-document",
+        "unusual-static",
+        "radio-signal-anomaly",
+        "elder-thing-murals",
+        "warm-air-below",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "tekeli-li"
+      ],
+      "danger": 3,
+      "activity": "The Shoggoth's sound drowns everything. The anti-signal",
+      "mcNote": "The sound. Tekeli-li. A signal from no station. His worst fear made audible.",
+      "npcBehavior": "Covers his ears. 'That frequency. That's not natural. That's not... that's a signal. Something is signaling.'"
+    },
+    {
+      "characterId": "mechanic-webb",
+      "session": 3,
+      "act": 3,
+      "location": "City → surface",
+      "status": "healthy",
+      "emotional": "flight",
+      "knowledge": [
+        "briefing-document",
+        "unusual-static",
+        "radio-signal-anomaly",
+        "elder-thing-murals",
+        "warm-air-below",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 3,
+      "activity": "Runs. Drops the radio. Doesn't go back"
+    },
+    {
+      "characterId": "agent-price",
+      "session": 3,
+      "act": 0,
+      "location": "Upper tunnels",
+      "status": "healthy",
+      "emotional": "nervous",
+      "knowledge": [
+        "briefing-document",
+        "anomaly-value",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Still calculating. Artifacts = profit. But who's the buyer for alien technology?"
+    },
+    {
+      "characterId": "agent-price",
+      "session": 3,
+      "act": 1,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "fear",
+      "knowledge": [
+        "briefing-document",
+        "anomaly-value",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "elder-things-were-men"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "The ledger stops making sense when the entities are people"
+    },
+    {
+      "characterId": "agent-price",
+      "session": 3,
+      "act": 2,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "terror",
+      "knowledge": [
+        "briefing-document",
+        "anomaly-value",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "tekeli-li"
+      ],
+      "danger": 3,
+      "activity": "No commercial value. Only annihilation. The second ledger closes",
+      "mcNote": "The ledgers are meaningless now. Nothing in his financial training prepared him for this.",
+      "npcBehavior": "Backs away slowly. The gold pen falls from nerveless fingers. 'This exceeds... this exceeds everything.'"
+    },
+    {
+      "characterId": "agent-price",
+      "session": 3,
+      "act": 3,
+      "location": "City → surface",
+      "status": "healthy",
+      "emotional": "survival",
+      "knowledge": [
+        "briefing-document",
+        "anomaly-value",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 3,
+      "activity": "Runs. Leaves the second ledger behind"
+    },
+    {
+      "characterId": "agent-ainsworth",
+      "session": 3,
+      "act": 0,
+      "location": "Upper tunnels",
+      "status": "healthy",
+      "emotional": "determined",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Takes samples. Labels everything. The discipline holds"
+    },
+    {
+      "characterId": "agent-ainsworth",
+      "session": 3,
+      "act": 1,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "grief-awe",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "elder-things-were-men"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "Rigor will not be enough to contain what this means"
+    },
+    {
+      "characterId": "agent-ainsworth",
+      "session": 3,
+      "act": 2,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "terror",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "tekeli-li"
+      ],
+      "danger": 3,
+      "activity": "The Shoggoth. No geological framework for this",
+      "mcNote": "Objectivity is gone. Her geological report is now a confession.",
+      "npcBehavior": "Stops writing mid-sentence. 'I can't... the words aren't... there are no words in my vocabulary for this.'"
+    },
+    {
+      "characterId": "agent-ainsworth",
+      "session": 3,
+      "act": 3,
+      "location": "City → surface",
+      "status": "healthy",
+      "emotional": "flight",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 3,
+      "activity": "Runs. The samples are in her pocket. The codebook is irrelevant now"
+    },
+    {
+      "characterId": "expert-sorensen",
+      "session": 3,
+      "act": 0,
+      "location": "Upper tunnels",
+      "status": "healthy",
+      "emotional": "praying",
+      "knowledge": [
+        "briefing-document",
+        "ice-behavior",
+        "sailors-stories",
+        "lakes-camp-destruction",
+        "mountain-scale",
+        "elder-thing-murals",
+        "warm-air-below"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "If he descends: muttering in Norwegian. The old prayers"
+    },
+    {
+      "characterId": "expert-sorensen",
+      "session": 3,
+      "act": 1,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "broken-calm",
+      "knowledge": [
+        "briefing-document",
+        "ice-behavior",
+        "sailors-stories",
+        "lakes-camp-destruction",
+        "mountain-scale",
+        "elder-thing-murals",
+        "warm-air-below",
+        "elder-things-were-men"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "The ice knows. It always knew. These things lived under his ice for twenty years"
+    },
+    {
+      "characterId": "expert-sorensen",
+      "session": 3,
+      "act": 2,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "beyond-fear",
+      "knowledge": [
+        "briefing-document",
+        "ice-behavior",
+        "sailors-stories",
+        "lakes-camp-destruction",
+        "mountain-scale",
+        "elder-thing-murals",
+        "warm-air-below",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "tekeli-li"
+      ],
+      "danger": 3,
+      "activity": "The Shoggoth. The thing under the ice. The thing the old stories warned about",
+      "mcNote": "The old stories were not exaggerated. They were understated.",
+      "npcBehavior": "Crosses himself — the only time he's done it on the expedition. 'Tekeli-li. The whalers had a word for it. Now I know why they drank.'"
+    },
+    {
+      "characterId": "expert-sorensen",
+      "session": 3,
+      "act": 3,
+      "location": "City → surface",
+      "status": "healthy",
+      "emotional": "survival",
+      "knowledge": [
+        "briefing-document",
+        "ice-behavior",
+        "sailors-stories",
+        "lakes-camp-destruction",
+        "mountain-scale",
+        "elder-thing-murals",
+        "warm-air-below",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 3,
+      "activity": "Leads through the city. Knows the way out by instinct"
+    },
+    {
+      "characterId": "expert-mcready",
+      "session": 3,
+      "act": 0,
+      "location": "Upper tunnels",
+      "status": "healthy",
+      "emotional": "instinctual-fear",
+      "knowledge": [
+        "briefing-document",
+        "dog-behavior",
+        "dogs-facing-away",
+        "lakes-camp-destruction",
+        "mountain-scale",
+        "elder-thing-murals",
+        "warm-air-below"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Moves like his dogs — low, cautious, sniffing the air"
+    },
+    {
+      "characterId": "expert-mcready",
+      "session": 3,
+      "act": 1,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "understanding",
+      "knowledge": [
+        "briefing-document",
+        "dog-behavior",
+        "dogs-facing-away",
+        "lakes-camp-destruction",
+        "mountain-scale",
+        "elder-thing-murals",
+        "warm-air-below",
+        "elder-things-were-men"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "Now he knows why the 1930 dogs were never right again. They saw this"
+    },
+    {
+      "characterId": "expert-mcready",
+      "session": 3,
+      "act": 2,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "primal-terror",
+      "knowledge": [
+        "briefing-document",
+        "dog-behavior",
+        "dogs-facing-away",
+        "lakes-camp-destruction",
+        "mountain-scale",
+        "elder-thing-murals",
+        "warm-air-below",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "tekeli-li"
+      ],
+      "danger": 3,
+      "activity": "The Shoggoth. This is what the dogs smelled. This is what they refused to face",
+      "mcNote": "He understands why the dogs wouldn't come. He wishes he'd listened.",
+      "npcBehavior": "Doesn't run immediately. Looks at the Shoggoth with something like recognition. 'The dogs knew. They always knew.' Then runs."
+    },
+    {
+      "characterId": "expert-mcready",
+      "session": 3,
+      "act": 3,
+      "location": "City → surface",
+      "status": "healthy",
+      "emotional": "animal-flight",
+      "knowledge": [
+        "briefing-document",
+        "dog-behavior",
+        "dogs-facing-away",
+        "lakes-camp-destruction",
+        "mountain-scale",
+        "elder-thing-murals",
+        "warm-air-below",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 3,
+      "activity": "Runs like the dogs would. Straight for the exit. No looking back"
+    },
+    {
+      "characterId": "believer-angell",
+      "session": 3,
+      "act": 0,
+      "location": "Upper tunnels",
+      "status": "healthy",
+      "emotional": "fragile-determined",
+      "knowledge": [
+        "pnakotic-fragments",
+        "eltdown-shards",
+        "necronomicon-marginalia",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "crude-carvings",
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Recognizes the crude spiral carvings from Eltdown Shard descriptions"
+    },
+    {
+      "characterId": "believer-angell",
+      "session": 3,
+      "act": 1,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "shattered",
+      "knowledge": [
+        "pnakotic-fragments",
+        "eltdown-shards",
+        "necronomicon-marginalia",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "elder-things-were-men"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "The texts never said the Elder Things were men. This was not in the pattern"
+    },
+    {
+      "characterId": "believer-angell",
+      "session": 3,
+      "act": 2,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "beyond-sanity",
+      "knowledge": [
+        "pnakotic-fragments",
+        "eltdown-shards",
+        "necronomicon-marginalia",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "tekeli-li"
+      ],
+      "danger": 3,
+      "activity": "Tekeli-li. The word from the texts. He's been reading about this thing his entire career",
+      "mcNote": "Being right is worse than being wrong. The texts didn't prepare him for the reality.",
+      "npcBehavior": "Falls to his knees. 'The Pnakotic manuscripts mention these. They call them... they call them mistakes.' Has to be physically lifted."
+    },
+    {
+      "characterId": "believer-angell",
+      "session": 3,
+      "act": 3,
+      "location": "City → surface",
+      "status": "healthy",
+      "emotional": "broken",
+      "knowledge": [
+        "pnakotic-fragments",
+        "eltdown-shards",
+        "necronomicon-marginalia",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 3,
+      "activity": "Others have to help him run. The pattern is complete but it destroyed him"
+    },
+    {
+      "characterId": "believer-waverly",
+      "session": 3,
+      "act": 0,
+      "location": "Upper tunnels",
+      "status": "healthy",
+      "emotional": "steady",
+      "knowledge": [
+        "oral-traditions",
+        "island-warnings",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Tends to others' fear. The nurse in her never stops. Compassion as armor"
+    },
+    {
+      "characterId": "believer-waverly",
+      "session": 3,
+      "act": 1,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "profound-grief",
+      "knowledge": [
+        "oral-traditions",
+        "island-warnings",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "elder-things-were-men"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "They were men. The oral traditions called them 'the first gardeners.' Now she understands"
+    },
+    {
+      "characterId": "believer-waverly",
+      "session": 3,
+      "act": 2,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "terror-faith",
+      "knowledge": [
+        "oral-traditions",
+        "island-warnings",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "tekeli-li"
+      ],
+      "danger": 3,
+      "activity": "The Shoggoth. The thing the stories warned about. Her cross is cold against her skin",
+      "mcNote": "The warnings were preparation, not prevention. She always knew this was coming.",
+      "npcBehavior": "The only one not screaming. Guides others toward the exit. 'I was warned. I came anyway. Move. Move now.'"
+    },
+    {
+      "characterId": "believer-waverly",
+      "session": 3,
+      "act": 3,
+      "location": "City → surface",
+      "status": "healthy",
+      "emotional": "helping-others",
+      "knowledge": [
+        "oral-traditions",
+        "island-warnings",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 3,
+      "activity": "Supports Angell, who is barely functioning. The nurse endures"
+    },
+    {
+      "characterId": "patron-starkweather",
+      "session": 3,
+      "act": 0,
+      "location": "Upper tunnels",
+      "status": "healthy",
+      "emotional": "grim-determination",
+      "knowledge": [
+        "dyer-account",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "tunnel-carvings"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "crude-carvings",
+        "nameless-scent"
+      ],
+      "danger": 2,
+      "activity": "Still leading from the front. The patron who won't let his investment go. 'We're already here. We see it through'"
+    },
+    {
+      "characterId": "patron-starkweather",
+      "session": 3,
+      "act": 1,
+      "location": "Deep tunnels",
+      "status": "healthy",
+      "emotional": "horror-guilt",
+      "knowledge": [
+        "dyer-account",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "tunnel-carvings",
+        "elder-things-were-men"
+      ],
+      "narrativeRole": "pivot",
+      "threadsActive": [
+        "crude-carvings"
+      ],
+      "danger": 2,
+      "activity": "The headless Elder Things. They were men. And he funded the expedition that disturbed their grave"
+    },
+    {
+      "characterId": "patron-starkweather",
+      "session": 3,
+      "act": 2,
+      "location": "Deep tunnels",
+      "status": "shaken",
+      "emotional": "broken-authority",
+      "knowledge": [
+        "dyer-account",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "tunnel-carvings",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "danger",
+      "threadsActive": [
+        "tekeli-li"
+      ],
+      "danger": 3,
+      "activity": "The Shoggoth. Dyer described this too. Starkweather funded proof of the one thing that should never have been proven",
+      "mcNote": "Starkweather's authority shatters here. The patron, the True Believer, the man who pushed them all forward — he sees the Shoggoth and understands what he's done. His status shifts to 'shaken' because the man who was certain about everything is now certain of only one thing: he was wrong to come here.",
+      "npcBehavior": "Freezes. For the first time, does not give orders. Others have to pull him. If he speaks, it's Dyer's words: 'Dyer tried to warn us. He tried.' The patron becomes dead weight that must be dragged to safety."
+    },
+    {
+      "characterId": "patron-starkweather",
+      "session": 3,
+      "act": 3,
+      "location": "City → surface",
+      "status": "shaken",
+      "emotional": "broken",
+      "knowledge": [
+        "dyer-account",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence",
+        "mountain-scale",
+        "elder-thing-murals",
+        "billion-year-civilization",
+        "warm-air-below",
+        "tunnel-carvings",
+        "elder-things-were-men",
+        "shoggoth-existence"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 3,
+      "activity": "Others lead him out. The patron follows. The man who funded everything has nothing left to fund"
+    },
+    {
+      "characterId": "patron-moore",
+      "session": 3,
+      "act": 0,
+      "location": "Radio silence — US",
+      "status": "healthy",
+      "emotional": "absent",
+      "knowledge": [
+        "dyer-account-redacted",
+        "briefing-document",
+        "triangular-markings-reported"
+      ],
+      "narrativeRole": "absent",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "Fully absent. His absence is felt most by Ainsworth, who has no one to report to. The oversight has ended"
+    },
+    {
+      "characterId": "patron-moore",
+      "session": 3,
+      "act": 1,
+      "location": "Radio silence — US",
+      "status": "healthy",
+      "emotional": "absent",
+      "knowledge": [
+        "dyer-account-redacted",
+        "briefing-document",
+        "triangular-markings-reported"
+      ],
+      "narrativeRole": "absent",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "No voice of reason to hear that the Elder Things were men. The empiricist misses the empathy"
+    },
+    {
+      "characterId": "patron-moore",
+      "session": 3,
+      "act": 2,
+      "location": "Radio silence — US",
+      "status": "healthy",
+      "emotional": "absent",
+      "knowledge": [
+        "dyer-account-redacted",
+        "briefing-document",
+        "triangular-markings-reported"
+      ],
+      "narrativeRole": "absent",
+      "threadsActive": [],
+      "danger": 3,
+      "activity": "The Shoggoth exists and Moore will never know. The skeptic's framework cannot contain what he cannot see"
+    },
+    {
+      "characterId": "patron-moore",
+      "session": 3,
+      "act": 3,
+      "location": "Radio silence — US",
+      "status": "healthy",
+      "emotional": "absent",
+      "knowledge": [
+        "dyer-account-redacted",
+        "briefing-document",
+        "triangular-markings-reported"
+      ],
+      "narrativeRole": "absent",
+      "threadsActive": [],
+      "danger": 3,
+      "activity": "They run toward a world where Moore is waiting for data. He will get something far worse than data"
+    }
+  ]
+}

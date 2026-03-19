@@ -1,0 +1,173 @@
+[
+  {
+    "id": 0,
+    "name": "The Circle",
+    "subtitle": "Co-creation, briefing, departure",
+    "color": "#8a9bb5",
+    "acts": [
+      {
+        "name": "Assembly",
+        "beats": [
+          "Character introductions — who are you, why are you here?",
+          "The expedition roster — Starkweather's pitch, Moore's caveats",
+          "Player archetypes chosen, backstories established"
+        ]
+      },
+      {
+        "name": "The Briefing",
+        "beats": [
+          "The curated dossier — Dyer's published account, Lake's camp disaster",
+          "Starkweather's additions vs. Moore's annotations",
+          "Equipment review — Pabodie's drill, radios, dog teams, planes",
+          "Questions the briefing doesn't answer"
+        ]
+      },
+      {
+        "name": "Departure",
+        "beats": [
+          "Final preparations at Arkham wharf",
+          "Boarding the vessel — last contact with civilization",
+          "The expedition sails south"
+        ]
+      }
+    ]
+  },
+  {
+    "id": 1,
+    "name": "The Ice",
+    "subtitle": "Transit, base camp, first anomalies",
+    "color": "#c4a35a",
+    "acts": [
+      {
+        "name": "The Voyage",
+        "beats": [
+          "Shipboard dynamics — patron tensions, crew relationships form",
+          "Crossing the Drake Passage — the world behind shrinks",
+          "First sight of the ice barrier — two hundred feet of vertical white"
+        ]
+      },
+      {
+        "name": "Base Camp",
+        "beats": [
+          "McMurdo Sound — establishing operations",
+          "Historic huts — layers of previous expeditions",
+          "Supply caches, radio checks, reconnaissance flights",
+          "Dogs settle in — McReady's early warning system"
+        ]
+      },
+      {
+        "name": "Lake's Camp",
+        "beats": [
+          "Push inland — following Dyer's route",
+          "Discovery of the first camp — anomalies begin",
+          "Star-shaped graves. Equipment that shouldn't be damaged the way it is.",
+          "Radio contact becomes intermittent"
+        ]
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "The Mountains",
+    "subtitle": "Discovery peaks, revelation, the city",
+    "color": "#6b9e7a",
+    "acts": [
+      {
+        "name": "The Ascent",
+        "beats": [
+          "Approaching the mountain range — peaks exceeding 35,000 feet",
+          "Caves with regular openings — formations like cubes on peaks",
+          "Dyer's private journal page found",
+          "Equipment malfunctions near certain geological formations"
+        ]
+      },
+      {
+        "name": "The City",
+        "beats": [
+          "First glimpse of cyclopean ruins beyond the mountains",
+          "Entering the city — architecture that predates all human civilization",
+          "The scale becomes apparent — this was built by something not human"
+        ]
+      },
+      {
+        "name": "The Murals",
+        "beats": [
+          "Wall carvings depicting Earth's true history",
+          "Elder Things — the original builders, a billion years ago",
+          "The Shoggoths — created as servants, rebelled",
+          "Understanding dawns — Dyer was right about everything"
+        ]
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "The Descent",
+    "subtitle": "Into the tunnels, confrontation, flight begins",
+    "color": "#d47b6f",
+    "acts": [
+      {
+        "name": "Into the Tunnels",
+        "beats": [
+          "Fifteen-foot carved passages descending into warmth",
+          "Crude carvings overlay the originals — something else has been here",
+          "Giant blind albino penguins — an underground ecosystem",
+          "The temperature is wrong. The nameless scent grows stronger."
+        ]
+      },
+      {
+        "name": "The Encounter",
+        "beats": [
+          "Confrontation — not combat, but witness",
+          "Something that breaks their model of reality",
+          "Tekeli-li — the sound that Poe recorded, that Dyer heard",
+          "The Shoggoth — or what the Shoggoths became"
+        ]
+      },
+      {
+        "name": "Flight",
+        "beats": [
+          "The escape begins — back through the tunnels",
+          "Radio silence — total blackout, alone",
+          "The dogs refuse to go back. They understand.",
+          "Running across the ice, leaving the city behind"
+        ]
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "The Return",
+    "subtitle": "Flight, the vision, the moral choice",
+    "color": "#a78bba",
+    "acts": [
+      {
+        "name": "The Ice",
+        "beats": [
+          "Fleeing across the plateau — the cold is actively hostile",
+          "Equipment failing, fuel critical",
+          "Who made it out? Who didn't?",
+          "The expedition vessel — if it's still there"
+        ]
+      },
+      {
+        "name": "The Vision",
+        "beats": [
+          "The Violet Mountains — a dim elfin line on the western horizon",
+          "What the Elder Things feared. Cities built there crumbled.",
+          "The final revelation — something worse than what they've already seen",
+          "Danforth looked. Danforth screamed."
+        ]
+      },
+      {
+        "name": "The Choice",
+        "beats": [
+          "What do you do with what you know?",
+          "Tell the world — and not be believed, like Dyer?",
+          "Destroy the evidence — and let the next expedition walk in blind?",
+          "The ceremony — carrying knowledge that changes you permanently"
+        ]
+      }
+    ]
+  }
+]

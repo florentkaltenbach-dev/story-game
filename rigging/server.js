@@ -6,6 +6,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
+const { startStoryWatcher } = require("./story-watcher");
 
 const PORT = parseInt(process.env.RIGGING_PORT || "3006");
 
@@ -20,6 +21,36 @@ const KNOWN_APPS = [
 ];
 
 const KNOWN_NAMES = new Set(KNOWN_APPS.map(a => a.name));
+
+// ── Story data file watcher ──
+const storyDataClients = new Set();
+
+const storyWatcher = startStoryWatcher({
+  configDir: path.resolve(__dirname, "../config"),
+  memoryDir: path.resolve(__dirname, "../memory"),
+  debounceMs: 300,
+  onChanged: (event) => {
+    const data = `event: story-data-changed\ndata: ${JSON.stringify(event)}\n\n`;
+    for (const client of storyDataClients) {
+      try { client.write(data); } catch { storyDataClients.delete(client); }
+    }
+    console.log(`[rigging] Broadcast story-data-changed to ${storyDataClients.size} client(s)`);
+
+    // Also invalidate the web app's API cache (best-effort)
+    try {
+      const http = require("http");
+      const req = http.request({
+        hostname: "localhost", port: 3004,
+        path: "/the-ceremony/api/story-data",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      }, () => {});
+      req.on("error", () => {});
+      req.write(JSON.stringify({ action: "invalidate" }));
+      req.end();
+    } catch { /* best-effort */ }
+  },
+});
 
 // === System scanning (all commands use execFileSync — no shell injection) ===
 
@@ -203,6 +234,70 @@ async function fullScan() {
     health: healthChecks,
   };
 }
+
+// === Helpers ===
+
+function escHtmlServer(s) {
+  if (!s) return '';
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// === Viz autodiscovery ===
+
+const VIZ_DIR = path.resolve(__dirname, "../web/public/");
+let vizCache = [];      // ordered list for iteration
+let vizBySlug = new Map(); // slug → entry for O(1) lookup
+
+function scanVizPages() {
+  try {
+    const entries = fs.readdirSync(VIZ_DIR).filter(f => {
+      if (!f.endsWith(".html")) return false;
+      if (f.startsWith("_")) return false;
+      if (f === "index.html") return false;
+      return true;
+    });
+
+    const results = [];
+    for (const filename of entries) {
+      const filepath = path.join(VIZ_DIR, filename);
+      const slug = filename.replace(/\.html$/, "");
+
+      // Read first 500 bytes to look for VIZ-META comment
+      let title = slug.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      let description = "";
+      let category = "uncategorized";
+
+      try {
+        const fd = fs.openSync(filepath, "r");
+        const buf = Buffer.alloc(500);
+        const bytesRead = fs.readSync(fd, buf, 0, 500, 0);
+        fs.closeSync(fd);
+
+        const head = buf.toString("utf-8", 0, bytesRead);
+        const metaMatch = head.match(/<!--\s*VIZ-META\s+(\{.*?\})\s*-->/);
+        if (metaMatch) {
+          try {
+            const meta = JSON.parse(metaMatch[1]);
+            if (meta.title) title = meta.title;
+            if (meta.description) description = meta.description;
+            if (meta.category) category = meta.category;
+          } catch { /* ignore malformed JSON */ }
+        }
+      } catch { /* file read error, use defaults */ }
+
+      results.push({ slug, filename, filepath, title, description, category });
+    }
+
+    vizCache = results;
+    vizBySlug = new Map(results.map(v => [v.slug, v]));
+  } catch (err) {
+    console.error("[The Rigging] Viz scan error:", err.message);
+  }
+}
+
+// Initial scan + periodic rescan
+scanVizPages();
+setInterval(scanVizPages, 60000);
 
 // === Dashboard HTML ===
 
@@ -459,8 +554,9 @@ function formatUptime(ms) {
 function formatBytes(b) {
   if (!b || b === 0) return '0 B';
   if (b < 1024) return b + ' B';
-  if (b < 1048576) return (b / 1024).toFixed(1) + ' MB';
-  return (b / 1048576).toFixed(1) + ' GB';
+  if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+  if (b < 1073741824) return (b / 1048576).toFixed(1) + ' MB';
+  return (b / 1073741824).toFixed(1) + ' GB';
 }
 
 function badge(text, type) {
@@ -791,44 +887,90 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Serve static viz files from web/public/ and working/
-  const VIZ_FILES = {
-    "/viz/codebase-map": path.resolve(__dirname, "../web/public/codebase-map.html"),
-    "/viz/engine-skeleton": path.resolve(__dirname, "../web/public/engine-skeleton.html"),
-    "/viz/story-skeleton": path.resolve(__dirname, "../web/public/story-skeleton.html"),
-    "/viz/relationship-map": path.resolve(__dirname, "../web/public/relationship-map.html"),
-    "/viz/fog-matrix": path.resolve(__dirname, "../web/public/fog-matrix.html"),
-  };
+  // Viz manifest API — returns discovered viz pages as JSON
+  if (req.url === "/api/viz-manifest") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(vizCache.map(v => ({
+      slug: v.slug,
+      filename: v.filename,
+      title: v.title,
+      description: v.description,
+      category: v.category,
+    }))));
+    return;
+  }
 
-  const vizPath = req.url.replace(/\.html$/, "").replace(/\/$/, "");
-  if (VIZ_FILES[vizPath]) {
+  // SSE endpoint for story data changes (viz clients subscribe here)
+  if (req.url === "/api/story-events" || req.url.startsWith("/api/story-events?")) {
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      "Connection": "keep-alive",
+      "Access-Control-Allow-Origin": "*",
+    });
+    res.write("event: connected\ndata: {}\n\n");
+    storyDataClients.add(res);
+    const keepalive = setInterval(() => {
+      try { res.write(":keepalive\n\n"); }
+      catch { clearInterval(keepalive); storyDataClients.delete(res); }
+    }, 30000);
+    req.on("close", () => { clearInterval(keepalive); storyDataClients.delete(res); });
+    return;
+  }
+
+  // Serve ceremony-data.js for viz pages
+  if (req.url === "/js/ceremony-data.js") {
     try {
-      const html = fs.readFileSync(VIZ_FILES[vizPath], "utf-8");
-      res.writeHead(200, { "Content-Type": "text/html" });
-      res.end(html);
+      const js = fs.readFileSync(path.resolve(__dirname, "../web/public/js/ceremony-data.js"), "utf-8");
+      res.writeHead(200, { "Content-Type": "application/javascript", "Cache-Control": "no-cache" });
+      res.end(js);
     } catch (err) {
-      res.writeHead(404, { "Content-Type": "text/plain" });
-      res.end("Viz file not found: " + err.message);
+      res.writeHead(404);
+      res.end("ceremony-data.js not found");
     }
     return;
   }
 
-  // Viz index
+  // Viz index — dynamically generated gallery
   if (req.url === "/viz" || req.url === "/viz/") {
+    const livePages = new Set(["relationship-map", "fog-matrix", "story-skeleton", "network-topology"]);
+    const items = vizCache.map(v => {
+      const desc = v.description ? " — " + escHtmlServer(v.description) : "";
+      const title = escHtmlServer(v.title);
+      const liveBadge = livePages.has(v.slug) ? ' <span style="color:#6b9e7a">● live</span>' : "";
+      return `<li><a href="/viz/${v.slug}">${title}</a>${desc}${liveBadge}</li>`;
+    }).join("\n");
+
     res.writeHead(200, { "Content-Type": "text/html" });
     res.end(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Visualizations</title>
 <style>body{background:#0a0e17;color:#e8dcc8;font-family:'SF Mono',monospace;padding:40px}
 a{color:#c4a35a;text-decoration:none}a:hover{text-decoration:underline}
 h1{font-size:16px;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:24px}
 li{margin:8px 0;font-size:14px}</style></head><body>
-<h1>The Ceremony — Visualizations</h1><ul>
-<li><a href="/viz/codebase-map">Codebase Map</a> — D3 force-graph of all files and connections</li>
-<li><a href="/viz/engine-skeleton">Runtime Architecture</a> — two-process data flow</li>
-<li><a href="/viz/story-skeleton">Narrative Architecture</a> — 5-session story structure</li>
-<li><a href="/viz/relationship-map">Relationship Map</a> — force-directed entity graph (NPCs, locations, threads)</li>
-<li><a href="/viz/fog-matrix">Knowledge Fog Matrix</a> — player × secrets revelation heatmap</li>
+<h1>The Ceremony — Visualizations</h1>
+<p style="font-size:11px;color:#5a6a7a;margin-bottom:16px">Changes to config/ or memory/ update live pages automatically.</p><ul>
+${items}
 </ul></body></html>`);
     return;
+  }
+
+  // Serve viz pages by slug (autodiscovered)
+  const vizPath = req.url.replace(/\.html$/, "").replace(/\/$/, "");
+  const vizMatch = vizPath.match(/^\/viz\/(.+)$/);
+  if (vizMatch) {
+    const slug = vizMatch[1];
+    const entry = vizBySlug.get(slug);
+    if (entry) {
+      try {
+        const html = fs.readFileSync(entry.filepath, "utf-8");
+        res.writeHead(200, { "Content-Type": "text/html" });
+        res.end(html);
+      } catch (err) {
+        res.writeHead(404, { "Content-Type": "text/plain" });
+        res.end("Viz file not found: " + err.message);
+      }
+      return;
+    }
   }
 
   // Serve dashboard for everything else

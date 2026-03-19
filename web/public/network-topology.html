@@ -1,0 +1,1423 @@
+<!-- VIZ-META {"title":"Network Topology","description":"Force-directed graph of server infrastructure, services, and connections","category":"infrastructure"} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Rigging — Network Topology</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0e17;
+    color: #e8dcc8;
+    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  header {
+    background: #0d1220;
+    border-bottom: 1px solid #1e2d44;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    z-index: 10;
+    position: relative;
+  }
+
+  header h1 {
+    font-family: 'Crimson Text', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #c4a35a;
+    letter-spacing: 1px;
+  }
+
+  header h1 span {
+    color: #6a6a7a;
+    font-weight: 400;
+    font-size: 16px;
+    margin-left: 12px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .last-updated {
+    font-size: 11px;
+    color: #4a5568;
+  }
+
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #6a7a8a;
+  }
+
+  .pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #6b9e7a;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .pulse.error {
+    background: #8b2500;
+    animation: pulse-err 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(107,158,122,0.4); }
+    50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(107,158,122,0); }
+  }
+
+  @keyframes pulse-err {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(139,37,0,0.4); }
+    50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(139,37,0,0); }
+  }
+
+  #main {
+    display: flex;
+    height: calc(100vh - 56px);
+    position: relative;
+  }
+
+  #graph-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #graph {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Links */
+  .link {
+    fill: none;
+    stroke-opacity: 0.4;
+    transition: stroke-opacity 0.2s;
+  }
+
+  .link.highlighted {
+    stroke-opacity: 0.9;
+  }
+
+  .link.dimmed {
+    stroke-opacity: 0.06;
+  }
+
+  /* Nodes */
+  .node-shape {
+    stroke-width: 1.5;
+    cursor: pointer;
+    transition: stroke-width 0.15s, opacity 0.2s;
+  }
+
+  .node-shape.selected {
+    stroke-width: 3;
+    stroke: #c4a35a !important;
+  }
+
+  .node-shape.dimmed {
+    opacity: 0.08;
+  }
+
+  .node-label {
+    fill: #e8dcc8;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    pointer-events: none;
+    text-anchor: middle;
+    dominant-baseline: central;
+    opacity: 0.85;
+  }
+
+  .node-label.dimmed {
+    opacity: 0.06;
+  }
+
+  .node-port-label {
+    fill: #6a7a8a;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    pointer-events: none;
+    text-anchor: middle;
+    opacity: 0.7;
+  }
+
+  .node-port-label.dimmed {
+    opacity: 0.06;
+  }
+
+  .node-icon {
+    fill: currentColor;
+    font-family: 'JetBrains Mono', monospace;
+    pointer-events: none;
+    text-anchor: middle;
+    dominant-baseline: central;
+    opacity: 0.8;
+  }
+
+  .node-icon.dimmed {
+    opacity: 0.06;
+  }
+
+  /* Tooltip */
+  .tooltip {
+    position: absolute;
+    background: #1a2236;
+    border: 1px solid #2a3a54;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 100;
+    max-width: 320px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .tooltip.visible { opacity: 1; }
+
+  .tt-name {
+    font-weight: 500;
+    color: #c4a35a;
+    margin-bottom: 4px;
+    font-size: 13px;
+  }
+
+  .tt-type {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .tt-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 0;
+    font-size: 11px;
+  }
+
+  .tt-label {
+    color: #4a5568;
+    margin-right: 12px;
+  }
+
+  .tt-value {
+    color: #a8b8c8;
+  }
+
+  .tt-value-ok { color: #6b9e7a; }
+  .tt-value-err { color: #c75050; }
+
+  /* Sidebar */
+  #sidebar {
+    width: 320px;
+    background: #0d1220;
+    border-left: 1px solid #1e2d44;
+    overflow-y: auto;
+    padding: 0;
+    transition: transform 0.3s;
+    flex-shrink: 0;
+  }
+
+  .sidebar-empty {
+    padding: 32px 20px;
+    color: #4a5568;
+    font-size: 12px;
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .sidebar-content {
+    padding: 20px;
+  }
+
+  .sb-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .sb-name {
+    font-size: 16px;
+    font-weight: 500;
+    color: #e8dcc8;
+  }
+
+  .sb-close {
+    background: transparent;
+    border: none;
+    color: #4a5568;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 2px 6px;
+    line-height: 1;
+  }
+
+  .sb-close:hover { color: #e8dcc8; }
+
+  .sb-badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .sb-section {
+    margin-bottom: 16px;
+  }
+
+  .sb-section-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #4a5568;
+    margin-bottom: 8px;
+  }
+
+  .sb-detail {
+    font-size: 12px;
+    color: #a8b8c8;
+    line-height: 1.5;
+  }
+
+  .sb-detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(30,45,68,0.3);
+  }
+
+  .sb-detail-row:last-child {
+    border-bottom: none;
+  }
+
+  .sb-detail-label {
+    color: #4a5568;
+    font-size: 12px;
+  }
+
+  .sb-conn-list {
+    list-style: none;
+  }
+
+  .sb-conn-list li {
+    padding: 5px 0;
+    font-size: 12px;
+    color: #a8b8c8;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    padding-left: 4px;
+    transition: background 0.15s;
+  }
+
+  .sb-conn-list li:hover {
+    background: #131a2b;
+  }
+
+  .sb-conn-type {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+
+  /* Legend */
+  #legend {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    background: rgba(13, 18, 32, 0.92);
+    border: 1px solid #1e2d44;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 11px;
+    z-index: 5;
+    pointer-events: none;
+    min-width: 180px;
+  }
+
+  #legend h3 {
+    font-family: 'Crimson Text', serif;
+    font-size: 13px;
+    color: #c4a35a;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  .legend-section {
+    margin-bottom: 10px;
+  }
+
+  .legend-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .legend-subtitle {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #4a5568;
+    margin-bottom: 5px;
+  }
+
+  .legend-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 3px;
+    color: #6a7a8a;
+  }
+
+  .legend-shape {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .legend-circle {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1.5px solid;
+  }
+
+  .legend-diamond {
+    width: 8px;
+    height: 8px;
+    transform: rotate(45deg);
+    border: 1.5px solid;
+  }
+
+  .legend-hex {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    border: 1.5px solid;
+  }
+
+  .legend-line {
+    width: 24px;
+    height: 2px;
+    flex-shrink: 0;
+  }
+
+  /* Update badge */
+  #update-badge {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    padding: 4px 12px;
+    background: #1e2d44;
+    border: 1px solid rgba(196,163,90,0.25);
+    border-radius: 4px;
+    font-size: 10px;
+    color: #c4a35a;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* Error banner */
+  #error-banner {
+    display: none;
+    background: rgba(139,58,58,0.2);
+    border-bottom: 1px solid rgba(139,58,58,0.3);
+    color: #c75050;
+    padding: 6px 24px;
+    font-size: 11px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div id="update-badge">Data updated</div>
+
+<header>
+  <h1>Network Topology <span>server infrastructure graph</span></h1>
+  <div class="header-right">
+    <span class="last-updated" id="last-updated"></span>
+    <span class="status-indicator">
+      <span class="pulse" id="pulse-dot"></span>
+      <span id="conn-status">connecting</span>
+    </span>
+  </div>
+</header>
+<div id="error-banner"></div>
+
+<div id="main">
+  <div id="graph-container">
+    <svg id="graph"></svg>
+    <div class="tooltip" id="tooltip"></div>
+    <div id="legend">
+      <h3>Legend</h3>
+      <div class="legend-section">
+        <div class="legend-subtitle">Node Types</div>
+        <div class="legend-row"><div class="legend-shape"><div class="legend-hex" style="border-color:#7ba4c7; background:rgba(123,164,199,0.15)"></div></div> Gateway</div>
+        <div class="legend-row"><div class="legend-shape"><div class="legend-circle" style="border-color:#6b9e7a; background:rgba(107,158,122,0.15)"></div></div> Application</div>
+        <div class="legend-row"><div class="legend-shape"><div class="legend-diamond" style="border-color:#c4a35a; background:rgba(196,163,90,0.15)"></div></div> Tunnel</div>
+        <div class="legend-row"><div class="legend-shape"><div class="legend-circle" style="border-color:#e8dcc8; background:rgba(232,220,200,0.1)"></div></div> User</div>
+      </div>
+      <div class="legend-section">
+        <div class="legend-subtitle">Status</div>
+        <div class="legend-row"><div class="legend-shape"><div class="legend-circle" style="border-color:#6b9e7a; background:rgba(107,158,122,0.3)"></div></div> Online</div>
+        <div class="legend-row"><div class="legend-shape"><div class="legend-circle" style="border-color:#c4a35a; background:rgba(196,163,90,0.3)"></div></div> Degraded</div>
+        <div class="legend-row"><div class="legend-shape"><div class="legend-circle" style="border-color:#8b2500; background:rgba(139,37,0,0.3)"></div></div> Down</div>
+        <div class="legend-row"><div class="legend-shape"><div class="legend-circle" style="border-color:#4a5568; background:rgba(74,85,104,0.2)"></div></div> Unknown</div>
+      </div>
+      <div class="legend-section">
+        <div class="legend-subtitle">Connections</div>
+        <div class="legend-row"><div class="legend-line" style="background:#7ba4c7"></div> Reverse Proxy</div>
+        <div class="legend-row"><div class="legend-line" style="background:#c4a35a; height:0; border-top:2px dashed #c4a35a"></div> Internal</div>
+        <div class="legend-row"><div class="legend-line" style="background:#6b9e7a; height:0; border-top:2px dotted #6b9e7a"></div> Tunnel</div>
+        <div class="legend-row"><div class="legend-line" style="background:#8b7bb5"></div> HTTPS</div>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar">
+    <div class="sidebar-empty">
+      Click a node to inspect<br>service details and connections.<br><br>
+      <span style="color:#2a3a54">Drag nodes to rearrange.</span><br>
+      <span style="color:#2a3a54">Scroll to zoom. Click background to deselect.</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- CONFIGURATION -------------------------------------------------------
+
+var SCAN_URL = (window.location.port === '3006')
+  ? '/api/scan'
+  : '/sandbox/rigging/api/scan';
+
+var POLL_INTERVAL = 10000;
+
+var NODE_CONFIGS = {
+  user:    { label: 'User',    color: '#e8dcc8', radius: 22, shape: 'circle',  icon: 'U' },
+  gateway: { label: 'Gateway', color: '#7ba4c7', radius: 28, shape: 'hexagon', icon: 'G' },
+  app:     { label: 'App',     color: '#6b9e7a', radius: 20, shape: 'circle',  icon: 'A' },
+  tunnel:  { label: 'Tunnel',  color: '#c4a35a', radius: 16, shape: 'diamond', icon: 'W' },
+};
+
+var STATUS_COLORS = {
+  online:  '#6b9e7a',
+  healthy: '#6b9e7a',
+  stopped: '#c4a35a',
+  degraded:'#c4a35a',
+  missing: '#4a5568',
+  errored: '#8b2500',
+  down:    '#8b2500',
+  unknown: '#4a5568',
+};
+
+var EDGE_CONFIGS = {
+  proxy:    { label: 'Proxy',    color: '#7ba4c7', width: 2.0, dash: null },
+  internal: { label: 'Internal', color: '#c4a35a', width: 1.5, dash: '6 4' },
+  tunnel:   { label: 'Tunnel',   color: '#6b9e7a', width: 2.0, dash: '3 3' },
+  https:    { label: 'HTTPS',    color: '#8b7bb5', width: 2.0, dash: null },
+};
+
+// ---- FALLBACK DATA -------------------------------------------------------
+
+var FALLBACK_NODES = [
+  { id: 'user',     type: 'user',    label: 'Browser',        port: null,  status: 'online', details: {} },
+  { id: 'caddy',    type: 'gateway', label: 'Caddy',          port: 3080,  status: 'unknown', details: { info: 'Reverse proxy gateway' } },
+  { id: 'ceremony', type: 'app',     label: 'Ceremony',       port: 3004,  status: 'unknown', details: { info: 'Next.js text companion' } },
+  { id: 'keeper',   type: 'app',     label: 'Keeper',         port: 3005,  status: 'unknown', details: { info: 'Claude API service' } },
+  { id: 'rigging',  type: 'app',     label: 'Rigging',        port: 3006,  status: 'unknown', details: { info: 'Infrastructure dashboard' } },
+  { id: 'hub',      type: 'app',     label: 'Hub',            port: 3080,  status: 'unknown', details: { info: 'Project discovery' } },
+  { id: 'dreizehn', type: 'app',     label: 'Dreizehn',       port: 3001,  status: 'unknown', details: { info: 'SvelteKit app' } },
+  { id: 'musiclist',type: 'app',     label: 'MusicList',      port: 3003,  status: 'unknown', details: { info: 'SvelteKit app' } },
+  { id: 'wireguard',type: 'tunnel',  label: 'WireGuard',      port: 51820, status: 'unknown', details: { info: 'VPN tunnel to gateway' } },
+];
+
+var FALLBACK_EDGES = [
+  { source: 'user',      target: 'caddy',    type: 'https' },
+  { source: 'caddy',     target: 'ceremony',  type: 'proxy' },
+  { source: 'caddy',     target: 'rigging',   type: 'proxy' },
+  { source: 'caddy',     target: 'dreizehn',  type: 'proxy' },
+  { source: 'caddy',     target: 'musiclist', type: 'proxy' },
+  { source: 'caddy',     target: 'hub',       type: 'proxy' },
+  { source: 'ceremony',  target: 'keeper',    type: 'internal' },
+  { source: 'wireguard', target: 'caddy',     type: 'tunnel' },
+];
+
+// ---- STATE ---------------------------------------------------------------
+
+var graphNodes = [];
+var graphEdges = [];
+var simulation = null;
+var selectedNode = null;
+var scanData = null;
+
+// ---- HELPERS -------------------------------------------------------------
+
+function formatUptime(ms) {
+  if (!ms) return '?';
+  var sec = Math.floor((Date.now() - ms) / 1000);
+  if (sec < 0) sec = 0;
+  if (sec < 60) return sec + 's';
+  if (sec < 3600) return Math.floor(sec / 60) + 'm';
+  if (sec < 86400) return Math.floor(sec / 3600) + 'h ' + Math.floor((sec % 3600) / 60) + 'm';
+  return Math.floor(sec / 86400) + 'd ' + Math.floor((sec % 86400) / 3600) + 'h';
+}
+
+function formatBytes(b) {
+  if (!b || b === 0) return '0 B';
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b / 1024).toFixed(1) + ' MB';
+  return (b / 1048576).toFixed(1) + ' GB';
+}
+
+function statusColor(status) {
+  return STATUS_COLORS[status] || STATUS_COLORS.unknown;
+}
+
+function getSourceId(e) { return typeof e.source === 'object' ? e.source.id : e.source; }
+function getTargetId(e) { return typeof e.target === 'object' ? e.target.id : e.target; }
+
+// ---- TRANSFORM SCAN DATA -------------------------------------------------
+
+function transformScanData(data) {
+  var nodes = [];
+  var edges = [];
+  var pm2Map = {};
+
+  (data.pm2 || []).forEach(function(p) {
+    pm2Map[p.name] = p;
+  });
+
+  // User node
+  nodes.push({
+    id: 'user', type: 'user', label: 'Browser', port: null,
+    status: 'online', details: { info: 'External user / browser client' }
+  });
+
+  // WireGuard node
+  var wg = data.wireguard || {};
+  nodes.push({
+    id: 'wireguard', type: 'tunnel', label: 'WireGuard', port: 51820,
+    status: wg.up ? (wg.handshake ? 'online' : 'degraded') : 'down',
+    details: {
+      info: 'VPN tunnel (wg0)',
+      endpoint: wg.endpoint || 'n/a',
+      handshake: wg.handshake || 'none',
+      transfer: wg.transfer || 'n/a',
+      keepalive: wg.keepalive || 'n/a',
+    }
+  });
+
+  // Caddy gateway node
+  var caddyStatus = 'unknown';
+  (data.health || []).forEach(function(h) {
+    if (h.url && h.url.indexOf('10.0.0.2:3080') >= 0) {
+      caddyStatus = h.ok ? 'online' : 'down';
+    }
+  });
+  var caddyRoutes = (data.caddy && data.caddy.routes) || [];
+  nodes.push({
+    id: 'caddy', type: 'gateway', label: 'Caddy', port: 3080,
+    status: caddyStatus,
+    details: {
+      info: 'Reverse proxy gateway',
+      bind: '10.0.0.2:3080',
+      sites: (data.caddy && data.caddy.sites) ? data.caddy.sites.join(', ') : 'n/a',
+      routes: caddyRoutes.length + ' routes',
+    }
+  });
+
+  // PM2 app nodes
+  var knownApps = [
+    { name: 'ceremony',  label: 'Ceremony',  port: 3004, info: 'Next.js text companion' },
+    { name: 'keeper',    label: 'Keeper',     port: 3005, info: 'Claude API service' },
+    { name: 'rigging',   label: 'Rigging',    port: 3006, info: 'Infrastructure dashboard' },
+    { name: 'dreizehn',  label: 'Dreizehn',   port: 3001, info: 'SvelteKit app' },
+    { name: 'musiclist', label: 'MusicList',   port: 3003, info: 'SvelteKit app' },
+  ];
+
+  knownApps.forEach(function(app) {
+    var pm2 = pm2Map[app.name];
+    var status = 'unknown';
+    var details = { info: app.info };
+
+    if (pm2) {
+      status = pm2.status === 'online' ? 'online' :
+               pm2.status === 'stopped' ? 'stopped' :
+               pm2.status === 'missing' ? 'missing' : 'errored';
+      details.pid = pm2.pid || null;
+      details.memory = pm2.memory ? formatBytes(pm2.memory) : null;
+      details.cpu = pm2.cpu != null ? pm2.cpu + '%' : null;
+      details.uptime = pm2.uptime ? formatUptime(pm2.uptime) : null;
+      details.restarts = pm2.restarts || 0;
+    }
+
+    (data.health || []).forEach(function(h) {
+      if (h.url && h.url.indexOf(':' + app.port) >= 0) {
+        details.healthUrl = h.url;
+        details.healthOk = h.ok;
+        details.healthMs = h.ms;
+        details.healthStatus = h.status;
+        if (!h.ok && status === 'online') {
+          status = 'degraded';
+        }
+      }
+    });
+
+    nodes.push({
+      id: app.name, type: 'app', label: app.label, port: app.port,
+      status: status, details: details,
+    });
+  });
+
+  // Additional PM2 processes not in knownApps
+  var knownNames = {};
+  knownApps.forEach(function(a) { knownNames[a.name] = true; });
+  (data.pm2 || []).forEach(function(p) {
+    if (!knownNames[p.name]) {
+      nodes.push({
+        id: p.name, type: 'app', label: p.name, port: null,
+        status: p.status === 'online' ? 'online' : p.status === 'stopped' ? 'stopped' : 'unknown',
+        details: {
+          info: 'PM2 process',
+          pid: p.pid,
+          memory: p.memory ? formatBytes(p.memory) : null,
+          cpu: p.cpu != null ? p.cpu + '%' : null,
+          uptime: p.uptime ? formatUptime(p.uptime) : null,
+          restarts: p.restarts || 0,
+        },
+      });
+    }
+  });
+
+  // Edges
+  edges.push({ source: 'user', target: 'caddy', type: 'https' });
+  edges.push({ source: 'wireguard', target: 'caddy', type: 'tunnel' });
+
+  // Caddy -> apps (proxy routes)
+  var routePortMap = {};
+  caddyRoutes.forEach(function(r) {
+    var portMatch = r.upstream && r.upstream.match(/:(\d+)/);
+    if (portMatch) routePortMap[portMatch[1]] = r.path;
+  });
+
+  var nodeById = {};
+  nodes.forEach(function(n) { nodeById[n.id] = n; });
+
+  nodes.forEach(function(n) {
+    if (n.type !== 'app') return;
+    if (n.port && routePortMap[String(n.port)]) {
+      edges.push({ source: 'caddy', target: n.id, type: 'proxy', route: routePortMap[String(n.port)] });
+    } else if (n.port && (n.port === 3004 || n.port === 3001 || n.port === 3003 || n.port === 3006)) {
+      edges.push({ source: 'caddy', target: n.id, type: 'proxy' });
+    }
+  });
+
+  // Internal: ceremony -> keeper
+  if (nodeById['ceremony'] && nodeById['keeper']) {
+    edges.push({ source: 'ceremony', target: 'keeper', type: 'internal' });
+  }
+
+  return { nodes: nodes, edges: edges };
+}
+
+// ---- SVG SETUP -----------------------------------------------------------
+
+var svgEl = d3.select('#graph');
+var container = document.getElementById('graph-container');
+var tooltip = document.getElementById('tooltip');
+var sidebar = document.getElementById('sidebar');
+
+var width, height;
+
+function updateDimensions() {
+  width = container.clientWidth;
+  height = container.clientHeight;
+  svgEl.attr('viewBox', [0, 0, width, height]);
+}
+updateDimensions();
+
+var defs = svgEl.append('defs');
+
+// Arrow markers
+Object.keys(EDGE_CONFIGS).forEach(function(key) {
+  var cfg = EDGE_CONFIGS[key];
+  defs.append('marker')
+    .attr('id', 'arrow-' + key)
+    .attr('viewBox', '0 -5 10 10')
+    .attr('refX', 20)
+    .attr('refY', 0)
+    .attr('markerWidth', 6)
+    .attr('markerHeight', 6)
+    .attr('orient', 'auto')
+    .append('path')
+      .attr('d', 'M0,-4L10,0L0,4')
+      .attr('fill', cfg.color)
+      .attr('fill-opacity', 0.6);
+});
+
+var g = svgEl.append('g');
+
+var zoom = d3.zoom()
+  .scaleExtent([0.15, 5])
+  .on('zoom', function(e) { g.attr('transform', e.transform); });
+
+svgEl.call(zoom);
+
+svgEl.on('click', function(e) {
+  if (e.target === svgEl.node()) {
+    selectedNode = null;
+    clearHighlight();
+    closeSidebar();
+  }
+});
+
+var linkLayer = g.append('g').attr('class', 'links');
+var nodeLayer = g.append('g').attr('class', 'nodes');
+
+// ---- NODE SHAPES ---------------------------------------------------------
+
+function drawNodeShape(sel) {
+  sel.selectAll('.node-shape, .node-icon, .node-label, .node-port-label').remove();
+
+  sel.each(function(d) {
+    var el = d3.select(this);
+    var cfg = NODE_CONFIGS[d.type] || NODE_CONFIGS.app;
+    var sc = statusColor(d.status);
+    var r = cfg.radius;
+
+    if (cfg.shape === 'hexagon') {
+      var hex = [];
+      for (var i = 0; i < 6; i++) {
+        var angle = (Math.PI / 3) * i - Math.PI / 6;
+        hex.push([r * Math.cos(angle), r * Math.sin(angle)]);
+      }
+      var hexPath = 'M' + hex.map(function(p) { return p[0] + ',' + p[1]; }).join('L') + 'Z';
+      el.append('path')
+        .attr('class', 'node-shape')
+        .attr('d', hexPath)
+        .attr('fill', d3.color(sc).copy({opacity: 0.15}))
+        .attr('stroke', sc)
+        .attr('stroke-width', 1.5);
+    } else if (cfg.shape === 'diamond') {
+      var dr = r * 0.9;
+      el.append('path')
+        .attr('class', 'node-shape')
+        .attr('d', 'M0,' + (-dr) + ' L' + dr + ',0 L0,' + dr + ' L' + (-dr) + ',0 Z')
+        .attr('fill', d3.color(sc).copy({opacity: 0.15}))
+        .attr('stroke', sc)
+        .attr('stroke-width', 1.5);
+    } else {
+      el.append('circle')
+        .attr('class', 'node-shape')
+        .attr('r', r)
+        .attr('fill', d3.color(sc).copy({opacity: 0.15}))
+        .attr('stroke', sc)
+        .attr('stroke-width', 1.5);
+    }
+
+    // Inner icon letter
+    el.append('text')
+      .attr('class', 'node-icon')
+      .attr('font-size', (r * 0.6) + 'px')
+      .attr('fill', sc)
+      .attr('text-anchor', 'middle')
+      .attr('dominant-baseline', 'central')
+      .text(cfg.icon);
+
+    // Name label below
+    el.append('text')
+      .attr('class', 'node-label')
+      .attr('dy', r + 14)
+      .text(d.label.length > 18 ? d.label.slice(0, 17) + '\u2026' : d.label);
+
+    // Port label below name
+    if (d.port) {
+      el.append('text')
+        .attr('class', 'node-port-label')
+        .attr('dy', r + 26)
+        .text(':' + d.port);
+    }
+  });
+}
+
+// ---- BUILD / REBUILD GRAPH -----------------------------------------------
+
+var linkG, nodeG;
+
+function buildGraph(nodes, edges) {
+  var oldPosMap = {};
+  graphNodes.forEach(function(n) {
+    if (n.x != null) oldPosMap[n.id] = { x: n.x, y: n.y, vx: n.vx || 0, vy: n.vy || 0 };
+  });
+
+  graphNodes = nodes.map(function(d) {
+    var pos = oldPosMap[d.id];
+    var obj = Object.assign({}, d);
+    if (pos) {
+      obj.x = pos.x; obj.y = pos.y;
+      obj.vx = pos.vx; obj.vy = pos.vy;
+    }
+    return obj;
+  });
+
+  graphEdges = edges.map(function(d) { return Object.assign({}, d); });
+
+  // Links
+  linkLayer.selectAll('line').remove();
+  linkG = linkLayer.selectAll('line')
+    .data(graphEdges)
+    .join('line')
+      .attr('class', 'link')
+      .attr('stroke', function(d) { return (EDGE_CONFIGS[d.type] || EDGE_CONFIGS.proxy).color; })
+      .attr('stroke-width', function(d) { return (EDGE_CONFIGS[d.type] || EDGE_CONFIGS.proxy).width; })
+      .attr('stroke-dasharray', function(d) { return (EDGE_CONFIGS[d.type] || EDGE_CONFIGS.proxy).dash; })
+      .attr('marker-end', function(d) { return 'url(#arrow-' + (EDGE_CONFIGS[d.type] ? d.type : 'proxy') + ')'; });
+
+  // Nodes
+  nodeLayer.selectAll('g.node-group').remove();
+  nodeG = nodeLayer.selectAll('g.node-group')
+    .data(graphNodes, function(d) { return d.id; })
+    .join('g')
+      .attr('class', 'node-group')
+      .call(d3.drag()
+        .on('start', dragStarted)
+        .on('drag', dragged)
+        .on('end', dragEnded)
+      );
+
+  drawNodeShape(nodeG);
+
+  // Events
+  nodeG.on('mouseenter', showTooltip)
+    .on('mousemove', moveTooltip)
+    .on('mouseleave', hideTooltip)
+    .on('click', function(e, d) {
+      e.stopPropagation();
+      selectedNode = d;
+      highlightNode(d);
+      openSidebar(d);
+    });
+
+  // Simulation
+  if (simulation) simulation.stop();
+
+  simulation = d3.forceSimulation(graphNodes)
+    .force('link', d3.forceLink(graphEdges).id(function(d) { return d.id; })
+      .distance(function(d) {
+        if (d.type === 'tunnel') return 140;
+        if (d.type === 'https') return 160;
+        if (d.type === 'proxy') return 120;
+        if (d.type === 'internal') return 100;
+        return 120;
+      })
+      .strength(function(d) {
+        if (d.type === 'internal') return 0.4;
+        if (d.type === 'tunnel') return 0.2;
+        return 0.3;
+      })
+    )
+    .force('charge', d3.forceManyBody()
+      .strength(function(d) {
+        if (d.type === 'gateway') return -600;
+        if (d.type === 'user') return -400;
+        if (d.type === 'tunnel') return -200;
+        return -350;
+      })
+    )
+    .force('center', d3.forceCenter(width / 2, height / 2).strength(0.05))
+    .force('collision', d3.forceCollide().radius(function(d) {
+      return (NODE_CONFIGS[d.type] || NODE_CONFIGS.app).radius + 12;
+    }))
+    .force('y', d3.forceY(function(d) {
+      if (d.type === 'user') return height * 0.12;
+      if (d.type === 'tunnel') return height * 0.35;
+      if (d.type === 'gateway') return height * 0.40;
+      return height * 0.70;
+    }).strength(0.08))
+    .force('x', d3.forceX(function(d) {
+      if (d.type === 'user') return width * 0.5;
+      if (d.type === 'tunnel') return width * 0.28;
+      if (d.type === 'gateway') return width * 0.5;
+      return width * 0.5;
+    }).strength(0.03))
+    .alphaDecay(0.02);
+
+  simulation.on('tick', function() {
+    linkG
+      .attr('x1', function(d) { return d.source.x; })
+      .attr('y1', function(d) { return d.source.y; })
+      .attr('x2', function(d) { return d.target.x; })
+      .attr('y2', function(d) { return d.target.y; });
+
+    nodeG.attr('transform', function(d) { return 'translate(' + d.x + ',' + d.y + ')'; });
+  });
+
+  // Zoom to fit after stabilization
+  if (Object.keys(oldPosMap).length === 0) {
+    setTimeout(zoomToFit, 2500);
+  }
+}
+
+function zoomToFit() {
+  var pad = 80;
+  var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  graphNodes.forEach(function(d) {
+    var r = (NODE_CONFIGS[d.type] || NODE_CONFIGS.app).radius;
+    if (d.x - r < x0) x0 = d.x - r;
+    if (d.y - r < y0) y0 = d.y - r;
+    if (d.x + r > x1) x1 = d.x + r;
+    if (d.y + r > y1) y1 = d.y + r;
+  });
+  if (x0 === Infinity) return;
+  var bw = x1 - x0 + pad * 2;
+  var bh = y1 - y0 + pad * 2;
+  var scale = Math.min(width / bw, height / bh, 1.5);
+  var cx = (x0 + x1) / 2;
+  var cy = (y0 + y1) / 2;
+  svgEl.transition().duration(800).call(
+    zoom.transform,
+    d3.zoomIdentity.translate(width / 2, height / 2).scale(scale).translate(-cx, -cy)
+  );
+}
+
+// ---- UPDATE (smooth transitions on refresh) ------------------------------
+
+function updateGraph(nodes, edges) {
+  var newDataMap = {};
+  nodes.forEach(function(n) { newDataMap[n.id] = n; });
+
+  var oldIds = new Set(graphNodes.map(function(n) { return n.id; }));
+  var newIds = new Set(nodes.map(function(n) { return n.id; }));
+
+  var hasStructuralChange = false;
+  newIds.forEach(function(id) { if (!oldIds.has(id)) hasStructuralChange = true; });
+  oldIds.forEach(function(id) { if (!newIds.has(id)) hasStructuralChange = true; });
+  if (graphEdges.length !== edges.length) hasStructuralChange = true;
+
+  if (hasStructuralChange) {
+    buildGraph(nodes, edges);
+    return;
+  }
+
+  // Smooth update: just refresh status/details on existing nodes
+  var changed = false;
+  graphNodes.forEach(function(n) {
+    var nd = newDataMap[n.id];
+    if (!nd) return;
+    if (n.status !== nd.status || n.label !== nd.label) changed = true;
+    n.status = nd.status;
+    n.label = nd.label;
+    n.port = nd.port;
+    n.details = nd.details;
+  });
+
+  if (changed) {
+    drawNodeShape(nodeG);
+    nodeG.on('mouseenter', showTooltip)
+      .on('mousemove', moveTooltip)
+      .on('mouseleave', hideTooltip)
+      .on('click', function(e, d) {
+        e.stopPropagation();
+        selectedNode = d;
+        highlightNode(d);
+        openSidebar(d);
+      });
+
+    if (selectedNode) {
+      var current = graphNodes.find(function(n) { return n.id === selectedNode.id; });
+      if (current) {
+        selectedNode = current;
+        openSidebar(current);
+      }
+    }
+  }
+}
+
+// ---- TOOLTIP (all DOM methods, no innerHTML) -----------------------------
+
+function makeTTRow(label, value, valueClass) {
+  var row = document.createElement('div');
+  row.className = 'tt-row';
+  var labelEl = document.createElement('span');
+  labelEl.className = 'tt-label';
+  labelEl.textContent = label;
+  row.appendChild(labelEl);
+  var valueEl = document.createElement('span');
+  valueEl.className = 'tt-value' + (valueClass ? ' tt-value-' + valueClass : '');
+  valueEl.textContent = String(value);
+  row.appendChild(valueEl);
+  return row;
+}
+
+function showTooltip(e, d) {
+  var sc = statusColor(d.status);
+  tooltip.textContent = '';
+
+  var nameDiv = document.createElement('div');
+  nameDiv.className = 'tt-name';
+  nameDiv.textContent = d.label + (d.port ? ' :' + d.port : '');
+  tooltip.appendChild(nameDiv);
+
+  var typeDiv = document.createElement('div');
+  typeDiv.className = 'tt-type';
+  typeDiv.style.background = sc + '22';
+  typeDiv.style.color = sc;
+  typeDiv.textContent = d.status;
+  tooltip.appendChild(typeDiv);
+
+  if (d.details) {
+    if (d.details.info) {
+      tooltip.appendChild(makeTTRow('', d.details.info));
+    }
+    if (d.details.memory) {
+      tooltip.appendChild(makeTTRow('Memory', d.details.memory));
+    }
+    if (d.details.cpu) {
+      tooltip.appendChild(makeTTRow('CPU', d.details.cpu));
+    }
+    if (d.details.uptime) {
+      tooltip.appendChild(makeTTRow('Uptime', d.details.uptime));
+    }
+    if (d.details.restarts > 0) {
+      tooltip.appendChild(makeTTRow('Restarts', String(d.details.restarts)));
+    }
+    if (d.details.healthMs != null) {
+      var healthClass = d.details.healthOk ? 'ok' : 'err';
+      tooltip.appendChild(makeTTRow('Health', d.details.healthStatus + ' / ' + d.details.healthMs + 'ms', healthClass));
+    }
+  }
+
+  var connCount = 0;
+  graphEdges.forEach(function(ed) {
+    if (getSourceId(ed) === d.id || getTargetId(ed) === d.id) connCount++;
+  });
+  tooltip.appendChild(makeTTRow('Connections', String(connCount)));
+
+  tooltip.classList.add('visible');
+}
+
+function moveTooltip(e) {
+  var rect = container.getBoundingClientRect();
+  var x = e.clientX - rect.left + 16;
+  var y = e.clientY - rect.top - 10;
+  if (x + 320 > rect.width) x = e.clientX - rect.left - 330;
+  if (y + 200 > rect.height) y = rect.height - 210;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
+}
+
+function hideTooltip() {
+  tooltip.classList.remove('visible');
+}
+
+// ---- HIGHLIGHT / SELECT --------------------------------------------------
+
+function highlightNode(d) {
+  var connectedNodes = {};
+  connectedNodes[d.id] = true;
+  var connectedEdgeIndices = {};
+
+  graphEdges.forEach(function(e, i) {
+    var sid = getSourceId(e), tid = getTargetId(e);
+    if (sid === d.id || tid === d.id) {
+      connectedNodes[sid] = true;
+      connectedNodes[tid] = true;
+      connectedEdgeIndices[i] = true;
+    }
+  });
+
+  nodeG.select('.node-shape')
+    .classed('dimmed', function(n) { return !connectedNodes[n.id]; })
+    .classed('selected', function(n) { return n.id === d.id; });
+  nodeG.selectAll('.node-label, .node-port-label')
+    .classed('dimmed', function(n) { return !connectedNodes[n.id]; });
+  nodeG.selectAll('.node-icon')
+    .classed('dimmed', function(n) { return !connectedNodes[n.id]; });
+  linkG
+    .classed('highlighted', function(_, i) { return !!connectedEdgeIndices[i]; })
+    .classed('dimmed', function(_, i) { return !connectedEdgeIndices[i]; });
+}
+
+function clearHighlight() {
+  if (!nodeG || !linkG) return;
+  nodeG.select('.node-shape').classed('dimmed', false).classed('selected', false);
+  nodeG.selectAll('.node-label, .node-port-label').classed('dimmed', false);
+  nodeG.selectAll('.node-icon').classed('dimmed', false);
+  linkG.classed('highlighted', false).classed('dimmed', false);
+}
+
+// ---- SIDEBAR (all DOM methods, no innerHTML) -----------------------------
+
+function openSidebar(d) {
+  var cfg = NODE_CONFIGS[d.type] || NODE_CONFIGS.app;
+  var sc = statusColor(d.status);
+
+  var conns = [];
+  graphEdges.forEach(function(e) {
+    var sid = getSourceId(e), tid = getTargetId(e);
+    if (sid === d.id || tid === d.id) {
+      var otherId = sid === d.id ? tid : sid;
+      var other = graphNodes.find(function(n) { return n.id === otherId; });
+      if (other) conns.push({ edge: e, other: other, direction: sid === d.id ? 'out' : 'in' });
+    }
+  });
+
+  sidebar.textContent = '';
+  var content = document.createElement('div');
+  content.className = 'sidebar-content';
+
+  // Header
+  var header = document.createElement('div');
+  header.className = 'sb-header';
+  var nameEl = document.createElement('div');
+  nameEl.className = 'sb-name';
+  nameEl.textContent = d.label;
+  header.appendChild(nameEl);
+  var closeBtn = document.createElement('button');
+  closeBtn.className = 'sb-close';
+  closeBtn.textContent = '\u00d7';
+  closeBtn.addEventListener('click', function() { closeSidebar(); clearHighlight(); });
+  header.appendChild(closeBtn);
+  content.appendChild(header);
+
+  // Status badge
+  var badge = document.createElement('div');
+  badge.className = 'sb-badge';
+  badge.style.background = sc + '22';
+  badge.style.color = sc;
+  badge.textContent = cfg.label + ' \u00b7 ' + d.status;
+  content.appendChild(badge);
+
+  // Port
+  if (d.port) {
+    var portSec = document.createElement('div');
+    portSec.className = 'sb-section';
+    var portTitle = document.createElement('div');
+    portTitle.className = 'sb-section-title';
+    portTitle.textContent = 'Port';
+    portSec.appendChild(portTitle);
+    var portVal = document.createElement('div');
+    portVal.className = 'sb-detail';
+    portVal.style.color = '#c4a35a';
+    portVal.textContent = ':' + d.port;
+    portSec.appendChild(portVal);
+    content.appendChild(portSec);
+  }
+
+  // Details
+  if (d.details && Object.keys(d.details).length > 0) {
+    var detSec = document.createElement('div');
+    detSec.className = 'sb-section';
+    var detTitle = document.createElement('div');
+    detTitle.className = 'sb-section-title';
+    detTitle.textContent = 'Details';
+    detSec.appendChild(detTitle);
+
+    Object.keys(d.details).forEach(function(key) {
+      var val = d.details[key];
+      if (val == null || val === '') return;
+      var row = document.createElement('div');
+      row.className = 'sb-detail-row';
+      var labelEl = document.createElement('span');
+      labelEl.className = 'sb-detail-label';
+      labelEl.textContent = key;
+      row.appendChild(labelEl);
+      var valueEl = document.createElement('span');
+      valueEl.className = 'sb-detail';
+      valueEl.textContent = String(val);
+      row.appendChild(valueEl);
+      detSec.appendChild(row);
+    });
+    content.appendChild(detSec);
+  }
+
+  // Connections
+  var connSec = document.createElement('div');
+  connSec.className = 'sb-section';
+  var connTitle = document.createElement('div');
+  connTitle.className = 'sb-section-title';
+  connTitle.textContent = 'Connections (' + conns.length + ')';
+  connSec.appendChild(connTitle);
+  var connList = document.createElement('ul');
+  connList.className = 'sb-conn-list';
+
+  conns.forEach(function(c) {
+    var ecfg = EDGE_CONFIGS[c.edge.type] || EDGE_CONFIGS.proxy;
+    var li = document.createElement('li');
+
+    var typeSpan = document.createElement('span');
+    typeSpan.className = 'sb-conn-type';
+    typeSpan.style.background = ecfg.color + '22';
+    typeSpan.style.color = ecfg.color;
+    typeSpan.textContent = ecfg.label;
+    li.appendChild(typeSpan);
+
+    var arrow = document.createElement('span');
+    arrow.style.color = '#4a5568';
+    arrow.style.fontSize = '10px';
+    arrow.textContent = c.direction === 'out' ? '\u2192' : '\u2190';
+    li.appendChild(arrow);
+
+    var nameSpan = document.createElement('span');
+    nameSpan.textContent = c.other.label + (c.other.port ? ' :' + c.other.port : '');
+    li.appendChild(nameSpan);
+
+    li.addEventListener('click', function() {
+      var targetNode = graphNodes.find(function(n) { return n.id === c.other.id; });
+      if (targetNode) {
+        selectedNode = targetNode;
+        highlightNode(targetNode);
+        openSidebar(targetNode);
+        svgEl.transition().duration(500).call(zoom.translateTo, targetNode.x, targetNode.y);
+      }
+    });
+
+    connList.appendChild(li);
+  });
+
+  connSec.appendChild(connList);
+  content.appendChild(connSec);
+  sidebar.appendChild(content);
+}
+
+function closeSidebar() {
+  selectedNode = null;
+  sidebar.textContent = '';
+  var empty = document.createElement('div');
+  empty.className = 'sidebar-empty';
+  empty.appendChild(document.createTextNode('Click a node to inspect'));
+  empty.appendChild(document.createElement('br'));
+  empty.appendChild(document.createTextNode('service details and connections.'));
+  empty.appendChild(document.createElement('br'));
+  empty.appendChild(document.createElement('br'));
+  var hint1 = document.createElement('span');
+  hint1.style.color = '#2a3a54';
+  hint1.textContent = 'Drag nodes to rearrange.';
+  empty.appendChild(hint1);
+  empty.appendChild(document.createElement('br'));
+  var hint2 = document.createElement('span');
+  hint2.style.color = '#2a3a54';
+  hint2.textContent = 'Scroll to zoom. Click background to deselect.';
+  empty.appendChild(hint2);
+  sidebar.appendChild(empty);
+}
+
+// ---- DRAG ----------------------------------------------------------------
+
+function dragStarted(e, d) {
+  if (!e.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x;
+  d.fy = d.y;
+}
+
+function dragged(e, d) {
+  d.fx = e.x;
+  d.fy = e.y;
+}
+
+function dragEnded(e, d) {
+  if (!e.active) simulation.alphaTarget(0);
+  d.fx = null;
+  d.fy = null;
+}
+
+// ---- RESIZE --------------------------------------------------------------
+
+window.addEventListener('resize', function() {
+  updateDimensions();
+  if (simulation) {
+    simulation.force('center', d3.forceCenter(width / 2, height / 2).strength(0.05));
+    simulation.alpha(0.1).restart();
+  }
+});
+
+// ---- POLLING / DATA LOADING ----------------------------------------------
+
+var isFirstLoad = true;
+
+async function poll() {
+  try {
+    var res = await fetch(SCAN_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    scanData = await res.json();
+
+    document.getElementById('error-banner').style.display = 'none';
+    document.getElementById('pulse-dot').className = 'pulse';
+    document.getElementById('conn-status').textContent = 'live';
+    document.getElementById('last-updated').textContent = 'Updated ' + new Date(scanData.timestamp).toLocaleTimeString();
+
+    var transformed = transformScanData(scanData);
+
+    if (isFirstLoad) {
+      buildGraph(transformed.nodes, transformed.edges);
+      isFirstLoad = false;
+    } else {
+      updateGraph(transformed.nodes, transformed.edges);
+      var updateBadge = document.getElementById('update-badge');
+      updateBadge.style.opacity = '1';
+      setTimeout(function() { updateBadge.style.opacity = '0'; }, 1500);
+    }
+
+  } catch (err) {
+    if (isFirstLoad) {
+      document.getElementById('error-banner').textContent = 'Could not reach scan API. Showing static topology.';
+      document.getElementById('error-banner').style.display = 'block';
+      document.getElementById('pulse-dot').className = 'pulse error';
+      document.getElementById('conn-status').textContent = 'offline';
+      document.getElementById('last-updated').textContent = 'Fallback mode';
+
+      buildGraph(FALLBACK_NODES, FALLBACK_EDGES);
+      isFirstLoad = false;
+    } else {
+      document.getElementById('error-banner').textContent = 'Scan failed. Last data preserved.';
+      document.getElementById('error-banner').style.display = 'block';
+      document.getElementById('pulse-dot').className = 'pulse error';
+    }
+  }
+}
+
+// Initial load
+poll();
+setInterval(poll, POLL_INTERVAL);
+
+</script>
+</body>
+</html>

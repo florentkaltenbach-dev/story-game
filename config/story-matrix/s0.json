@@ -1,0 +1,865 @@
+{
+  "id": 0,
+  "name": "The Circle",
+  "acts": [
+    {
+      "name": "The World",
+      "index": 0
+    },
+    {
+      "name": "The Characters",
+      "index": 1
+    },
+    {
+      "name": "The Briefing",
+      "index": 2
+    },
+    {
+      "name": "The Departure",
+      "index": 3
+    }
+  ],
+  "beats": [
+    {
+      "characterId": "scientist-pabodie",
+      "session": 0,
+      "act": 0,
+      "location": "Miskatonic University",
+      "status": "healthy",
+      "emotional": "eager",
+      "knowledge": [],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Referenced as designer of the boring apparatus"
+    },
+    {
+      "characterId": "scientist-pabodie",
+      "session": 0,
+      "act": 1,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "methodical",
+      "knowledge": [],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Player co-creation — Pabodie available as PC choice"
+    },
+    {
+      "characterId": "scientist-pabodie",
+      "session": 0,
+      "act": 2,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "focused",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Evaluates technical aspects of the briefing"
+    },
+    {
+      "characterId": "scientist-pabodie",
+      "session": 0,
+      "act": 3,
+      "location": "Arkham docks",
+      "status": "healthy",
+      "emotional": "determined",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Departs — motivated by unexplained core samples",
+      "mcNote": "Pabodie grounds technical exposition. His confidence in his equipment is dramatic irony.",
+      "npcBehavior": "Checks drill crate lashings. 'The core samples from '30 contained formations that shouldn't exist. This time, we go deeper.'"
+    },
+    {
+      "characterId": "scientist-bryce",
+      "session": 0,
+      "act": 0,
+      "location": "Cambridge",
+      "status": "healthy",
+      "emotional": "intrigued",
+      "knowledge": [],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Referenced as marine biologist recruited by Moore"
+    },
+    {
+      "characterId": "scientist-bryce",
+      "session": 0,
+      "act": 1,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "analytical",
+      "knowledge": [],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Available as PC choice — first woman on Antarctic geological survey"
+    },
+    {
+      "characterId": "scientist-bryce",
+      "session": 0,
+      "act": 2,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "skeptical",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Notes biological claims in the briefing that defy classification"
+    },
+    {
+      "characterId": "scientist-bryce",
+      "session": 0,
+      "act": 3,
+      "location": "Arkham docks",
+      "status": "healthy",
+      "emotional": "resolute",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Departs — intends to classify what Dyer could not",
+      "mcNote": "Bryce represents the scientific establishment daring to look. Her gender on a 1933 expedition is tension.",
+      "npcBehavior": "Carries specimen jars packed in straw. 'If Dyer's specimens are real, every taxonomy textbook needs rewriting.'"
+    },
+    {
+      "characterId": "veteran-rourke",
+      "session": 0,
+      "act": 0,
+      "location": "Undisclosed",
+      "status": "healthy",
+      "emotional": "neutral",
+      "knowledge": [],
+      "narrativeRole": "absent",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Not yet introduced"
+    },
+    {
+      "characterId": "veteran-rourke",
+      "session": 0,
+      "act": 1,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "watchful",
+      "knowledge": [],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Available as PC choice — hired security, Gallipoli veteran"
+    },
+    {
+      "characterId": "veteran-rourke",
+      "session": 0,
+      "act": 2,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "assessing",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Evaluates the briefing for tactical concerns"
+    },
+    {
+      "characterId": "veteran-rourke",
+      "session": 0,
+      "act": 3,
+      "location": "Arkham docks",
+      "status": "healthy",
+      "emotional": "professional",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Departs — the contract is simple: keep them alive",
+      "mcNote": "Rourke is the experienced soldier who read the briefing and priced the risk. His calm is unsettling.",
+      "npcBehavior": "Checks sightlines from the deck. 'Two others read the briefing and declined. I read it and named my price.'"
+    },
+    {
+      "characterId": "journalist-caldwell",
+      "session": 0,
+      "act": 0,
+      "location": "Arkham Gazette",
+      "status": "healthy",
+      "emotional": "neutral",
+      "knowledge": [],
+      "narrativeRole": "absent",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Not yet introduced"
+    },
+    {
+      "characterId": "journalist-caldwell",
+      "session": 0,
+      "act": 1,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "eager",
+      "knowledge": [],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Available as PC choice — cheap reporter, signed the waiver"
+    },
+    {
+      "characterId": "journalist-caldwell",
+      "session": 0,
+      "act": 2,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "suspicious",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Notes what's missing from the briefing. Already looking for the story"
+    },
+    {
+      "characterId": "journalist-caldwell",
+      "session": 0,
+      "act": 3,
+      "location": "Arkham docks",
+      "status": "healthy",
+      "emotional": "ambitious",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Departs — front-page stories don't bury themselves",
+      "mcNote": "Caldwell's ambition and Innsmouth experience make her a wildcard. She'll take risks for the story.",
+      "npcBehavior": "Photographs the crew from the gangplank. 'The Gazette sent their cheapest reporter. They'll regret that.'"
+    },
+    {
+      "characterId": "mechanic-gedney",
+      "session": 0,
+      "act": 0,
+      "location": "Gardiner, Maine",
+      "status": "healthy",
+      "emotional": "neutral",
+      "knowledge": [],
+      "narrativeRole": "absent",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Not yet introduced"
+    },
+    {
+      "characterId": "mechanic-gedney",
+      "session": 0,
+      "act": 1,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "practical",
+      "knowledge": [],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Available as PC — aircraft mechanic, keeps the Fairchilds flying"
+    },
+    {
+      "characterId": "mechanic-gedney",
+      "session": 0,
+      "act": 2,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "unconcerned",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Half-listens to briefing. Already thinking about cold-weather engine mods"
+    },
+    {
+      "characterId": "mechanic-gedney",
+      "session": 0,
+      "act": 3,
+      "location": "Arkham docks",
+      "status": "healthy",
+      "emotional": "eager",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Departs — the machines need him",
+      "mcNote": "Gedney is the anti-intellectual — machines are his language. His breakdown hits hardest because he's the most grounded.",
+      "npcBehavior": "Strokes the Fairchild's fuselage. 'She'll fly. She always flies.' Doesn't look back at the dock."
+    },
+    {
+      "characterId": "mechanic-webb",
+      "session": 0,
+      "act": 0,
+      "location": "Maine coast",
+      "status": "healthy",
+      "emotional": "neutral",
+      "knowledge": [],
+      "narrativeRole": "absent",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Not yet introduced"
+    },
+    {
+      "characterId": "mechanic-webb",
+      "session": 0,
+      "act": 1,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "quiet",
+      "knowledge": [],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Available as PC — radio operator, lighthouse kid"
+    },
+    {
+      "characterId": "mechanic-webb",
+      "session": 0,
+      "act": 2,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "attentive",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Listens carefully. Taps Morse on his knee"
+    },
+    {
+      "characterId": "mechanic-webb",
+      "session": 0,
+      "act": 3,
+      "location": "Arkham docks",
+      "status": "healthy",
+      "emotional": "resolute",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Departs — as long as the radio works, they're not alone",
+      "mcNote": "Webb's lighthouse childhood means silence = danger. When his radio goes quiet, the players should feel it.",
+      "npcBehavior": "Tests the Marconi one last time. 'Signal clear. Moore confirms departure. We are not alone.' Yet."
+    },
+    {
+      "characterId": "agent-price",
+      "session": 0,
+      "act": 0,
+      "location": "New York",
+      "status": "healthy",
+      "emotional": "neutral",
+      "knowledge": [],
+      "narrativeRole": "absent",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Not yet introduced"
+    },
+    {
+      "characterId": "agent-price",
+      "session": 0,
+      "act": 1,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "calculating",
+      "knowledge": [],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Available as PC — Starkweather's money man"
+    },
+    {
+      "characterId": "agent-price",
+      "session": 0,
+      "act": 2,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "evaluating",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Assesses cost-benefit of every claim in the briefing"
+    },
+    {
+      "characterId": "agent-price",
+      "session": 0,
+      "act": 3,
+      "location": "Arkham docks",
+      "status": "healthy",
+      "emotional": "professional",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Departs — protecting Starkweather's investment",
+      "mcNote": "Price represents the money. His two ledgers are a slow-burn mystery — what's in the second one?",
+      "npcBehavior": "Ticks items off the manifest with a gold pen. 'Starkweather's investment is protected. For now.'"
+    },
+    {
+      "characterId": "agent-ainsworth",
+      "session": 0,
+      "act": 0,
+      "location": "University office",
+      "status": "healthy",
+      "emotional": "neutral",
+      "knowledge": [],
+      "narrativeRole": "absent",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Not yet introduced"
+    },
+    {
+      "characterId": "agent-ainsworth",
+      "session": 0,
+      "act": 1,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "observant",
+      "knowledge": [],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Available as PC — Moore's scientific observer, coded radio"
+    },
+    {
+      "characterId": "agent-ainsworth",
+      "session": 0,
+      "act": 2,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "critical",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Notes every unsupported claim. Reports to Moore via coded frequency"
+    },
+    {
+      "characterId": "agent-ainsworth",
+      "session": 0,
+      "act": 3,
+      "location": "Arkham docks",
+      "status": "healthy",
+      "emotional": "dutiful",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Departs — the science must be clean",
+      "mcNote": "Ainsworth's dual loyalty (science + Moore's oversight) creates tension with Starkweather's faction.",
+      "npcBehavior": "Pockets a codebook. 'The science must be clean. Whatever we find, the data will be rigorous.'"
+    },
+    {
+      "characterId": "expert-sorensen",
+      "session": 0,
+      "act": 0,
+      "location": "Sandefjord, Norway",
+      "status": "healthy",
+      "emotional": "neutral",
+      "knowledge": [],
+      "narrativeRole": "absent",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Not yet introduced"
+    },
+    {
+      "characterId": "expert-sorensen",
+      "session": 0,
+      "act": 1,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "stoic",
+      "knowledge": [],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Available as PC — Norwegian ice pilot, 20 years Antarctic waters"
+    },
+    {
+      "characterId": "expert-sorensen",
+      "session": 0,
+      "act": 2,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "wary",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Knows the ice. Smells trouble in the briefing. Old sailors' stories"
+    },
+    {
+      "characterId": "expert-sorensen",
+      "session": 0,
+      "act": 3,
+      "location": "Arkham docks",
+      "status": "healthy",
+      "emotional": "resigned",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Departs — the ice is the only country he has left",
+      "mcNote": "Sørensen carries folk knowledge that proves true. His 'superstition' is actually prescience.",
+      "npcBehavior": "Sniffs the wind. 'The ice will tell us what books cannot. It always does.'"
+    },
+    {
+      "characterId": "expert-mcready",
+      "session": 0,
+      "act": 0,
+      "location": "Antarctica (Byrd expedition)",
+      "status": "healthy",
+      "emotional": "neutral",
+      "knowledge": [],
+      "narrativeRole": "absent",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Not yet introduced"
+    },
+    {
+      "characterId": "expert-mcready",
+      "session": 0,
+      "act": 1,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "guarded",
+      "knowledge": [],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Available as PC — dog handler, Byrd expedition veteran"
+    },
+    {
+      "characterId": "expert-mcready",
+      "session": 0,
+      "act": 2,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "interested",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Dogs from the 1930 expedition were never right again. He wants to know why"
+    },
+    {
+      "characterId": "expert-mcready",
+      "session": 0,
+      "act": 3,
+      "location": "Arkham docks",
+      "status": "healthy",
+      "emotional": "determined",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Departs — the dogs came back wrong, and he intends to find out why",
+      "mcNote": "McReady's dogs are the early warning system. When they won't go, the players should listen.",
+      "npcBehavior": "The dogs are calm now. They won't be for long. 'Good boys. We'll see what you see.'"
+    },
+    {
+      "characterId": "believer-angell",
+      "session": 0,
+      "act": 0,
+      "location": "Brown University",
+      "status": "healthy",
+      "emotional": "neutral",
+      "knowledge": [],
+      "narrativeRole": "absent",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Not yet introduced"
+    },
+    {
+      "characterId": "believer-angell",
+      "session": 0,
+      "act": 1,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "obsessive",
+      "knowledge": [
+        "pnakotic-fragments",
+        "eltdown-shards",
+        "necronomicon-marginalia"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Available as PC — already partially broken by what he believes is coming"
+    },
+    {
+      "characterId": "believer-angell",
+      "session": 0,
+      "act": 2,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "vindicated",
+      "knowledge": [
+        "pnakotic-fragments",
+        "eltdown-shards",
+        "necronomicon-marginalia",
+        "briefing-document"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "The briefing confirms correlations he found in the texts"
+    },
+    {
+      "characterId": "believer-angell",
+      "session": 0,
+      "act": 3,
+      "location": "Arkham docks",
+      "status": "healthy",
+      "emotional": "terrified-eager",
+      "knowledge": [
+        "pnakotic-fragments",
+        "eltdown-shards",
+        "necronomicon-marginalia",
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Departs — if the texts and Dyer describe the same thing, the pattern can be understood",
+      "mcNote": "Angell is the most fragile — already partially broken by what he believes. His confirmation arc is tragedy.",
+      "npcBehavior": "Clutches his satchel. Three notebooks, a monograph, marginalia from the Necronomicon. 'I expect to find exactly what the texts describe.'"
+    },
+    {
+      "characterId": "believer-waverly",
+      "session": 0,
+      "act": 0,
+      "location": "Solomon Islands",
+      "status": "healthy",
+      "emotional": "neutral",
+      "knowledge": [],
+      "narrativeRole": "absent",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Not yet introduced"
+    },
+    {
+      "characterId": "believer-waverly",
+      "session": 0,
+      "act": 1,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "calm",
+      "knowledge": [
+        "oral-traditions",
+        "island-warnings"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Available as PC — CMS nurse, recognized Dyer's descriptions from oral traditions"
+    },
+    {
+      "characterId": "believer-waverly",
+      "session": 0,
+      "act": 2,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "grave",
+      "knowledge": [
+        "oral-traditions",
+        "island-warnings",
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "The briefing describes what three island cultures warned against"
+    },
+    {
+      "characterId": "believer-waverly",
+      "session": 0,
+      "act": 3,
+      "location": "Arkham docks",
+      "status": "healthy",
+      "emotional": "resolute",
+      "knowledge": [
+        "oral-traditions",
+        "island-warnings",
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Departs — the old stories are warnings, not superstition",
+      "mcNote": "Waverly heard these warnings in indigenous traditions. She's the most prepared and the most afraid.",
+      "npcBehavior": "Touches the silver cross. 'The old stories were not superstition. They were preparation.' Says a quiet prayer."
+    },
+    {
+      "characterId": "patron-starkweather",
+      "session": 0,
+      "act": 0,
+      "location": "Miskatonic University — faculty lounge",
+      "status": "healthy",
+      "emotional": "fervent",
+      "knowledge": [
+        "dyer-account"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Referenced as co-patron who read Dyer's suppressed account and believed every word"
+    },
+    {
+      "characterId": "patron-starkweather",
+      "session": 0,
+      "act": 1,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "charismatic",
+      "knowledge": [
+        "dyer-account"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Introduces himself. The man who funded this. Shakes every hand. Believes"
+    },
+    {
+      "characterId": "patron-starkweather",
+      "session": 0,
+      "act": 2,
+      "location": "Briefing room",
+      "status": "healthy",
+      "emotional": "passionate",
+      "knowledge": [
+        "dyer-account",
+        "briefing-document"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Delivers the briefing with the zeal of a convert. Pushes past every objection",
+      "mcNote": "Starkweather's enthusiasm is the red flag no one notices. His certainty should feel infectious — and slightly wrong. He never asks 'what if Dyer was right?' He states it as fact.",
+      "npcBehavior": "Dismisses safety concerns with charisma. Invokes his authority as patron to override caution. 'I didn't fund half-measures.' If challenged, pivots to legacy — 'We will be the ones who proved it.'"
+    },
+    {
+      "characterId": "patron-starkweather",
+      "session": 0,
+      "act": 3,
+      "location": "Arkham docks",
+      "status": "healthy",
+      "emotional": "triumphant",
+      "knowledge": [
+        "dyer-account",
+        "briefing-document"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Boards the ship himself. This is his expedition, his vindication. He's going all the way"
+    },
+    {
+      "characterId": "patron-moore",
+      "session": 0,
+      "act": 0,
+      "location": "Harvard — geology department",
+      "status": "healthy",
+      "emotional": "skeptical",
+      "knowledge": [
+        "dyer-account-redacted"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Referenced as co-patron who read Dyer's account and saw only geological anomalies worth investigating"
+    },
+    {
+      "characterId": "patron-moore",
+      "session": 0,
+      "act": 1,
+      "location": "Briefing room (via radio)",
+      "status": "healthy",
+      "emotional": "authoritative",
+      "knowledge": [
+        "dyer-account-redacted"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Present via radio hookup. The skeptic's voice — measured, clinical, demanding evidence for every claim"
+    },
+    {
+      "characterId": "patron-moore",
+      "session": 0,
+      "act": 2,
+      "location": "Briefing room (via radio)",
+      "status": "healthy",
+      "emotional": "dismissive-precise",
+      "knowledge": [
+        "dyer-account-redacted",
+        "briefing-document"
+      ],
+      "narrativeRole": "tension",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Counterbalances Starkweather's zeal. Strips the briefing to verifiable claims. 'Bring me data, not stories'",
+      "mcNote": "Moore is the skeptic anchor. Where Starkweather sells the dream, Moore demands the receipts. His radio presence should feel like the adult in the room — but also like someone who doesn't understand what he's sending people into. He'll be wrong about the supernatural, but right about the danger of enthusiasm without caution.",
+      "npcBehavior": "Interrupts Starkweather's flourishes with pointed questions. 'What is your evidence for that claim, Harold?' Demands Ainsworth file independent reports. Makes it clear: his money comes with oversight. 'The geology is interesting. Everything else is Dyer's breakdown speaking.'"
+    },
+    {
+      "characterId": "patron-moore",
+      "session": 0,
+      "act": 3,
+      "location": "Harvard (via radio)",
+      "status": "healthy",
+      "emotional": "measured",
+      "knowledge": [
+        "dyer-account-redacted",
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Final radio check before departure. 'Regular reports. Coded frequency. I want data, not dramatics'"
+    }
+  ]
+}

@@ -9,11 +9,17 @@
   ],
   "interfaces": [
     { "name": "Play", "path": "/the-ceremony/play", "type": "app", "description": "Player text companion" },
-    { "name": "MC Dashboard", "path": "/the-ceremony/mc", "type": "app", "description": "Storyteller controls" },
-    { "name": "Codebase Map", "path": "/the-ceremony/codebase-map.html", "type": "visualization", "description": "D3 force graph of all files and connections" },
-    { "name": "Runtime Architecture", "path": "/the-ceremony/engine-skeleton.html", "type": "visualization", "description": "Two-process data flow with context assembly tiers" },
-    { "name": "Narrative Architecture", "path": "/the-ceremony/story-skeleton.html", "type": "visualization", "description": "5-session story structure with acts and journey" },
-    { "name": "Relationship Map", "path": "/the-ceremony/relationship-map.html", "type": "visualization", "description": "Force-directed entity graph of NPCs, locations, and threads" },
-    { "name": "Knowledge Fog Matrix", "path": "/the-ceremony/fog-matrix.html", "type": "visualization", "description": "Player × secrets revelation heatmap" }
-  ]
+    { "name": "MC Dashboard", "path": "/the-ceremony/mc", "type": "app", "description": "Storyteller controls" }
+  ],
+  "topology": {
+    "nodes": [
+      { "id": "ceremony", "label": "Ceremony", "port": 3004, "type": "web" },
+      { "id": "keeper", "label": "Keeper", "port": 3005, "type": "api" },
+      { "id": "rigging", "label": "Rigging", "port": 3006, "type": "infra" }
+    ],
+    "edges": [
+      { "from": "ceremony", "to": "keeper", "label": "HTTP" },
+      { "from": "rigging", "to": "ceremony", "label": "SSE" }
+    ]
+  }
 }

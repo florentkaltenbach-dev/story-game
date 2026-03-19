@@ -3,55 +3,17 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { Player, Session, CharacterSheet } from "@/lib/types";
 
-// Archetypes from config/characters.json
-const ARCHETYPES = [
-  {
-    name: "The Scientist",
-    motivation: "To prove or disprove. Knowledge is everything.",
-    skills: "Expertise, analysis, careful observation",
-    vulnerability: "Curiosity overrides self-preservation",
-  },
-  {
-    name: "The Veteran",
-    motivation: "Seen war, survived. Hired for protection.",
-    skills: "Calm under pressure, practical skills",
-    vulnerability: "What they've seen before doesn't prepare them for this",
-  },
-  {
-    name: "The Journalist",
-    motivation: "The story. Byline of a lifetime.",
-    skills: "Asks questions others don't, records everything",
-    vulnerability: "Will risk others for the scoop",
-  },
-  {
-    name: "The Mechanic",
-    motivation: "Keeps the planes flying, the radios working, the drills drilling.",
-    skills: "Essential practical skills",
-    vulnerability: "Rational mind that breaks when rationality fails",
-  },
-  {
-    name: "The Patron's Agent",
-    motivation: "Represents whoever's funding this. Has a hidden agenda.",
-    skills: "Resources, authority, connections",
-    vulnerability: "Loyalty divided between the group and the patron",
-  },
-  {
-    name: "The Local Expert",
-    motivation: "Whaler, sailor, guide. Knows the ice.",
-    skills: "Survival skills, navigation, weather sense",
-    vulnerability: "Superstitious, or maybe just experienced enough to be afraid",
-  },
-  {
-    name: "The Believer",
-    motivation: "Actually read Dyer. Believes every word. Maybe obsessively.",
-    skills: "Preparation, foreknowledge",
-    vulnerability: "Already partially broken by what they believe is coming",
-  },
-];
+export interface Archetype {
+  name: string;
+  motivation: string;
+  skills: string;
+  vulnerability: string;
+}
 
 interface CharacterCreationProps {
   player: Player;
   session: Session;
+  archetypes: Archetype[];
   onUpdate: (fields: Partial<CharacterSheet>) => void;
   onSubmit: () => void;
 }
@@ -59,6 +21,7 @@ interface CharacterCreationProps {
 export default function CharacterCreation({
   player,
   session,
+  archetypes,
   onUpdate,
   onSubmit,
 }: CharacterCreationProps) {
@@ -67,7 +30,7 @@ export default function CharacterCreation({
 
   const [archetype, setArchetype] = useState(character.archetype);
   const [customArchetype, setCustomArchetype] = useState(
-    ARCHETYPES.some((a) => a.name === character.archetype) ? "" : character.archetype
+    archetypes.some((a) => a.name === character.archetype) ? "" : character.archetype
   );
   const [background, setBackground] = useState(character.background);
   const [motivation, setMotivation] = useState(character.motivation);
@@ -86,7 +49,7 @@ export default function CharacterCreation({
   useEffect(() => {
     setArchetype(character.archetype);
     setCustomArchetype(
-      ARCHETYPES.some((a) => a.name === character.archetype) ? "" : character.archetype
+      archetypes.some((a) => a.name === character.archetype) ? "" : character.archetype
     );
     setBackground(character.background);
     setMotivation(character.motivation);
@@ -95,8 +58,8 @@ export default function CharacterCreation({
     setRelationships(character.relationships);
   }, [character]);
 
-  const isOther = archetype === "__other__" || (!ARCHETYPES.some((a) => a.name === archetype) && archetype !== "");
-  const selectedArchetype = ARCHETYPES.find((a) => a.name === archetype);
+  const isOther = archetype === "__other__" || (!archetypes.some((a) => a.name === archetype) && archetype !== "");
+  const selectedArchetype = archetypes.find((a) => a.name === archetype);
 
   // Resolve the effective archetype value
   const resolvedArchetype = isOther ? customArchetype : archetype;
@@ -257,7 +220,7 @@ export default function CharacterCreation({
                 }`}
               >
                 <option value="">Select a role...</option>
-                {ARCHETYPES.map((a) => (
+                {archetypes.map((a) => (
                   <option key={a.name} value={a.name}>{a.name}</option>
                 ))}
                 <option value="__other__">Other (custom)</option>

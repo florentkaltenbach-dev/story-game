@@ -3,6 +3,16 @@ import express from "express";
 import Anthropic from "@anthropic-ai/sdk";
 import { readFile, readdir } from "fs/promises";
 import { join, extname } from "path";
+import type {
+  MemoryLevelNumber,
+  KeeperMode,
+  SessionStatus,
+  Channel,
+  KeeperInput,
+  KeeperResponse,
+  NarrativeThreadStatus,
+  NarrativeThread,
+} from "./types";
 import {
   MODE_TIERS,
   MODE_MAX_TOKENS,
@@ -13,55 +23,6 @@ import {
   RateLimiter,
   CostTracker,
 } from "./lib";
-
-// === Types (duplicated from web — minimal subset) ===
-
-type MemoryLevelNumber = 1 | 2 | 3 | 4 | 5;
-
-type KeeperMode =
-  | "player_response"
-  | "mc_query"
-  | "mc_generate"
-  | "journal_write"
-  | "compression"
-  | "thread_evaluation";
-
-type SessionStatus = "lobby" | "active" | "paused" | "ended";
-type Channel = "all" | "keeper-private" | "mc-keeper";
-
-interface KeeperInput {
-  mode: KeeperMode;
-  trigger: {
-    type: "player_action" | "mc_query" | "mc_narration" | "session_event";
-    channel: Channel;
-    content: string;
-    playerId?: string;
-  };
-  session: {
-    number: number;
-    act: number;
-    status: SessionStatus;
-  };
-  recentHistory?: Array<{ role: string; name: string; content: string }>;
-  players?: Array<{ name: string; characterName: string; journal: string; notes: string }>;
-  playerKnowledge?: string[];
-}
-
-interface KeeperResponse {
-  narrative: string;
-  journalUpdate?: string;
-  internalNotes?: string;
-  degraded?: boolean;
-}
-
-type NarrativeThreadStatus = "dormant" | "planted" | "growing" | "ripe" | "resolved";
-
-interface NarrativeThread {
-  id: string;
-  name: string;
-  status: NarrativeThreadStatus;
-  content: string;
-}
 
 // === Paths ===
 
@@ -275,7 +236,9 @@ async function assembleContext(input: KeeperInput): Promise<{
 
     // Knowledge fog: filter NPCs based on player knowledge when in player_response mode
     const knownNpcs = input.playerKnowledge
-      ? new Set(input.playerKnowledge.filter(k => k.startsWith("npc-met:")).map(k => k.split(":")[1]))
+      ? new Set(Object.entries(input.playerKnowledge)
+          .filter(([k, v]) => k.startsWith("npc-") && (v === "rumored" || v === "confirmed"))
+          .map(([k]) => k.slice(4))) // strip "npc-" prefix to get slug
       : null;
 
     let charContent = Object.entries(characters)

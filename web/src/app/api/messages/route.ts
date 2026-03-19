@@ -194,7 +194,8 @@ async function handleKeeperResponse(
   // Track knowledge for the player who triggered this response
   if (playerId && pipelineResult.detectedEvents.length > 0) {
     const knowledgeEntries = deriveKnowledge(pipelineResult.detectedEvents, session.scene.location);
-    addKnowledge(playerId, knowledgeEntries).catch((err) =>
+    const player = session.players.find((p) => p.id === playerId);
+    addKnowledge(playerId, player?.characterName || player?.name || playerId, knowledgeEntries).catch((err) =>
       console.error("[knowledge] Failed to update ledger:", err)
     );
   }
@@ -409,7 +410,7 @@ export async function POST(request: Request) {
         session: { number: session.number, act: session.act, status: session.status },
         recentHistory: getRecentHistory("keeper-private", ctx.playerId),
         players: session.players.map(p => ({ name: p.name, characterName: p.characterName, journal: p.journal, notes: p.notes })),
-        playerKnowledge: ledger?.entries,
+        playerKnowledge: ledger?.knowledge,
       };
 
       // Try streaming; fall back to non-streaming on error
@@ -432,7 +433,7 @@ export async function POST(request: Request) {
         session: { number: session.number, act: session.act, status: session.status },
         recentHistory: getRecentHistory("all"),
         players: session.players.map(p => ({ name: p.name, characterName: p.characterName, journal: p.journal, notes: p.notes })),
-        playerKnowledge: ledgerAll?.entries,
+        playerKnowledge: ledgerAll?.knowledge,
       };
 
       const keeperResponse = await streamKeeperResponse(keeperInput, ctx.playerId);
@@ -454,7 +455,7 @@ export async function POST(request: Request) {
         session: { number: session.number, act: session.act, status: session.status },
         recentHistory: getRecentHistory("all"),
         players: session.players.map(p => ({ name: p.name, characterName: p.characterName, journal: p.journal, notes: p.notes })),
-        playerKnowledge: ledgerSecret?.entries,
+        playerKnowledge: ledgerSecret?.knowledge,
       });
 
       // Private result to the acting player

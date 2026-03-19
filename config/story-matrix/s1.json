@@ -1,0 +1,844 @@
+{
+  "id": 1,
+  "name": "The Ice",
+  "acts": [
+    {
+      "name": "The Crossing",
+      "index": 0
+    },
+    {
+      "name": "Base Camp",
+      "index": 1
+    },
+    {
+      "name": "Lake's Camp",
+      "index": 2
+    }
+  ],
+  "beats": [
+    {
+      "characterId": "scientist-pabodie",
+      "session": 1,
+      "act": 0,
+      "location": "Ship — Southern Ocean",
+      "status": "healthy",
+      "emotional": "restless",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "equipment-malfunctions"
+      ],
+      "danger": 0,
+      "activity": "Maintains drilling equipment. Notes instruments behaving oddly"
+    },
+    {
+      "characterId": "scientist-pabodie",
+      "session": 1,
+      "act": 1,
+      "location": "Base camp",
+      "status": "healthy",
+      "emotional": "concerned",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "equipment-malfunctions",
+        "dogs-refuse-food"
+      ],
+      "danger": 1,
+      "activity": "Triangular markings in wrong strata. Equipment fails near certain sites"
+    },
+    {
+      "characterId": "scientist-pabodie",
+      "session": 1,
+      "act": 2,
+      "location": "Lake's camp",
+      "status": "healthy",
+      "emotional": "shaken",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "equipment-malfunctions",
+        "dyers-private-journal"
+      ],
+      "danger": 2,
+      "activity": "Finds Lake's private journal. Recognizes his own drill marks on destroyed equipment",
+      "mcNote": "Pabodie recognizes his own drill marks on destroyed equipment — the 1930 expedition was here.",
+      "npcBehavior": "Runs fingers over drill marks. 'These are mine. I made these cuts three years ago. But something cut them back.'"
+    },
+    {
+      "characterId": "scientist-bryce",
+      "session": 1,
+      "act": 0,
+      "location": "Ship — Southern Ocean",
+      "status": "healthy",
+      "emotional": "observant",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "dogs-refuse-food"
+      ],
+      "danger": 0,
+      "activity": "Notes dogs' behavior changes as biological anomaly"
+    },
+    {
+      "characterId": "scientist-bryce",
+      "session": 1,
+      "act": 1,
+      "location": "Base camp",
+      "status": "healthy",
+      "emotional": "excited",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "dogs-refuse-food",
+        "equipment-malfunctions"
+      ],
+      "danger": 1,
+      "activity": "The triangular markings contain biological material that shouldn't exist"
+    },
+    {
+      "characterId": "scientist-bryce",
+      "session": 1,
+      "act": 2,
+      "location": "Lake's camp",
+      "status": "healthy",
+      "emotional": "disturbed",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "dyers-private-journal"
+      ],
+      "danger": 2,
+      "activity": "The surviving specimen defies every taxonomy she knows",
+      "mcNote": "The specimen defies every taxonomy. This is where Bryce's confidence begins to crack.",
+      "npcBehavior": "Stares at the specimen for a full minute before speaking. 'This isn't wrong. I'm wrong. Everything I know is insufficient.'"
+    },
+    {
+      "characterId": "veteran-rourke",
+      "session": 1,
+      "act": 0,
+      "location": "Ship — Southern Ocean",
+      "status": "healthy",
+      "emotional": "alert",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "dogs-refuse-food"
+      ],
+      "danger": 0,
+      "activity": "Notes dogs' distress. Checks perimeter out of habit"
+    },
+    {
+      "characterId": "veteran-rourke",
+      "session": 1,
+      "act": 1,
+      "location": "Base camp",
+      "status": "healthy",
+      "emotional": "uneasy",
+      "knowledge": [
+        "briefing-document",
+        "night-sounds"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "dogs-refuse-food",
+        "equipment-malfunctions"
+      ],
+      "danger": 1,
+      "activity": "Night watch — hears sounds the wind doesn't explain"
+    },
+    {
+      "characterId": "veteran-rourke",
+      "session": 1,
+      "act": 2,
+      "location": "Lake's camp",
+      "status": "healthy",
+      "emotional": "grim",
+      "knowledge": [
+        "briefing-document",
+        "night-sounds",
+        "lakes-camp-destruction",
+        "specimen-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "dyers-private-journal"
+      ],
+      "danger": 2,
+      "activity": "Reads the destruction at Lake's camp as combat, not accident",
+      "mcNote": "Rourke reads the destruction as a combat scene, not an accident. Military eye sees what civilians miss.",
+      "npcBehavior": "Kneels by the wreckage. 'This wasn't weather. This was organized violence. Something fought here and won.'"
+    },
+    {
+      "characterId": "journalist-caldwell",
+      "session": 1,
+      "act": 0,
+      "location": "Ship — Southern Ocean",
+      "status": "healthy",
+      "emotional": "curious",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "mirage-city"
+      ],
+      "danger": 0,
+      "activity": "Photographs the mirages. Interviews crew about previous voyages"
+    },
+    {
+      "characterId": "journalist-caldwell",
+      "session": 1,
+      "act": 1,
+      "location": "Base camp",
+      "status": "healthy",
+      "emotional": "excited",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "dogs-refuse-food",
+        "equipment-malfunctions"
+      ],
+      "danger": 1,
+      "activity": "Documents everything. This is bigger than the Innsmouth story"
+    },
+    {
+      "characterId": "journalist-caldwell",
+      "session": 1,
+      "act": 2,
+      "location": "Lake's camp",
+      "status": "healthy",
+      "emotional": "horrified-thrilled",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "dyers-private-journal"
+      ],
+      "danger": 2,
+      "activity": "Photographs Lake's camp. Reads his journal. The story of a lifetime",
+      "mcNote": "This is where Caldwell's journalist instinct becomes dangerous — she wants closer, not safer.",
+      "npcBehavior": "Photographs everything twice. 'Lake's journal ends mid-sentence. That's not how scientists write. That's how men interrupted by something write.'"
+    },
+    {
+      "characterId": "mechanic-gedney",
+      "session": 1,
+      "act": 0,
+      "location": "Ship — Southern Ocean",
+      "status": "healthy",
+      "emotional": "busy",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "equipment-malfunctions"
+      ],
+      "danger": 0,
+      "activity": "Preps the planes for Antarctic conditions. First odd readings"
+    },
+    {
+      "characterId": "mechanic-gedney",
+      "session": 1,
+      "act": 1,
+      "location": "Base camp",
+      "status": "healthy",
+      "emotional": "frustrated",
+      "knowledge": [
+        "briefing-document",
+        "equipment-anomalies"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "equipment-malfunctions"
+      ],
+      "danger": 1,
+      "activity": "Equipment failures near certain sites. Nothing he fixes stays fixed"
+    },
+    {
+      "characterId": "mechanic-gedney",
+      "session": 1,
+      "act": 2,
+      "location": "Lake's camp",
+      "status": "healthy",
+      "emotional": "disturbed",
+      "knowledge": [
+        "briefing-document",
+        "equipment-anomalies",
+        "lakes-camp-destruction"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "equipment-malfunctions"
+      ],
+      "danger": 2,
+      "activity": "Recognizes deliberate damage to Lake's equipment. Not weather — intent",
+      "mcNote": "Equipment destroyed by something that doesn't use tools. Gedney's rational world takes its first hit.",
+      "npcBehavior": "Picks up a shattered gauge. 'This wasn't dropped. It was crushed. But there are no tool marks. What crushes steel without tools?'"
+    },
+    {
+      "characterId": "mechanic-webb",
+      "session": 1,
+      "act": 0,
+      "location": "Ship — Southern Ocean",
+      "status": "healthy",
+      "emotional": "content",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "radio-degradation"
+      ],
+      "danger": 0,
+      "activity": "Radio clear. Regular check-ins with Moore. First hints of unusual static"
+    },
+    {
+      "characterId": "mechanic-webb",
+      "session": 1,
+      "act": 1,
+      "location": "Base camp",
+      "status": "healthy",
+      "emotional": "concerned",
+      "knowledge": [
+        "briefing-document",
+        "unusual-static"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "radio-degradation",
+        "equipment-malfunctions"
+      ],
+      "danger": 1,
+      "activity": "Static patterns that don't match any known interference. The radio 'breathes'"
+    },
+    {
+      "characterId": "mechanic-webb",
+      "session": 1,
+      "act": 2,
+      "location": "Lake's camp",
+      "status": "healthy",
+      "emotional": "anxious",
+      "knowledge": [
+        "briefing-document",
+        "unusual-static",
+        "radio-signal-anomaly"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "radio-degradation"
+      ],
+      "danger": 2,
+      "activity": "Radio reception degrades near Lake's camp. Something interferes",
+      "mcNote": "Radio begins to degrade here. Webb notices the pattern before anyone else.",
+      "npcBehavior": "Adjusts the receiver. 'Moore's signal is clear from base camp. Here, it... pulses. Like something is between us and the antenna.'"
+    },
+    {
+      "characterId": "agent-price",
+      "session": 1,
+      "act": 0,
+      "location": "Ship — Southern Ocean",
+      "status": "healthy",
+      "emotional": "impatient",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [],
+      "danger": 0,
+      "activity": "Tracks expenses. Questions delays. Time is money"
+    },
+    {
+      "characterId": "agent-price",
+      "session": 1,
+      "act": 1,
+      "location": "Base camp",
+      "status": "healthy",
+      "emotional": "interested",
+      "knowledge": [
+        "briefing-document",
+        "anomaly-value"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 1,
+      "activity": "The anomalies have commercial implications. Begins second ledger"
+    },
+    {
+      "characterId": "agent-price",
+      "session": 1,
+      "act": 2,
+      "location": "Lake's camp",
+      "status": "healthy",
+      "emotional": "excited",
+      "knowledge": [
+        "briefing-document",
+        "anomaly-value",
+        "specimen-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "A specimen that defies classification is worth more than the entire expedition",
+      "mcNote": "Price sees dollar signs in the specimens. His greed is about to become a plot driver.",
+      "npcBehavior": "Makes notes in the second ledger. 'The biological material alone is worth... considerable. Starkweather will want to know.'"
+    },
+    {
+      "characterId": "agent-ainsworth",
+      "session": 1,
+      "act": 0,
+      "location": "Ship — Southern Ocean",
+      "status": "healthy",
+      "emotional": "methodical",
+      "knowledge": [
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "radio-degradation"
+      ],
+      "danger": 0,
+      "activity": "Regular coded reports to Moore. Notes anomalies objectively"
+    },
+    {
+      "characterId": "agent-ainsworth",
+      "session": 1,
+      "act": 1,
+      "location": "Base camp",
+      "status": "healthy",
+      "emotional": "concerned",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "radio-degradation"
+      ],
+      "danger": 1,
+      "activity": "Coded report to Moore on the markings. Moore demands caution"
+    },
+    {
+      "characterId": "agent-ainsworth",
+      "session": 1,
+      "act": 2,
+      "location": "Lake's camp",
+      "status": "healthy",
+      "emotional": "shaken",
+      "knowledge": [
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "radio-degradation",
+        "dyers-private-journal"
+      ],
+      "danger": 2,
+      "activity": "Tries to report to Moore. Radio increasingly unreliable. Evidence is undeniable",
+      "mcNote": "Her geology training says these formations are impossible. Her coded report to Moore says 'anomalous.'",
+      "npcBehavior": "Samples the rock face. 'These strata are Pre-Cambrian. Nothing should be in Pre-Cambrian strata. And yet.'"
+    },
+    {
+      "characterId": "expert-sorensen",
+      "session": 1,
+      "act": 0,
+      "location": "Ship — Southern Ocean",
+      "status": "healthy",
+      "emotional": "uneasy",
+      "knowledge": [
+        "briefing-document",
+        "ice-behavior"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "mirage-city",
+        "dogs-refuse-food"
+      ],
+      "danger": 0,
+      "activity": "The ice is wrong. Mirages persist too long. The dogs know"
+    },
+    {
+      "characterId": "expert-sorensen",
+      "session": 1,
+      "act": 1,
+      "location": "Base camp",
+      "status": "healthy",
+      "emotional": "afraid",
+      "knowledge": [
+        "briefing-document",
+        "ice-behavior",
+        "sailors-stories"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "wind-piping",
+        "dogs-refuse-food"
+      ],
+      "danger": 1,
+      "activity": "Recalls Lars Larsen's crew seeing stone ruins from a crow's nest in 1929"
+    },
+    {
+      "characterId": "expert-sorensen",
+      "session": 1,
+      "act": 2,
+      "location": "Lake's camp",
+      "status": "healthy",
+      "emotional": "grim",
+      "knowledge": [
+        "briefing-document",
+        "ice-behavior",
+        "sailors-stories",
+        "lakes-camp-destruction"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [],
+      "danger": 2,
+      "activity": "Reads the ice around Lake's camp. Something melted it from below",
+      "mcNote": "The old sailor's tales are becoming real. Sørensen is the first to accept what others deny.",
+      "npcBehavior": "Goes quiet. Touches the ice wall. 'A man from Lars Larsen's crew told me about stone ruins. I called him a drunk. I owe him an apology.'"
+    },
+    {
+      "characterId": "expert-mcready",
+      "session": 1,
+      "act": 0,
+      "location": "Ship — Southern Ocean",
+      "status": "healthy",
+      "emotional": "alert",
+      "knowledge": [
+        "briefing-document",
+        "dog-behavior"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "dogs-refuse-food"
+      ],
+      "danger": 0,
+      "activity": "The dogs are uneasy. Dismissed as weather — but McReady knows dogs"
+    },
+    {
+      "characterId": "expert-mcready",
+      "session": 1,
+      "act": 1,
+      "location": "Base camp",
+      "status": "healthy",
+      "emotional": "alarmed",
+      "knowledge": [
+        "briefing-document",
+        "dog-behavior",
+        "dogs-facing-away"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "dogs-refuse-food"
+      ],
+      "danger": 1,
+      "activity": "Dogs refuse food. Won't face south. They know something is there"
+    },
+    {
+      "characterId": "expert-mcready",
+      "session": 1,
+      "act": 2,
+      "location": "Lake's camp",
+      "status": "healthy",
+      "emotional": "grim",
+      "knowledge": [
+        "briefing-document",
+        "dog-behavior",
+        "dogs-facing-away",
+        "lakes-camp-destruction"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "dogs-refuse-food"
+      ],
+      "danger": 2,
+      "activity": "No dog remains at Lake's camp. The dogs either fled or were taken",
+      "mcNote": "The dogs won't approach the camp. McReady knows their instincts are better than his instruments.",
+      "npcBehavior": "Holds the lead dog back. 'She won't go closer. Last time I saw dogs this scared was when a glacier calved. They knew before anyone.'"
+    },
+    {
+      "characterId": "believer-angell",
+      "session": 1,
+      "act": 0,
+      "location": "Ship — Southern Ocean",
+      "status": "healthy",
+      "emotional": "excited",
+      "knowledge": [
+        "pnakotic-fragments",
+        "eltdown-shards",
+        "necronomicon-marginalia",
+        "briefing-document"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "mirage-city",
+        "wind-piping"
+      ],
+      "danger": 0,
+      "activity": "The mirages match descriptions in the Pnakotic Manuscripts. The wind piping matches too"
+    },
+    {
+      "characterId": "believer-angell",
+      "session": 1,
+      "act": 1,
+      "location": "Base camp",
+      "status": "healthy",
+      "emotional": "manic",
+      "knowledge": [
+        "pnakotic-fragments",
+        "eltdown-shards",
+        "necronomicon-marginalia",
+        "briefing-document",
+        "triangular-markings"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "wind-piping",
+        "equipment-malfunctions"
+      ],
+      "danger": 1,
+      "activity": "The markings correlate with Eltdown Shards. Three notebooks filling fast"
+    },
+    {
+      "characterId": "believer-angell",
+      "session": 1,
+      "act": 2,
+      "location": "Lake's camp",
+      "status": "healthy",
+      "emotional": "ecstatic-terrified",
+      "knowledge": [
+        "pnakotic-fragments",
+        "eltdown-shards",
+        "necronomicon-marginalia",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "dyers-private-journal"
+      ],
+      "danger": 2,
+      "activity": "Lake's journal confirms Dyer's private account. The pattern is real",
+      "mcNote": "Angell's texts are being confirmed in real time. This should feel vindicating but feels like doom.",
+      "npcBehavior": "Hands trembling, cross-references a notebook. 'This matches the Pnakotic fragments. Word for word. I was right. God help me, I was right.'"
+    },
+    {
+      "characterId": "believer-waverly",
+      "session": 1,
+      "act": 0,
+      "location": "Ship — Southern Ocean",
+      "status": "healthy",
+      "emotional": "watchful",
+      "knowledge": [
+        "oral-traditions",
+        "island-warnings",
+        "briefing-document"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "dogs-refuse-food"
+      ],
+      "danger": 0,
+      "activity": "The dogs sense it. In the islands, the animals always knew first"
+    },
+    {
+      "characterId": "believer-waverly",
+      "session": 1,
+      "act": 1,
+      "location": "Base camp",
+      "status": "healthy",
+      "emotional": "concerned",
+      "knowledge": [
+        "oral-traditions",
+        "island-warnings",
+        "briefing-document",
+        "triangular-markings"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "dogs-refuse-food",
+        "wind-piping"
+      ],
+      "danger": 1,
+      "activity": "The wind piping matches descriptions from Solomon Islands elders"
+    },
+    {
+      "characterId": "believer-waverly",
+      "session": 1,
+      "act": 2,
+      "location": "Lake's camp",
+      "status": "healthy",
+      "emotional": "grieving",
+      "knowledge": [
+        "oral-traditions",
+        "island-warnings",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "dyers-private-journal"
+      ],
+      "danger": 2,
+      "activity": "These people died because they didn't listen to the warnings. As always",
+      "mcNote": "The indigenous warnings Waverly heard in the Solomons described this exact scenario.",
+      "npcBehavior": "Closes her eyes. 'In the Solomons, they told me about a place where the old things sleep. They said: do not wake them. We have woken them.'"
+    },
+    {
+      "characterId": "patron-starkweather",
+      "session": 1,
+      "act": 0,
+      "location": "Ship — Southern Ocean",
+      "status": "healthy",
+      "emotional": "impatient",
+      "knowledge": [
+        "dyer-account",
+        "briefing-document"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "mirage-city"
+      ],
+      "danger": 0,
+      "activity": "Paces the deck. Points at the mirages as proof. 'Dyer described exactly this'"
+    },
+    {
+      "characterId": "patron-starkweather",
+      "session": 1,
+      "act": 1,
+      "location": "Base camp",
+      "status": "healthy",
+      "emotional": "vindicated",
+      "knowledge": [
+        "dyer-account",
+        "briefing-document",
+        "triangular-markings"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "equipment-malfunctions"
+      ],
+      "danger": 1,
+      "activity": "The markings confirm Dyer. Starkweather is electric — 'I told you. I told all of you'"
+    },
+    {
+      "characterId": "patron-starkweather",
+      "session": 1,
+      "act": 2,
+      "location": "Lake's camp",
+      "status": "healthy",
+      "emotional": "vindication-turning-to-fear",
+      "knowledge": [
+        "dyer-account",
+        "briefing-document",
+        "triangular-markings",
+        "lakes-journal",
+        "specimen-existence"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "dyers-private-journal"
+      ],
+      "danger": 2,
+      "activity": "Lake's camp is exactly as Dyer described. The vindication tastes different now — because Dyer also described what came next",
+      "mcNote": "This is the hinge. Starkweather wanted to be right. Now he IS right — and the implications are landing. His emotional shift from vindication to unease should be visible but not yet acknowledged by him. He's still pushing forward, but the swagger has a crack in it.",
+      "npcBehavior": "Still asserting authority but the orders come faster, with less patience. Snaps at Price when questioned about costs. Insists on examining the specimen personally. Doesn't sleep."
+    },
+    {
+      "characterId": "patron-moore",
+      "session": 1,
+      "act": 0,
+      "location": "Harvard (via radio)",
+      "status": "healthy",
+      "emotional": "impatient",
+      "knowledge": [
+        "dyer-account-redacted",
+        "briefing-document"
+      ],
+      "narrativeRole": "support",
+      "threadsActive": [
+        "radio-degradation"
+      ],
+      "danger": 0,
+      "activity": "Regular radio check-ins. Demands progress reports. Dismisses mirage sightings as atmospheric refraction"
+    },
+    {
+      "characterId": "patron-moore",
+      "session": 1,
+      "act": 1,
+      "location": "Harvard (via radio)",
+      "status": "healthy",
+      "emotional": "interested-skeptical",
+      "knowledge": [
+        "dyer-account-redacted",
+        "briefing-document",
+        "triangular-markings-reported"
+      ],
+      "narrativeRole": "lead",
+      "threadsActive": [
+        "radio-degradation"
+      ],
+      "danger": 1,
+      "activity": "Last clear radio contact with full context. The markings intrigue him. Demands samples, measurements, photographs. 'Interesting if verified'",
+      "mcNote": "This is the last time Moore's voice comes through clearly. The full weight of scientific authority, 10,000 miles away. He's genuinely interested in the triangular markings but frames everything as geology. Make his voice clear and strong here — it will fade.",
+      "npcBehavior": "Rapid-fire questions through the radio. Cross-references with known geological formations. Instructs Ainsworth to take independent measurements. 'Don't let Starkweather's enthusiasm contaminate the data.' Ends with: 'Good work. Report again at 0600.'"
+    },
+    {
+      "characterId": "patron-moore",
+      "session": 1,
+      "act": 2,
+      "location": "Harvard (via radio — degraded)",
+      "status": "healthy",
+      "emotional": "demanding-frustrated",
+      "knowledge": [
+        "dyer-account-redacted",
+        "briefing-document",
+        "triangular-markings-reported"
+      ],
+      "narrativeRole": "tension",
+      "threadsActive": [
+        "radio-degradation"
+      ],
+      "danger": 2,
+      "activity": "Radio degrades. Catches fragments of Lake's camp report. Demands data through static. 'Say again — specimen? What specimen?'",
+      "mcNote": "Moore's voice breaks up here. He catches enough to be alarmed but not enough to understand. The skeptic is losing his primary tool — information. His frustration should carry through the static. He's used to controlling this from afar, and the control is slipping.",
+      "npcBehavior": "Repeats 'say again' through static. When he catches the word 'specimen,' his tone changes — sharper, more urgent. 'Do NOT touch anything until Ainsworth confirms— [static].' The connection dies mid-sentence."
+    }
+  ]
+}

@@ -12,6 +12,16 @@
   --danger: #c55050;
   --border: #2a3a55;
   --muted: #b0c0d8;
+
+  /* Antarctic palette — D5 environmental colors */
+  --midnight-sun: #d4935a;
+  --ice-shadow: #5a8aad;
+  --bare-rock: #2a2a2e;
+  --opalescent: #c8b8a0;
+  --ichor: #1a4a2a;
+  --violet-peak: #6a4a8a;
+  --elder-yellow: #c8b040;
+  --prismatic: #7ab8a8;
 }
 
 @theme inline {
@@ -29,6 +39,14 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-narrative: var(--font-crimson);
+  --color-midnight-sun: var(--midnight-sun);
+  --color-ice-shadow: var(--ice-shadow);
+  --color-bare-rock: var(--bare-rock);
+  --color-opalescent: var(--opalescent);
+  --color-ichor: var(--ichor);
+  --color-violet-peak: var(--violet-peak);
+  --color-elder-yellow: var(--elder-yellow);
+  --color-prismatic: var(--prismatic);
 }
 
 body {
@@ -141,4 +159,182 @@ body {
   .group:hover .touch-visible {
     opacity: 1;
   }
+}
+
+/* ═══════════════════════════════════════════════
+   SESSION TONE THEMES (D4.2 — Sensory Progression)
+   Apply to a parent element to shift the entire UI palette.
+   ═══════════════════════════════════════════════ */
+
+/* S0: Arkham — warm amber, civilization, the last roof */
+.session-0 {
+  --accent: #d4b36a;
+  --background: #0a0e14;
+  --surface: #111822;
+  --border: #2e3e55;
+  --muted: #b8c4d4;
+}
+
+/* S1: At Sea / Antarctica — cooler, first unease */
+.session-1 {
+  --accent: #c4a85e;
+  --background: #080c12;
+  --surface: #0d1320;
+  --border: #263448;
+  --muted: #9ab0c8;
+  --ice-shadow: #6a9abb;
+}
+
+/* S2: The City — awe, five-pointed geometry enters, gold dims */
+.session-2 {
+  --accent: #b09850;
+  --background: #060910;
+  --surface: #0b1018;
+  --border: #1e2e42;
+  --muted: #8a9eb8;
+  --bare-rock: #1a1a22;
+}
+
+/* S3: The Tunnels — green tint, distortion, terror */
+.session-3 {
+  --accent: #9a8848;
+  --background: #050810;
+  --surface: #0a0e16;
+  --border: #1a2838;
+  --muted: #7a90a8;
+  --ichor: #1a5a2e;
+}
+
+/* S4: The Return — violet/rose, minimal, silence */
+.session-4 {
+  --accent: #8a7a50;
+  --background: #060810;
+  --surface: #0a0d16;
+  --border: #1a2438;
+  --muted: #7888a0;
+  --violet-peak: #7a5a9a;
+}
+
+/* ═══════════════════════════════════════════════
+   STRATUM BLEEDING OVERLAYS (D1 — Reality degradation)
+   ═══════════════════════════════════════════════ */
+
+.stratum-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  transition: opacity 2s ease;
+}
+
+.stratum-i { opacity: 0; }
+
+.stratum-ii {
+  background: repeating-conic-gradient(
+    from 0deg at 50% 50%,
+    transparent 0deg 70deg,
+    var(--bare-rock) 70deg 72deg
+  );
+  mix-blend-mode: overlay;
+  opacity: 0.03;
+}
+
+.stratum-iii {
+  background:
+    repeating-conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg 70deg,
+      var(--bare-rock) 70deg 72deg
+    ),
+    linear-gradient(180deg, transparent 0%, var(--ichor) 100%);
+  mix-blend-mode: overlay;
+  opacity: 0.06;
+  animation: stratum-flicker 8s ease-in-out infinite;
+}
+
+.stratum-iv {
+  background:
+    linear-gradient(180deg, var(--violet-peak) 0%, transparent 40%, var(--ichor) 100%);
+  mix-blend-mode: overlay;
+  opacity: 0.05;
+}
+
+@keyframes stratum-flicker {
+  0%, 100% { opacity: 0.06; }
+  50% { opacity: 0.04; }
+  75% { opacity: 0.08; }
+}
+
+/* ═══════════════════════════════════════════════
+   JOURNAL DEGRADATION (D1 — Typography decay)
+   ═══════════════════════════════════════════════ */
+
+.journal-s0 {
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+}
+
+.journal-s1 {
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  filter: blur(0.2px);
+}
+
+.journal-s2 {
+  font-family: var(--font-narrative);
+  letter-spacing: 0.01em;
+  font-style: italic;
+}
+
+.journal-s3 {
+  font-family: var(--font-narrative);
+  letter-spacing: -0.01em;
+  font-style: italic;
+  filter: blur(0.3px);
+  opacity: 0.9;
+}
+
+.journal-s4 {
+  font-family: var(--font-narrative);
+  letter-spacing: -0.02em;
+  word-spacing: 0.2em;
+  opacity: 0.7;
+}
+
+/* ═══════════════════════════════════════════════
+   THREAT PROXIMITY (D1 — Environmental UI effects)
+   ═══════════════════════════════════════════════ */
+
+.threat-frost {
+  position: relative;
+}
+.threat-frost::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at top, var(--ice-shadow) 0%, transparent 70%);
+  opacity: 0.04;
+}
+
+.threat-ichor {
+  position: relative;
+}
+.threat-ichor::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(0deg, var(--ichor) 0%, transparent 30%);
+  opacity: 0.08;
+}
+
+.threat-static {
+  animation: static-grain 0.15s steps(3) infinite;
+}
+
+@keyframes static-grain {
+  0% { filter: contrast(1.01) brightness(0.99); }
+  33% { filter: contrast(0.99) brightness(1.01); }
+  66% { filter: contrast(1.005) brightness(0.995); }
 }

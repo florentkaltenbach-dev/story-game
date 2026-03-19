@@ -1,0 +1,521 @@
+<!-- VIZ-META {"title":"Project Dashboard","description":"Architecture, task board, memory system, and token economy overview","category":"dashboard"} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Ceremony — Project Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0a0e17;
+    --surface: #131a2b;
+    --border: #1e2d44;
+    --text: #e8dcc8;
+    --text-dim: #8b9bb4;
+    --accent: #c4a35a;
+    --accent2: #6b9e7a;
+    --green: #6b9e7a;
+    --amber: #c4a35a;
+    --red: #8b3a3a;
+    --cyan: #7ba4c7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 2rem;
+  }
+  h1 {
+    font-family: 'Crimson Text', serif;
+    font-size: 1.8rem;
+    color: var(--accent);
+    margin-bottom: 0.25rem;
+    letter-spacing: 0.05em;
+  }
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1rem;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .grid-full {
+    grid-column: 1 / -1;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+  }
+  .card h2 {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent2);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .card h2 .tag {
+    font-size: 0.65rem;
+    background: var(--accent);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* Mermaid overrides */
+  .mermaid {
+    display: flex;
+    justify-content: center;
+  }
+  .mermaid svg { max-width: 100%; }
+
+  /* Kanban */
+  .kanban {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  .kanban-col h3 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px 4px 0 0;
+    text-align: center;
+  }
+  .kanban-col.done h3 { background: rgba(107,158,122,0.15); color: var(--green); }
+  .kanban-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.5rem 0.6rem;
+    margin-top: 0.4rem;
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+  .kanban-item .num {
+    color: var(--text-dim);
+    font-size: 0.7rem;
+  }
+
+  /* Memory viz */
+  .memory-levels {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .mem-level {
+    flex: 1;
+    min-width: 140px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem;
+    text-align: center;
+  }
+  .mem-level .level-num {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: var(--accent);
+  }
+  .mem-level .level-name {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-bottom: 0.4rem;
+  }
+  .mem-level .level-files {
+    font-size: 0.85rem;
+    color: var(--green);
+  }
+  .mem-level .level-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+  }
+  .mem-level .level-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  /* Stats row */
+  .stats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .stat {
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+    padding: 0.75rem;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .stat .val {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--cyan);
+  }
+  .stat .label {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Grade badges */
+  .grades {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+  }
+  .grade-item {
+    text-align: center;
+    padding: 0.6rem;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .grade-item .grade {
+    font-size: 1.3rem;
+    font-weight: bold;
+  }
+  .grade-item .grade.bad { color: var(--red); }
+  .grade-item .grade.mid { color: var(--amber); }
+  .grade-item .grade.ok { color: var(--cyan); }
+  .grade-item .glabel {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  /* Token budget bar */
+  .token-bar-container {
+    margin-top: 0.75rem;
+  }
+  .token-bar {
+    height: 20px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+  }
+  .token-bar .seg {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    font-weight: bold;
+    color: #000;
+  }
+  .token-legend {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .token-legend span {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .token-legend .dot {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    display: inline-block;
+  }
+</style>
+</head>
+<body>
+
+<h1>THE CEREMONY</h1>
+<p class="subtitle">AI-powered interactive story platform — Project Dashboard — March 2026</p>
+
+<div class="grid">
+
+  <!-- Architecture -->
+  <div class="card grid-full">
+    <h2>System Architecture</h2>
+    <div class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#c4a35a', 'primaryTextColor': '#e8dcc8', 'primaryBorderColor': '#1e2d44', 'lineColor': '#8b9bb4', 'secondaryColor': '#131a2b', 'tertiaryColor': '#131a2b', 'background': '#131a2b', 'mainBkg': '#131a2b', 'nodeBorder': '#c4a35a'}}}%%
+flowchart LR
+    subgraph CLIENTS["Clients"]
+        MC["MC Page\n/mc"]
+        P1["Player 1\n/play"]
+        P2["Player 2\n/play"]
+        P3["Player ...\n/play"]
+    end
+    subgraph WEB["Next.js :3004"]
+        API["API Routes"]
+        SSE["SSE Events"]
+        MEM["Memory Engine\n(filesystem)"]
+        STORE["State Store\n(in-memory + JSON)"]
+    end
+    subgraph KEEPER["keeper-service :3005"]
+        CK["ClaudeKeeper"]
+        CTX["Context Assembly"]
+        RL["Rate Limiter\n10/min, 100/sess"]
+        CACHE["Prompt Cache"]
+    end
+    CLAUDE["Claude API\nHaiku 4.5"]
+
+    MC -->|HTTP| API
+    P1 -->|HTTP| API
+    P2 -->|HTTP| API
+    P3 -->|HTTP| API
+    SSE -.->|events| MC
+    SSE -.->|events| P1
+    SSE -.->|events| P2
+    SSE -.->|events| P3
+    API --> STORE
+    API --> MEM
+    API -->|POST /keeper| CK
+    CK --> CTX
+    CTX --> CACHE
+    CK --> RL
+    CK -->|API call| CLAUDE
+    MEM -->|read memory files| CTX
+    </div>
+  </div>
+
+  <!-- Kanban TODO -->
+  <div class="card grid-full">
+    <h2>Task Board</h2>
+    <div class="kanban">
+      <div class="kanban-col done">
+        <h3>Done</h3>
+        <div class="kanban-item"><span class="num">#1</span> Lock Patron Option B</div>
+        <div class="kanban-item"><span class="num">#2</span> Briefing Document v1</div>
+        <div class="kanban-item"><span class="num">#4</span> Episode Structure v2</div>
+        <div class="kanban-item"><span class="num">#5</span> Config Files (5/5)</div>
+        <div class="kanban-item"><span class="num">#6</span> Memory Levels (23 files)</div>
+        <div class="kanban-item"><span class="num">#7</span> P7 History wired</div>
+        <div class="kanban-item"><span class="num">--</span> Keeper + Web app live</div>
+        <div class="kanban-item"><span class="num">--</span> SSE, persistence, audit</div>
+        <div class="kanban-item"><span class="num">#3</span> Revise Preset v0</div>
+        <div class="kanban-item"><span class="num">--</span> Wire stateUpdates write</div>
+        <div class="kanban-item"><span class="num">--</span> Dry-run Keeper prompt</div>
+        <div class="kanban-item"><span class="num">--</span> Auth & Security (A)</div>
+        <div class="kanban-item"><span class="num">--</span> Tests (109 passing)</div>
+        <div class="kanban-item"><span class="num">--</span> Token Economy</div>
+        <div class="kanban-item"><span class="num">--</span> MC Tools</div>
+        <div class="kanban-item"><span class="num">--</span> Player Experience</div>
+        <div class="kanban-item"><span class="num">--</span> Reality Document</div>
+        <div class="kanban-item"><span class="num">--</span> Keeper as NPC</div>
+        <div class="kanban-item"><span class="num">--</span> Character Creation</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Memory System -->
+  <div class="card">
+    <h2>Memory System <span class="tag">5 levels</span></h2>
+    <div class="memory-levels">
+      <div class="mem-level">
+        <div class="level-num">L1</div>
+        <div class="level-name">Plot State</div>
+        <div class="level-files">9 files</div>
+        <div class="level-bar"><div class="level-bar-fill" style="width:90%"></div></div>
+      </div>
+      <div class="mem-level">
+        <div class="level-num">L2</div>
+        <div class="level-name">Character State</div>
+        <div class="level-files">2 files</div>
+        <div class="level-bar"><div class="level-bar-fill" style="width:40%"></div></div>
+      </div>
+      <div class="mem-level">
+        <div class="level-num">L3</div>
+        <div class="level-name">Narrative Threads</div>
+        <div class="level-files">10 files</div>
+        <div class="level-bar"><div class="level-bar-fill" style="width:100%"></div></div>
+      </div>
+      <div class="mem-level">
+        <div class="level-num">L4</div>
+        <div class="level-name">Thematic Layer</div>
+        <div class="level-files">3 files</div>
+        <div class="level-bar"><div class="level-bar-fill" style="width:60%"></div></div>
+      </div>
+      <div class="mem-level">
+        <div class="level-num">L5</div>
+        <div class="level-name">World State</div>
+        <div class="level-files">4 files</div>
+        <div class="level-bar"><div class="level-bar-fill" style="width:70%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- V2 Grades -->
+  <div class="card">
+    <h2>V2 Audit Grades</h2>
+    <div class="grades">
+      <div class="grade-item">
+        <div class="grade ok">A</div>
+        <div class="glabel">Security</div>
+      </div>
+      <div class="grade-item">
+        <div class="grade ok">B+</div>
+        <div class="glabel">Data Integrity</div>
+      </div>
+      <div class="grade-item">
+        <div class="grade mid">C+</div>
+        <div class="glabel">Context Assembly</div>
+      </div>
+      <div class="grade-item">
+        <div class="grade ok">A</div>
+        <div class="glabel">Tests</div>
+      </div>
+    </div>
+    <div style="margin-top:1rem; font-size:0.75rem; color:var(--text-dim);">
+      Auth complete. HMAC tokens + RBAC. 109 tests passing. stateUpdates wired.
+    </div>
+  </div>
+
+  <!-- Session Structure -->
+  <div class="card">
+    <h2>Session Structure <span class="tag">v2 — 5 sessions</span></h2>
+    <div class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#c4a35a', 'primaryTextColor': '#e8dcc8', 'lineColor': '#8b9bb4', 'secondaryColor': '#131a2b', 'tertiaryColor': '#131a2b', 'background': '#131a2b', 'mainBkg': '#131a2b', 'nodeBorder': '#c4a35a'}}}%%
+flowchart LR
+    S0["Session 0\nCo-Creation"]
+    S1["Session 1\nDeparture"]
+    S2["Session 2\nArrival"]
+    S3["Session 3\nDescent"]
+    S4["Session 4\nRevelation"]
+    S0 --> S1 --> S2 --> S3 --> S4
+    style S0 fill:#131a2b,stroke:#c4a35a
+    style S1 fill:#131a2b,stroke:#7ba4c7
+    style S2 fill:#131a2b,stroke:#7ba4c7
+    style S3 fill:#131a2b,stroke:#6b9e7a
+    style S4 fill:#131a2b,stroke:#c4a35a
+    </div>
+  </div>
+
+  <!-- Token Economy -->
+  <div class="card">
+    <h2>Token Economy</h2>
+    <div class="stats">
+      <div class="stat">
+        <div class="val">~2,700</div>
+        <div class="label">Input tokens/turn</div>
+      </div>
+      <div class="stat">
+        <div class="val">4,000</div>
+        <div class="label">Budget target</div>
+      </div>
+      <div class="stat">
+        <div class="val">~$3.30</div>
+        <div class="label">Est. cost/ceremony</div>
+      </div>
+      <div class="stat">
+        <div class="val">10/min</div>
+        <div class="label">Rate limit</div>
+      </div>
+    </div>
+    <div class="token-bar-container">
+      <div style="font-size:0.75rem; color:var(--text-dim); margin-bottom:0.3rem;">Context Budget — All P0-P8 tiers now wired (~3,400 of 4,000 tokens est.)</div>
+      <div class="token-bar">
+        <div class="seg" style="width:20%; background: var(--accent);">P0 Ident</div>
+        <div class="seg" style="width:18%; background: var(--amber);">P1 Preset</div>
+        <div class="seg" style="width:8%; background: var(--cyan);">P2-P6</div>
+        <div class="seg" style="width:12%; background: var(--accent2);">P7 Hist</div>
+        <div class="seg" style="width:5%; background: var(--green);">P8</div>
+        <div class="seg" style="width:37%; background: rgba(255,255,255,0.05); color: var(--text-dim);">Headroom</div>
+      </div>
+      <div class="token-legend">
+        <span><span class="dot" style="background:var(--accent)"></span> P0 Identity (800)</span>
+        <span><span class="dot" style="background:var(--amber)"></span> P1 Preset DNA (1200)</span>
+        <span><span class="dot" style="background:var(--cyan)"></span> P2-P6 Memory (1400)</span>
+        <span><span class="dot" style="background:var(--accent2)"></span> P7 History (500) NEW</span>
+        <span><span class="dot" style="background:var(--green)"></span> P8 Input (200)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Keeper Dispatch Flow -->
+  <div class="card grid-full">
+    <h2>Keeper Dispatch Flow</h2>
+    <div class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#c4a35a', 'primaryTextColor': '#e8dcc8', 'lineColor': '#8b9bb4', 'secondaryColor': '#131a2b', 'tertiaryColor': '#131a2b', 'background': '#131a2b', 'mainBkg': '#131a2b', 'nodeBorder': '#c4a35a'}}}%%
+flowchart TD
+    REQ["Incoming Request\n(player action / MC query)"]
+    HIST["P7: Recent History\n(from web app)"]
+    RL["Rate Limiter\ncheck"]
+    CTX["Context Assembly\nP0-P8 all tiers"]
+    P01["P0+P1: Identity\n+ Preset DNA"]
+    P26["P2-P6: Memory\nFiles (5 levels)"]
+    P7["P7: Recent\nConversation"]
+    P8["P8: Current\nMessage"]
+    API["Claude API Call\n(Haiku 4.5)"]
+    PARSE["Parse Response"]
+    NAR["narrative\n(text to display)"]
+    SU["stateUpdates\n(memory writes)"]
+    SSE_OUT["SSE Broadcast\nto clients"]
+    MEM_WRITE["Write to\nmemory/"]
+
+    REQ --> RL
+    REQ --> HIST
+    RL -->|pass| CTX
+    RL -->|fail| DENY["429 Rate Limited"]
+    CTX --> P01 & P26 & P7 & P8
+    HIST --> P7
+    P01 & P26 & P7 & P8 --> API
+    API --> PARSE
+    PARSE --> NAR
+    PARSE --> SU
+    NAR --> SSE_OUT
+    SU --> MEM_WRITE
+
+    style DENY fill:#2a1010,stroke:#8b3a3a
+    style MEM_WRITE fill:#0a1a0a,stroke:#6b9e7a
+    style SSE_OUT fill:#0a1a1a,stroke:#7ba4c7
+    style P7 fill:#1a1020,stroke:#6b9e7a
+    </div>
+  </div>
+
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    flowchart: { curve: 'basis', padding: 15 },
+    themeVariables: {
+      darkMode: true,
+      background: '#131a2b',
+      primaryColor: '#131a2b',
+      primaryTextColor: '#e8dcc8',
+      primaryBorderColor: '#c4a35a',
+      lineColor: '#8b9bb4',
+      fontFamily: 'JetBrains Mono, monospace',
+      fontSize: '13px',
+    }
+  });
+</script>
+
+</body>
+</html>

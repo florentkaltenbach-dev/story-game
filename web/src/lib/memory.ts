@@ -369,10 +369,21 @@ export async function copyPresetConfig(presetId: string): Promise<number> {
   await mkdir(CONFIG_ROOT, { recursive: true });
   let count = 0;
 
+  // MC-authored files generated post-preset — preserve if they already exist
+  const PRESERVE_FILES = new Set(["sessions.json", "fates.json"]);
+
   try {
     const files = await readdir(srcDir);
     for (const file of files) {
       if (!file.endsWith(".json")) continue;
+      if (PRESERVE_FILES.has(file)) {
+        try {
+          await readFile(join(CONFIG_ROOT, file), "utf-8");
+          continue; // File exists, skip to preserve MC work
+        } catch {
+          // File doesn't exist yet, safe to copy
+        }
+      }
       const content = await readFile(join(srcDir, file), "utf-8");
       await writeFile(join(CONFIG_ROOT, file), content, "utf-8");
       count++;

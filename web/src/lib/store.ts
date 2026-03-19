@@ -18,7 +18,7 @@ export const session: Session = {
   scene: {
     title: "The Arkham Wharf",
     description:
-      "September 2nd, 1931. The cargo steamer Doris Wilkinson sits low in the harbour, her hold already heavy with crates of geological equipment and provisions for eighteen months. A cold drizzle falls on the Arkham wharf. The expedition party has been summoned for final briefing before departure at dawn.",
+      "September 2nd, 1933. The cargo steamer Doris Wilkinson sits low in the harbour, her hold already heavy with crates of geological equipment and provisions for eighteen months. A cold drizzle falls on the Arkham wharf. The expedition party has been summoned for final briefing before departure at dawn.",
     location: "Arkham, Massachusetts",
   },
   players: [],

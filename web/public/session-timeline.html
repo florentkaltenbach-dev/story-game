@@ -1,0 +1,954 @@
+<!-- VIZ-META {"title":"Session Timeline","description":"Swimlane view of story progression across sessions, acts, and participant roles","category":"visualization"} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Ceremony — Session Timeline</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="/the-ceremony/js/ceremony-data.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0e17;
+    color: #e8dcc8;
+    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  header {
+    background: #0d1220;
+    border-bottom: 1px solid #1e2d44;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    z-index: 10;
+    position: relative;
+  }
+
+  header h1 {
+    font-family: 'Crimson Text', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #c4a35a;
+    letter-spacing: 1px;
+  }
+
+  header h1 span {
+    color: #6a6a7a;
+    font-weight: 400;
+    font-size: 16px;
+    margin-left: 12px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  #controls {
+    background: #0d1220;
+    border-bottom: 1px solid #1e2d44;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 10;
+    position: relative;
+  }
+
+  .filter-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #4a5568;
+    margin-right: 4px;
+  }
+
+  .session-btn {
+    background: #131a2b;
+    border: 1px solid #1e2d44;
+    border-radius: 6px;
+    padding: 5px 12px;
+    color: #6a7a8a;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .session-btn:hover {
+    color: #e8dcc8;
+    border-color: #3a4a5a;
+  }
+
+  .session-btn.active {
+    background: #1e2d44;
+    color: #e8dcc8;
+    border-color: #c4a35a;
+  }
+
+  .session-btn .swatch {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .separator {
+    width: 1px;
+    height: 24px;
+    background: #1e2d44;
+    flex-shrink: 0;
+  }
+
+  .zoom-btn {
+    background: #131a2b;
+    border: 1px solid #1e2d44;
+    border-radius: 6px;
+    padding: 5px 10px;
+    color: #6a7a8a;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+    line-height: 1;
+  }
+
+  .zoom-btn:hover {
+    color: #e8dcc8;
+    border-color: #3a4a5a;
+  }
+
+  .stats {
+    margin-left: auto;
+    font-size: 11px;
+    color: #4a5568;
+  }
+
+  #main {
+    height: calc(100vh - 56px - 46px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  #timeline-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .tooltip {
+    position: absolute;
+    background: #1a2236;
+    border: 1px solid #2a3a54;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 100;
+    max-width: 320px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .tooltip.visible { opacity: 1; }
+
+  .tt-name {
+    font-weight: 500;
+    color: #c4a35a;
+    margin-bottom: 4px;
+  }
+
+  .tt-type {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 6px;
+  }
+
+  .tt-desc {
+    color: #a8b8c8;
+    font-size: 11px;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  .tt-meta {
+    color: #6a7a8a;
+    font-size: 10px;
+    margin-top: 6px;
+  }
+
+  .empty-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #4a5568;
+    font-size: 14px;
+    letter-spacing: 0.05em;
+    line-height: 1.8;
+    z-index: 5;
+  }
+
+  .empty-hint {
+    font-size: 12px;
+    color: #2a3a54;
+    margin-top: 12px;
+  }
+
+  /* Legend overlay */
+  #legend {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    background: rgba(13, 18, 32, 0.92);
+    border: 1px solid #1e2d44;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 11px;
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  #legend h3 {
+    font-family: 'Crimson Text', serif;
+    font-size: 13px;
+    color: #c4a35a;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .legend-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    color: #6a7a8a;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .legend-line {
+    width: 24px;
+    height: 2px;
+    flex-shrink: 0;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.12; }
+    50% { opacity: 0.22; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loading" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;color:#5a6a7a;letter-spacing:0.15em;text-transform:uppercase;z-index:100">Loading session data...</div>
+<div id="update-badge" style="position:fixed;top:12px;right:12px;padding:4px 12px;background:#1e2d44;border:1px solid #c4a35a44;border-radius:4px;font-size:10px;color:#c4a35a;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:100">Data updated</div>
+
+<header>
+  <h1>Session Timeline <span>swimlane view of story progression</span></h1>
+  <div class="header-right">
+    <span class="stats" id="stats"></span>
+  </div>
+</header>
+
+<div id="controls">
+  <span class="filter-label">Sessions</span>
+  <div id="session-filters" style="display:flex;gap:6px"></div>
+  <div class="separator"></div>
+  <button class="zoom-btn" id="zoom-fit" title="Zoom to fit">Fit</button>
+  <button class="zoom-btn" id="zoom-in" title="Zoom in">+</button>
+  <button class="zoom-btn" id="zoom-out" title="Zoom out">&minus;</button>
+</div>
+
+<div id="main">
+  <svg id="timeline-svg"></svg>
+  <div class="tooltip" id="tooltip"></div>
+  <div id="legend">
+    <h3>Swimlanes</h3>
+    <div class="legend-row"><div class="legend-dot" style="background:#c4a35a"></div> MC (narrator)</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#8b7bb5"></div> Keeper (AI agent)</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#6b9e7a"></div> Players</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#5a6a7a"></div> System</div>
+    <div style="margin-top:8px;padding-top:6px;border-top:1px solid #1e2d44"></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#e8dcc8;width:6px;height:6px"></div> Beat / event</div>
+    <div class="legend-row"><div class="legend-line" style="background:#1e2d44"></div> Act division</div>
+  </div>
+</div>
+
+<script>
+/* ====================================================================
+   The Ceremony — Session Timeline Swimlane Visualization
+   Self-contained D3 v7 interactive timeline
+   ==================================================================== */
+
+// ── Role definitions ──
+
+var ROLES = [
+  { id: 'mc',      name: 'MC',       color: '#c4a35a', desc: 'Human narrator' },
+  { id: 'keeper',  name: 'Keeper',   color: '#8b7bb5', desc: 'AI agent (Claude)' },
+  { id: 'player1', name: 'Player 1', color: '#6b9e7a', desc: 'Expedition member' },
+  { id: 'player2', name: 'Player 2', color: '#7ba4c7', desc: 'Expedition member' },
+  { id: 'player3', name: 'Player 3', color: '#c45a5a', desc: 'Expedition member' },
+  { id: 'player4', name: 'Player 4', color: '#e0a06f', desc: 'Expedition member' },
+  { id: 'player5', name: 'Player 5', color: '#22d3ee', desc: 'Expedition member' },
+  { id: 'system',  name: 'System',   color: '#5a6a7a', desc: 'Scripts & pipeline' }
+];
+
+var SESSIONS = [];
+var focusedSession = null;
+
+// ── Data loading ──
+
+CeremonyData.load({ slice: 'narrative' }).then(function(data) {
+  processData(data);
+  document.getElementById('loading').style.display = 'none';
+  buildControls();
+  renderTimeline();
+});
+
+CeremonyData.subscribe(function(data) {
+  processData(data);
+  renderTimeline();
+
+  // Flash update badge
+  var badge = document.getElementById('update-badge');
+  badge.style.opacity = '1';
+  setTimeout(function() { badge.style.opacity = '0'; }, 2000);
+});
+
+function processData(data) {
+  if (!data) return;
+
+  var sessionColors = ['#c4a35a', '#6b9e7a', '#7ba4c7', '#d47b6f', '#a78bba'];
+
+  if (data.sessions && data.sessions.length > 0) {
+    SESSIONS = data.sessions.map(function(s, i) {
+      return {
+        id: s.id || (i + 1),
+        name: s.name || ('Session ' + (i + 1)),
+        subtitle: s.subtitle || '',
+        color: s.color || sessionColors[i % sessionColors.length],
+        acts: (s.acts || []).map(function(a) {
+          return {
+            name: a.name || 'Act',
+            beats: a.beats || []
+          };
+        })
+      };
+    });
+  }
+
+  // If no sessions, create defaults
+  if (SESSIONS.length === 0) {
+    SESSIONS = [1,2,3,4,5].map(function(i) {
+      return {
+        id: i,
+        name: 'Session ' + i,
+        subtitle: '',
+        color: sessionColors[(i - 1) % sessionColors.length],
+        acts: []
+      };
+    });
+  }
+}
+
+// ── Build control buttons ──
+
+function buildControls() {
+  var container = document.getElementById('session-filters');
+
+  // "All" button
+  var allBtn = document.createElement('button');
+  allBtn.className = 'session-btn active';
+  allBtn.textContent = 'All';
+  allBtn.setAttribute('data-session', 'all');
+  allBtn.addEventListener('click', function() {
+    focusedSession = null;
+    document.querySelectorAll('.session-btn').forEach(function(b) { b.classList.remove('active'); });
+    allBtn.classList.add('active');
+    renderTimeline();
+  });
+  container.appendChild(allBtn);
+
+  // Per-session buttons
+  SESSIONS.forEach(function(s) {
+    var btn = document.createElement('button');
+    btn.className = 'session-btn';
+    btn.setAttribute('data-session', String(s.id));
+    var swatch = document.createElement('span');
+    swatch.className = 'swatch';
+    swatch.style.background = s.color;
+    btn.appendChild(swatch);
+    btn.appendChild(document.createTextNode(s.name));
+    btn.addEventListener('click', function() {
+      focusedSession = s.id;
+      document.querySelectorAll('.session-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      renderTimeline();
+    });
+    container.appendChild(btn);
+  });
+}
+
+// ── SVG Setup ──
+
+var svgEl = d3.select('#timeline-svg');
+var mainContainer = document.getElementById('main');
+var tooltip = document.getElementById('tooltip');
+var statsEl = document.getElementById('stats');
+
+var zoom = d3.zoom()
+  .scaleExtent([0.3, 6])
+  .on('zoom', function(e) {
+    rootG.attr('transform', e.transform);
+  });
+
+svgEl.call(zoom);
+var rootG = svgEl.append('g');
+
+// Zoom controls
+document.getElementById('zoom-in').addEventListener('click', function() {
+  svgEl.transition().duration(300).call(zoom.scaleBy, 1.5);
+});
+document.getElementById('zoom-out').addEventListener('click', function() {
+  svgEl.transition().duration(300).call(zoom.scaleBy, 0.667);
+});
+document.getElementById('zoom-fit').addEventListener('click', function() {
+  zoomToFit();
+});
+
+// ── Main render function ──
+
+function renderTimeline() {
+  // Clear previous render
+  rootG.selectAll('*').remove();
+
+  var width = mainContainer.clientWidth;
+  var height = mainContainer.clientHeight;
+
+  // Remove any existing empty message
+  var existing = document.querySelector('.empty-message');
+  if (existing) existing.parentNode.removeChild(existing);
+
+  // Check for empty data
+  var hasSessions = SESSIONS.length > 0;
+
+  if (!hasSessions) {
+    var msg = document.createElement('div');
+    msg.className = 'empty-message';
+    var msgText = document.createTextNode('No session data yet');
+    msg.appendChild(msgText);
+    msg.appendChild(document.createElement('br'));
+    var hint = document.createElement('div');
+    hint.className = 'empty-hint';
+    hint.textContent = 'Sessions will appear as the story progresses';
+    msg.appendChild(hint);
+    mainContainer.appendChild(msg);
+    statsEl.textContent = '0 sessions';
+    return;
+  }
+
+  // ── Layout constants ──
+
+  var MARGIN = { top: 60, right: 40, bottom: 40, left: 140 };
+  var LANE_HEIGHT = 52;
+  var LANE_GAP = 4;
+  var SESSION_GAP = 16;
+  var ACT_MIN_WIDTH = 120;
+
+  // Determine which sessions to show
+  var visibleSessions = focusedSession
+    ? SESSIONS.filter(function(s) { return s.id === focusedSession; })
+    : SESSIONS;
+
+  // Calculate total timeline width
+  var totalActCount = 0;
+  visibleSessions.forEach(function(s) {
+    totalActCount += Math.max(s.acts.length, 1); // at least 1 slot per session
+  });
+
+  var availableWidth = Math.max(
+    width - MARGIN.left - MARGIN.right,
+    totalActCount * ACT_MIN_WIDTH + (visibleSessions.length - 1) * SESSION_GAP
+  );
+
+  // Update stats
+  var totalBeats = 0;
+  visibleSessions.forEach(function(s) {
+    s.acts.forEach(function(a) { totalBeats += a.beats.length; });
+  });
+  statsEl.textContent = visibleSessions.length + ' session' + (visibleSessions.length !== 1 ? 's' : '')
+    + ' / ' + totalActCount + ' act' + (totalActCount !== 1 ? 's' : '')
+    + ' / ' + totalBeats + ' beat' + (totalBeats !== 1 ? 's' : '');
+
+  // ── Compute session/act x-positions ──
+
+  var sessionLayouts = [];
+  var currentX = MARGIN.left;
+
+  visibleSessions.forEach(function(s) {
+    var actCount = Math.max(s.acts.length, 1);
+    var sessionWidth = (actCount / totalActCount) * availableWidth;
+    var actWidth = sessionWidth / actCount;
+
+    var acts = [];
+    if (s.acts.length > 0) {
+      s.acts.forEach(function(a, ai) {
+        acts.push({
+          name: a.name,
+          beats: a.beats,
+          x: currentX + ai * actWidth,
+          width: actWidth,
+          empty: false
+        });
+      });
+    } else {
+      acts.push({
+        name: 'awaiting acts',
+        beats: [],
+        x: currentX,
+        width: sessionWidth,
+        empty: true
+      });
+    }
+
+    sessionLayouts.push({
+      session: s,
+      x: currentX,
+      width: sessionWidth,
+      acts: acts
+    });
+
+    currentX += sessionWidth + SESSION_GAP;
+  });
+
+  // ── Y scale for swimlanes ──
+
+  var laneY = function(i) { return MARGIN.top + i * (LANE_HEIGHT + LANE_GAP); };
+  var lanesHeight = ROLES.length * (LANE_HEIGHT + LANE_GAP) - LANE_GAP;
+
+  // ── Background swimlane stripes ──
+
+  var lanesG = rootG.append('g').attr('class', 'lanes');
+
+  ROLES.forEach(function(role, i) {
+    var y = laneY(i);
+
+    // Alternating stripe background
+    lanesG.append('rect')
+      .attr('x', MARGIN.left - 8)
+      .attr('y', y)
+      .attr('width', availableWidth + 16)
+      .attr('height', LANE_HEIGHT)
+      .attr('fill', i % 2 === 0 ? '#0c1120' : '#0a0e17')
+      .attr('rx', 3);
+
+    // Lane label (left side)
+    lanesG.append('text')
+      .attr('x', MARGIN.left - 16)
+      .attr('y', y + LANE_HEIGHT / 2)
+      .attr('text-anchor', 'end')
+      .attr('dominant-baseline', 'central')
+      .attr('fill', role.color)
+      .attr('font-family', 'JetBrains Mono, monospace')
+      .attr('font-size', 11)
+      .attr('font-weight', 400)
+      .attr('opacity', 0.9)
+      .text(role.name);
+
+    // Separator line below each lane
+    if (i < ROLES.length - 1) {
+      lanesG.append('line')
+        .attr('x1', MARGIN.left - 8)
+        .attr('y1', y + LANE_HEIGHT + LANE_GAP / 2)
+        .attr('x2', MARGIN.left + availableWidth + 8)
+        .attr('y2', y + LANE_HEIGHT + LANE_GAP / 2)
+        .attr('stroke', '#1e2d44')
+        .attr('stroke-width', 0.5)
+        .attr('opacity', 0.6);
+    }
+  });
+
+  // ── Session bands ──
+
+  var sessionsG = rootG.append('g').attr('class', 'sessions');
+
+  sessionLayouts.forEach(function(layout) {
+    var s = layout.session;
+
+    // Session background band (full height)
+    sessionsG.append('rect')
+      .attr('x', layout.x)
+      .attr('y', MARGIN.top - 4)
+      .attr('width', layout.width)
+      .attr('height', lanesHeight + 8)
+      .attr('fill', s.color)
+      .attr('opacity', 0.06)
+      .attr('rx', 6);
+
+    // Session border (left edge)
+    sessionsG.append('line')
+      .attr('x1', layout.x)
+      .attr('y1', MARGIN.top - 10)
+      .attr('x2', layout.x)
+      .attr('y2', MARGIN.top + lanesHeight + 10)
+      .attr('stroke', s.color)
+      .attr('stroke-width', 1.5)
+      .attr('opacity', 0.3);
+
+    // Session label (top)
+    sessionsG.append('text')
+      .attr('x', layout.x + layout.width / 2)
+      .attr('y', MARGIN.top - 24)
+      .attr('text-anchor', 'middle')
+      .attr('fill', s.color)
+      .attr('font-family', 'Crimson Text, serif')
+      .attr('font-size', 16)
+      .attr('font-weight', 600)
+      .attr('opacity', 0.95)
+      .text(s.name);
+
+    // Session subtitle
+    if (s.subtitle) {
+      sessionsG.append('text')
+        .attr('x', layout.x + layout.width / 2)
+        .attr('y', MARGIN.top - 10)
+        .attr('text-anchor', 'middle')
+        .attr('fill', s.color)
+        .attr('font-family', 'JetBrains Mono, monospace')
+        .attr('font-size', 9)
+        .attr('opacity', 0.5)
+        .text(s.subtitle.length > 40 ? s.subtitle.slice(0, 38) + '\u2026' : s.subtitle);
+    }
+
+    // Session hover area for tooltip
+    sessionsG.append('rect')
+      .attr('x', layout.x)
+      .attr('y', MARGIN.top - 40)
+      .attr('width', layout.width)
+      .attr('height', 38)
+      .attr('fill', 'transparent')
+      .attr('cursor', 'pointer')
+      .on('mouseenter', function(e) {
+        showTooltip(e, {
+          name: s.name,
+          type: 'Session',
+          typeColor: s.color,
+          desc: s.subtitle || 'No description',
+          meta: s.acts.length + ' act' + (s.acts.length !== 1 ? 's' : '')
+            + (totalBeatsForSession(s) > 0
+              ? ', ' + totalBeatsForSession(s) + ' beat' + (totalBeatsForSession(s) !== 1 ? 's' : '')
+              : '')
+        });
+      })
+      .on('mousemove', function(e) { moveTooltip(e); })
+      .on('mouseleave', function() { hideTooltip(); });
+  });
+
+  // ── Act divisions ──
+
+  var actsG = rootG.append('g').attr('class', 'acts');
+
+  sessionLayouts.forEach(function(layout) {
+    var s = layout.session;
+
+    layout.acts.forEach(function(act, ai) {
+      // Act divider line (except first act in each session)
+      if (ai > 0) {
+        actsG.append('line')
+          .attr('x1', act.x)
+          .attr('y1', MARGIN.top)
+          .attr('x2', act.x)
+          .attr('y2', MARGIN.top + lanesHeight)
+          .attr('stroke', s.color)
+          .attr('stroke-width', 1)
+          .attr('stroke-dasharray', '4 4')
+          .attr('opacity', 0.2);
+      }
+
+      // Act label at bottom
+      var labelText = act.empty ? 'awaiting acts' : act.name;
+      actsG.append('text')
+        .attr('x', act.x + act.width / 2)
+        .attr('y', MARGIN.top + lanesHeight + 18)
+        .attr('text-anchor', 'middle')
+        .attr('fill', act.empty ? '#3a4a5a' : '#5a6a7a')
+        .attr('font-family', 'JetBrains Mono, monospace')
+        .attr('font-size', 9)
+        .attr('font-style', act.empty ? 'italic' : 'normal')
+        .attr('opacity', 0.8)
+        .text(labelText);
+
+      // Per-lane act cells (subtle border)
+      ROLES.forEach(function(role, ri) {
+        var y = laneY(ri);
+        actsG.append('rect')
+          .attr('x', act.x + 2)
+          .attr('y', y + 1)
+          .attr('width', act.width - 4)
+          .attr('height', LANE_HEIGHT - 2)
+          .attr('fill', 'transparent')
+          .attr('stroke', s.color)
+          .attr('stroke-width', 0.5)
+          .attr('stroke-opacity', 0.08)
+          .attr('rx', 3);
+      });
+    });
+  });
+
+  // ── Beat dots ──
+
+  var beatsG = rootG.append('g').attr('class', 'beats');
+
+  sessionLayouts.forEach(function(layout) {
+    var s = layout.session;
+
+    layout.acts.forEach(function(act) {
+      if (!act.beats || act.beats.length === 0) return;
+
+      // Assign each beat to a role based on position and content
+      act.beats.forEach(function(beatText, bi) {
+        var roleIndex = assignBeatToRole(beatText, bi, act.beats.length);
+        var role = ROLES[roleIndex];
+        var y = laneY(roleIndex);
+
+        // X position within the act cell
+        var beatX = act.x + (act.width * 0.1) + ((act.width * 0.8) * (bi + 0.5) / act.beats.length);
+        // Y position: vertical center with slight jitter
+        var jitter = (hashCode(beatText) % 20) - 10;
+        var beatY = y + LANE_HEIGHT / 2 + jitter * 0.5;
+
+        // Beat dot
+        var dot = beatsG.append('circle')
+          .attr('cx', beatX)
+          .attr('cy', beatY)
+          .attr('r', 4)
+          .attr('fill', role.color)
+          .attr('fill-opacity', 0.5)
+          .attr('stroke', role.color)
+          .attr('stroke-width', 1)
+          .attr('stroke-opacity', 0.8)
+          .attr('cursor', 'pointer');
+
+        // Beat hover
+        dot.on('mouseenter', function(e) {
+          d3.select(this)
+            .transition().duration(150)
+            .attr('r', 7)
+            .attr('fill-opacity', 0.8);
+
+          showTooltip(e, {
+            name: truncate(beatText, 60),
+            type: role.name + ' beat',
+            typeColor: role.color,
+            desc: beatText,
+            meta: act.name + ' \u2014 ' + s.name
+          });
+        })
+        .on('mousemove', function(e) { moveTooltip(e); })
+        .on('mouseleave', function() {
+          d3.select(this)
+            .transition().duration(150)
+            .attr('r', 4)
+            .attr('fill-opacity', 0.5);
+          hideTooltip();
+        });
+      });
+    });
+  });
+
+  // ── Active session pulse (last session with acts) ──
+
+  var activeIdx = -1;
+  for (var i = visibleSessions.length - 1; i >= 0; i--) {
+    if (visibleSessions[i].acts.length > 0) {
+      activeIdx = i;
+      break;
+    }
+  }
+
+  if (activeIdx >= 0 && sessionLayouts[activeIdx]) {
+    var activeLayout = sessionLayouts[activeIdx];
+    rootG.append('rect')
+      .attr('x', activeLayout.x - 2)
+      .attr('y', MARGIN.top - 6)
+      .attr('width', activeLayout.width + 4)
+      .attr('height', lanesHeight + 12)
+      .attr('fill', 'none')
+      .attr('stroke', activeLayout.session.color)
+      .attr('stroke-width', 1.5)
+      .attr('rx', 8)
+      .attr('opacity', 0.3)
+      .style('animation', 'pulse-glow 3s ease-in-out infinite');
+
+    // "active" indicator
+    rootG.append('text')
+      .attr('x', activeLayout.x + activeLayout.width + 8)
+      .attr('y', MARGIN.top - 24)
+      .attr('fill', activeLayout.session.color)
+      .attr('font-family', 'JetBrains Mono, monospace')
+      .attr('font-size', 9)
+      .attr('opacity', 0.6)
+      .attr('text-anchor', 'start')
+      .text('\u25cf active');
+  }
+
+  // Zoom to fit after first render
+  setTimeout(zoomToFit, 300);
+}
+
+// ── Helper functions ──
+
+function totalBeatsForSession(s) {
+  var count = 0;
+  (s.acts || []).forEach(function(a) { count += (a.beats || []).length; });
+  return count;
+}
+
+function assignBeatToRole(beatText, beatIndex, totalBeats) {
+  // Use beat text content keywords + position to assign roles
+  var text = beatText.toLowerCase();
+
+  // Keyword-based assignment
+  if (text.indexOf('mc ') >= 0 || text.indexOf('narrator') >= 0 || text.indexOf('describe') >= 0 || text.indexOf('scene') >= 0 || text.indexOf('introduce') >= 0) return 0; // MC
+  if (text.indexOf('keeper') >= 0 || text.indexOf('claude') >= 0 || text.indexOf('ai ') >= 0 || text.indexOf('respond') >= 0) return 1; // Keeper
+  if (text.indexOf('system') >= 0 || text.indexOf('script') >= 0 || text.indexOf('pipeline') >= 0 || text.indexOf('trigger') >= 0 || text.indexOf('extract') >= 0) return 7; // System
+  if (text.indexOf('player') >= 0 || text.indexOf('explore') >= 0 || text.indexOf('investigate') >= 0) {
+    // Distribute across players
+    return 2 + (hashCode(beatText) % 5);
+  }
+
+  // Position-based fallback: cycle through roles with narrative logic
+  // Early beats = MC/Keeper, middle = Players, late = System/MC recap
+  var segment = beatIndex / Math.max(totalBeats - 1, 1);
+  if (segment < 0.15) return 0;       // MC opens
+  if (segment < 0.3) return 1;        // Keeper responds
+  if (segment < 0.7) return 2 + (beatIndex % 5); // Players act
+  if (segment < 0.85) return 1;       // Keeper reacts
+  return 7;                            // System processes
+}
+
+function hashCode(str) {
+  var hash = 0;
+  for (var i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function truncate(str, max) {
+  if (!str) return '';
+  return str.length > max ? str.slice(0, max - 1) + '\u2026' : str;
+}
+
+function zoomToFit() {
+  var bounds = rootG.node().getBBox();
+  if (bounds.width === 0 || bounds.height === 0) return;
+
+  var cWidth = mainContainer.clientWidth;
+  var cHeight = mainContainer.clientHeight;
+
+  var pad = 40;
+  var scaleX = (cWidth - pad * 2) / bounds.width;
+  var scaleY = (cHeight - pad * 2) / bounds.height;
+  var scale = Math.min(scaleX, scaleY, 2);
+
+  var cx = bounds.x + bounds.width / 2;
+  var cy = bounds.y + bounds.height / 2;
+
+  svgEl.transition().duration(600).call(
+    zoom.transform,
+    d3.zoomIdentity
+      .translate(cWidth / 2, cHeight / 2)
+      .scale(scale)
+      .translate(-cx, -cy)
+  );
+}
+
+// ── Tooltip ──
+
+function showTooltip(event, data) {
+  tooltip.textContent = '';
+
+  var nameDiv = document.createElement('div');
+  nameDiv.className = 'tt-name';
+  nameDiv.textContent = data.name;
+  tooltip.appendChild(nameDiv);
+
+  var typeDiv = document.createElement('div');
+  typeDiv.className = 'tt-type';
+  typeDiv.style.background = data.typeColor + '22';
+  typeDiv.style.color = data.typeColor;
+  typeDiv.textContent = data.type;
+  tooltip.appendChild(typeDiv);
+
+  if (data.desc) {
+    var descDiv = document.createElement('div');
+    descDiv.className = 'tt-desc';
+    descDiv.textContent = data.desc;
+    tooltip.appendChild(descDiv);
+  }
+
+  if (data.meta) {
+    var metaDiv = document.createElement('div');
+    metaDiv.className = 'tt-meta';
+    metaDiv.textContent = data.meta;
+    tooltip.appendChild(metaDiv);
+  }
+
+  tooltip.classList.add('visible');
+  moveTooltip(event);
+}
+
+function moveTooltip(event) {
+  var rect = mainContainer.getBoundingClientRect();
+  var x = event.clientX - rect.left + 16;
+  var y = event.clientY - rect.top - 10;
+  if (x + 320 > rect.width) x = event.clientX - rect.left - 330;
+  if (y + 150 > rect.height) y = rect.height - 160;
+  if (y < 0) y = 10;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
+}
+
+function hideTooltip() {
+  tooltip.classList.remove('visible');
+}
+
+// ── Window resize ──
+
+var resizeTimer = null;
+window.addEventListener('resize', function() {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(function() {
+    renderTimeline();
+  }, 200);
+});
+
+</script>
+</body>
+</html>

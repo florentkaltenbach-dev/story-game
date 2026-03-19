@@ -6,6 +6,7 @@ import type { GameWidget, Player, Session, CharacterSheet } from "@/lib/types";
 import Panel from "@/components/ui/Panel";
 import CharacterPanel from "@/components/CharacterPanel";
 import CharacterCreation from "@/components/CharacterCreation";
+import type { Archetype } from "@/components/CharacterCreation";
 import WidgetRenderer from "@/components/widgets/WidgetRenderer";
 
 interface PanelDef {
@@ -22,6 +23,7 @@ interface PlayerPanelShelfProps {
   player: Player;
   session: Session;
   widgets: GameWidget[];
+  archetypes: Archetype[];
   onCharacterUpdate: (fields: Partial<CharacterSheet>) => void;
   onCharacterSubmit: () => void;
 }
@@ -35,7 +37,7 @@ const KIND_ICONS: Record<string, string> = {
 };
 
 function usePanelDefs(props: PlayerPanelShelfProps): PanelDef[] {
-  const { player, session, widgets, onCharacterUpdate, onCharacterSubmit } = props;
+  const { player, session, widgets, archetypes, onCharacterUpdate, onCharacterSubmit } = props;
 
   // Character panel is always first
   const characterPanel: PanelDef = player.character.status === "approved"
@@ -55,6 +57,7 @@ function usePanelDefs(props: PlayerPanelShelfProps): PanelDef[] {
           <CharacterCreation
             player={player}
             session={session}
+            archetypes={archetypes}
             onUpdate={onCharacterUpdate}
             onSubmit={onCharacterSubmit}
           />
